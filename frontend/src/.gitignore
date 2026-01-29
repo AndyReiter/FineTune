@@ -1,7 +1,0 @@
-# Local databases
-/data/
-/*.mv.db
-/*.trace.db
-# H2
-**/*.mv.db
-**/*.trace.db
