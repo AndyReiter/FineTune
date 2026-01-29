@@ -1,0 +1,88 @@
+# =========================
+# Spring Boot / Java
+# =========================
+
+# Build output
+/target/
+*.jar
+*.war
+*.ear
+
+# Gradle cache / locks
+.gradle/
+.gradle/*
+
+# Compiled class files
+*.class
+
+# Logs
+*.log
+
+# Maven / Gradle
+.mvn/
+build/
+
+# Eclipse / IntelliJ / IDEA
+*.iml
+*.ipr
+*.iws
+.idea/
+*.classpath
+*.project
+*.settings/
+
+# Mac / OS
+.DS_Store
+
+# =========================
+# Node / React / Vite
+# =========================
+
+# Node modules
+/finetune-frontend/node_modules/
+
+# Production build output
+/finetune-frontend/dist/
+
+# Environment variables
+/finetune-frontend/.env
+/finetune-frontend/.env.local
+/finetune-frontend/.env.development.local
+/finetune-frontend/.env.test.local
+/finetune-frontend/.env.production.local
+
+# Logs
+/finetune-frontend/npm-debug.log*
+/finetune-frontend/yarn-debug.log*
+/finetune-frontend/yarn-error.log*
+
+# Vite cache
+/finetune-frontend/.vite/
+
+# =========================
+# IDE / Editor
+# =========================
+
+# VS Code
+.vscode/
+
+# JetBrains
+*.iml
+.idea/
+
+# =========================
+# Misc / Temporary files
+# =========================
+
+# Database files
+/data/shopdb.mv.db
+
+# Gradle lock / hashes
+.gradle/**/fileHashes.lock
+
+# Maven compiler tracking files
+target/maven-status/
+
+# Temporary swap files
+*.swp
+*~
