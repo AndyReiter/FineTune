@@ -1,3 +1,7 @@
+/**
+ * The `WorkOrderService` class is a Spring service component that interacts with a
+ * `WorkOrderRepository` to save work orders.
+ */
 package com.finetune.app.service;
 
 import com.finetune.app.model.entity.WorkOrder;

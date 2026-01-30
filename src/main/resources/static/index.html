@@ -1,24 +1,278 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Ski Shop Tracker</title>
-  <link rel="stylesheet" href="styles.css">
+  <meta charset="UTF-8" />
+  <title>Work Orders MVP</title>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f6f7f8;
+      margin: 0;
+      padding: 20px;
+    }
+
+    h1, h2, h3 {
+      margin-bottom: 10px;
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      background: #ffffff;
+      padding: 20px;
+      border-radius: 6px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    form {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    input, select, button {
+      padding: 8px;
+      font-size: 14px;
+    }
+
+    button {
+      cursor: pointer;
+    }
+
+    .full-width {
+      grid-column: span 5;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+
+    th, td {
+      border: 1px solid #ddd;
+      padding: 8px;
+      font-size: 14px;
+      vertical-align: top;
+    }
+
+    th {
+      background: #f0f0f0;
+    }
+
+    ul {
+      margin: 0;
+      padding-left: 18px;
+    }
+
+    .actions button {
+      margin-right: 5px;
+    }
+
+    .message {
+      margin-top: 10px;
+      font-size: 14px;
+    }
+
+    .success {
+      color: green;
+    }
+
+    .error {
+      color: red;
+    }
+  </style>
 </head>
 <body>
 
-  <h1>Ski Shop Tracker</h1>
+<div class="container">
+  <h1>Work Orders (MVP)</h1>
 
-  <img src="images/ski.png" alt="Skis" class="hero-image">
+  <!-- ===============================
+       Create Work Order
+       =============================== -->
+  <h2>Create Work Order</h2>
 
-  <div class="button-group">
-    <button id="checkInBtn">Check In Item</button>
-    <button id="statusBtn">View Status</button>
-  </div>
+  <form id="createForm">
+    <input type="text" id="firstName" placeholder="First Name" required />
+    <input type="text" id="lastName" placeholder="Last Name" required />
+    <input type="text" id="phone" placeholder="Phone (10 digits)" required />
+    <input type="email" id="email" placeholder="Email" required />
+    <div></div>
 
-  <p id="message"></p>
+    <div class="full-width">
+      <h3>Skis</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Make</th>
+            <th>Model</th>
+            <th>Service</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="skiItemsTable"></tbody>
+      </table>
+      <button type="button" onclick="addSkiRow()">+ Add Ski</button>
+    </div>
 
-  <script src="app.js"></script>
+    <button type="submit" class="full-width">Create Work Order</button>
+  </form>
+
+  <div id="formMessage" class="message"></div>
+
+  <!-- ===============================
+       Work Orders List
+       =============================== -->
+  <h2>All Work Orders</h2>
+
+  <table>
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Customer</th>
+        <th>Phone</th>
+        <th>Email</th>
+        <th>Skis</th>
+        <th>Status</th>
+        <th>Created At</th>
+      </tr>
+    </thead>
+    <tbody id="workOrdersTable"></tbody>
+  </table>
+
+  <div id="listMessage" class="message"></div>
+</div>
+
+<script>
+  const API_BASE = "http://localhost:8080/workorders";
+
+  const tableBody = document.getElementById("workOrdersTable");
+  const formMessage = document.getElementById("formMessage");
+  const listMessage = document.getElementById("listMessage");
+  const skiItemsTable = document.getElementById("skiItemsTable");
+
+  /* ===============================
+     Ski Rows
+     =============================== */
+  function addSkiRow() {
+    const row = document.createElement("tr");
+
+    row.innerHTML = `
+      <td><input required placeholder="Make" /></td>
+      <td><input required placeholder="Model" /></td>
+      <td>
+        <select required>
+          <option value="">Select</option>
+          <option value="TUNE">Tune</option>
+          <option value="MOUNT">Mount</option>
+          <option value="REPAIR">Repair</option>
+        </select>
+      </td>
+      <td>
+        <button type="button" onclick="this.closest('tr').remove()">✕</button>
+      </td>
+    `;
+
+    skiItemsTable.appendChild(row);
+  }
+
+  addSkiRow();
+
+  /* ===============================
+     Fetch Work Orders
+     =============================== */
+  async function fetchWorkOrders() {
+    try {
+      const response = await fetch(API_BASE);
+      const data = await response.json();
+
+      tableBody.innerHTML = "";
+
+      data.forEach(order => {
+        const row = document.createElement("tr");
+
+        row.innerHTML = `
+          <td>${order.id}</td>
+          <td>${order.customerFirstName} ${order.customerLastName}</td>
+          <td>${order.phone || ""}</td>
+          <td>${order.email || ""}</td>
+          <td>
+            <ul>
+              ${(order.skiItems || []).map(ski =>
+                `<li>${ski.skiMake} ${ski.skiModel} (${ski.serviceType})</li>`
+              ).join("")}
+            </ul>
+          </td>
+          <td>${order.status}</td>
+          <td>${order.createdAt || ""}</td>
+        `;
+
+        tableBody.appendChild(row);
+      });
+    } catch (error) {
+      console.error(error);
+      listMessage.textContent = "Failed to load work orders.";
+      listMessage.className = "message error";
+    }
+  }
+
+  /* ===============================
+     Create Work Order
+     =============================== */
+  document.getElementById("createForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const skiRows = [...skiItemsTable.children];
+
+    if (skiRows.length === 0) {
+      alert("At least one ski is required.");
+      return;
+    }
+
+    const skis = skiRows.map(row => {
+      const inputs = row.querySelectorAll("input, select");
+      return {
+        skiMake: inputs[0].value.trim(),
+        skiModel: inputs[1].value.trim,
+        serviceType: inputs[2].value
+      };
+    });
+
+    const payload = {
+      customerFirstName: document.getElementById("firstName").value,
+      customerLastName: document.getElementById("lastName").value,
+      phone: document.getElementById("phone").value,
+      email: document.getElementById("email").value,
+      skis: skis
+    };
+
+    try {
+      const response = await fetch(API_BASE, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+
+      if (!response.ok) throw new Error();
+
+      formMessage.textContent = "Work order created successfully.";
+      formMessage.className = "message success";
+
+      e.target.reset();
+      skiItemsTable.innerHTML = "";
+      addSkiRow();
+      fetchWorkOrders();
+    } catch {
+      formMessage.textContent = "Error creating work order.";
+      formMessage.className = "message error";
+    }
+  });
+
+  fetchWorkOrders();
+</script>
+
 </body>
 </html>
-
