@@ -1,53 +1,41 @@
-// src/api.js
-import axios from 'axios';
+const API_BASE = "http://localhost:8080";
 
-const API_BASE = 'http://localhost:8080'; // Change if your Spring Boot server is different
+export async function fetchWorkOrders() {
+  const res = await fetch(`${API_BASE}/workorders`);
+  if (!res.ok) throw new Error("Failed to fetch work orders");
+  return res.json();
+}
 
-export const getWorkOrders = async () => {
-  try {
-    const response = await axios.get(`${API_BASE}/workorders`);
-    return response.data;
-  } catch (error) {
-    console.error('Error fetching work orders:', error);
-    throw error;
-  }
-};
+export async function fetchWorkOrder(id) {
+  const res = await fetch(`${API_BASE}/workorders/${id}`);
+  if (!res.ok) throw new Error("Failed to fetch work order");
+  return res.json();
+}
 
-export const getWorkOrderById = async (id) => {
-  try {
-    const response = await axios.get(`${API_BASE}/workorders/${id}`);
-    return response.data;
-  } catch (error) {
-    console.error(`Error fetching work order ${id}:`, error);
-    throw error;
-  }
-};
+export async function createWorkOrder(data) {
+  const res = await fetch(`${API_BASE}/workorders`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) throw new Error("Failed to create work order");
+  return res.json();
+}
 
-export const createWorkOrder = async (workOrder) => {
-  try {
-    const response = await axios.post(`${API_BASE}/workorders`, workOrder);
-    return response.data;
-  } catch (error) {
-    console.error('Error creating work order:', error);
-    throw error;
-  }
-};
+export async function updateWorkOrder(id, data) {
+  const res = await fetch(`${API_BASE}/workorders/${id}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) throw new Error("Failed to update work order");
+  return res.json();
+}
 
-export const updateWorkOrder = async (id, workOrder) => {
-  try {
-    const response = await axios.put(`${API_BASE}/workorders/${id}`, workOrder);
-    return response.data;
-  } catch (error) {
-    console.error(`Error updating work order ${id}:`, error);
-    throw error;
-  }
-};
-
-export const deleteWorkOrder = async (id) => {
-  try {
-    await axios.delete(`${API_BASE}/workorders/${id}`);
-  } catch (error) {
-    console.error(`Error deleting work order ${id}:`, error);
-    throw error;
-  }
-};
+export async function deleteWorkOrder(id) {
+  const res = await fetch(`${API_BASE}/workorders/${id}`, {
+    method: "DELETE",
+  });
+  if (!res.ok) throw new Error("Failed to delete work order");
+  return res.json();
+}
