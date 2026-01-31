@@ -1,22 +1,46 @@
-/**
- * The WorkOrderController class in a Java Spring application handles CRUD operations for work orders
- * and ski items.
- */
 package com.finetune.app.controller;
 
+import com.finetune.app.model.dto.CreateWorkOrderRequest;
+import com.finetune.app.model.dto.WorkOrderResponse;
+import com.finetune.app.model.dto.UpdateSkiItemStatusRequest;
 import com.finetune.app.model.entity.WorkOrder;
 import com.finetune.app.repository.WorkOrderRepository;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-import com.finetune.app.model.dto.CreateWorkOrderRequest;
-import com.finetune.app.model.dto.SkiItemRequest;
-import com.finetune.app.model.entity.SkiItem;
-import jakarta.validation.Valid;
+import com.finetune.app.service.WorkOrderService;
 
-import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
+import jakarta.validation.Valid;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpStatus;
+
+/**
+ * WorkOrderController handles all WorkOrder-related API endpoints.
+ * 
+ * Key Changes:
+ * - Now delegates to WorkOrderService for merge logic (moved from controller)
+ * - POST /workorders calls WorkOrderService.createOrMergeWorkOrder()
+ * - Returns WorkOrderResponse DTOs for clean JSON (no circular references)
+ * 
+ * Merge Behavior:
+ * - If customer exists with an open work order, new ski items are MERGED
+ * - If no open work order exists, a NEW work order is created
+ * - Work order is open if status != "PICKED_UP"
+ * - Individual ski item status is tracked
+ * - Overall work order status is DONE only when ALL items are DONE
+ * 
+ * All GET endpoints return WorkOrderResponse DTOs to maintain clean JSON structure.
+ */
 @RestController
 @RequestMapping("/workorders")
 @CrossOrigin(origins = "*")
@@ -25,64 +49,111 @@ public class WorkOrderController {
     @Autowired
     private WorkOrderRepository workOrderRepository;
 
+    @Autowired
+    private WorkOrderService workOrderService;
+
+    /**
+     * Get all work orders.
+     * Returns WorkOrderResponse DTOs to avoid circular references.
+     */
     @GetMapping
-    public List<WorkOrder> getAllWorkOrders() {
-        return workOrderRepository.findAll();
+    public List<WorkOrderResponse> getAllWorkOrders() {
+        return workOrderRepository.findAll().stream()
+            .map(WorkOrderResponse::fromEntity)
+            .collect(Collectors.toList());
     }
 
+    /**
+     * Create or merge a work order.
+     * 
+     * Workflow (delegated to WorkOrderService):
+     * 1. Validates the incoming request (customer info + ski items)
+     * 2. Finds existing Customer by email/phone OR creates new one
+     * 3. Searches for an open work order for that customer
+     * 4. If found: MERGE new ski items into the existing work order
+     *    - No notification sent (customer already notified)
+     * 5. If not found: CREATE a new work order
+     *    - Notification would be sent to customer
+     * 6. Updates work order status based on all ski items
+     *    - Status = DONE only when ALL items are DONE
+     * 7. Persists changes (cascade handles Customer, WorkOrder, SkiItems)
+     * 8. Returns the work order (new or merged) as WorkOrderResponse DTO
+     * 
+     * @param request CreateWorkOrderRequest with customer and ski item details
+     * @return WorkOrderResponse with all ski items (new + merged)
+     */
     @PostMapping
-    public WorkOrder createWorkOrder(
-        @Valid @RequestBody CreateWorkOrderRequest request) {
+    public ResponseEntity<WorkOrderResponse> createWorkOrder(
+            @Valid @RequestBody CreateWorkOrderRequest request) {
 
-        WorkOrder workOrder = new WorkOrder();
-        workOrder.setCustomerFirstName(request.getCustomerFirstName());
-        workOrder.setCustomerLastName(request.getCustomerLastName());
-        workOrder.setPhone(request.getPhone());
-        workOrder.setEmail(request.getEmail());
-        workOrder.setStatus("RECEIVED");
-        workOrder.setCreatedAt(LocalDateTime.now());
+        // Delegate to service which handles:
+        // - Customer lookup/creation
+        // - Open work order detection
+        // - Merging items into existing orders
+        // - Creating new orders when needed
+        WorkOrder workOrder = workOrderService.createOrMergeWorkOrder(request);
 
-        for (SkiItemRequest skiReq : request.getSkis()) {
-            SkiItem skiItem = new SkiItem();
-            skiItem.setSkiMake(skiReq.getSkiMake());
-            skiItem.setSkiModel(skiReq.getSkiModel());
-            skiItem.setServiceType(skiReq.getServiceType());
-            workOrder.addSkiItem(skiItem);
-        }
-
-        return workOrderRepository.save(workOrder);
+        return ResponseEntity.status(HttpStatus.CREATED)
+            .body(WorkOrderResponse.fromEntity(workOrder));
     }
+
+    /**
+     * Get a specific work order by ID with all its ski items.
+     * 
+     * @param id WorkOrder ID
+     * @return WorkOrderResponse with customer info and all ski items, or 404 if not found
+     */
     @GetMapping("/{id}")
-    public ResponseEntity<WorkOrder> getWorkOrderById(@PathVariable Long id) {
+    public ResponseEntity<WorkOrderResponse> getWorkOrderById(@PathVariable Long id) {
         return workOrderRepository.findById(id)
-            .map(ResponseEntity::ok)
+            .map(workOrder -> ResponseEntity.ok(WorkOrderResponse.fromEntity(workOrder)))
             .orElse(ResponseEntity.notFound().build());
     }
 
     /**
-     * Update a work order with the given id and details.
-     * @param id The id of the work order to update.
-     * @param workOrderDetails The details of the work order to update.
-     * @return A ResponseEntity containing the updated work order if found, otherwise a 404 response.
+     * Mark a work order as picked up (closed).
+     * Once picked up, no new items can be merged into this order.
+     * New items for this customer will create a new work order.
+     * 
+     * @param id WorkOrder ID
+     * @return Updated WorkOrderResponse, or 404 if not found
      */
-    @PutMapping("/{id}")
-    public ResponseEntity<WorkOrder> updateWorkOrder(
-        @PathVariable Long id,
-        @RequestBody WorkOrder workOrderDetails) {
-
-        return workOrderRepository.findById(id)
-            .map(workOrder -> {
-                workOrder.setCustomerFirstName(workOrderDetails.getCustomerFirstName());
-                workOrder.setCustomerLastName(workOrderDetails.getCustomerLastName());
-                workOrder.setPhone(workOrderDetails.getPhone());
-                workOrder.setEmail(workOrderDetails.getEmail());
-                workOrder.setStatus(workOrderDetails.getStatus());
-                return ResponseEntity.ok(workOrderRepository.save(workOrder));
-            })
-            .orElse(ResponseEntity.notFound().build());
+    @PostMapping("/{id}/pickup")
+    public ResponseEntity<WorkOrderResponse> pickupWorkOrder(@PathVariable Long id) {
+        WorkOrder workOrder = workOrderService.pickupWorkOrder(id);
+        return ResponseEntity.ok(WorkOrderResponse.fromEntity(workOrder));
     }
 
+    /**
+     * Update a ski item's status within a work order.
+     * Allowed statuses: PENDING, IN_PROGRESS, DONE
+     * 
+     * When a ski item status changes, the work order's status is automatically recalculated:
+     * - If all items are DONE, work order status becomes DONE
+     * - Otherwise, work order status remains RECEIVED
+     * 
+     * @param orderId WorkOrder ID
+     * @param skiId Ski Item ID
+     * @param request UpdateSkiItemStatusRequest with new status
+     * @return Updated WorkOrderResponse, or 404 if not found
+     */
+    @PatchMapping("/{orderId}/skis/{skiId}/status")
+    public ResponseEntity<WorkOrderResponse> updateSkiItemStatus(
+            @PathVariable Long orderId,
+            @PathVariable Long skiId,
+            @Valid @RequestBody UpdateSkiItemStatusRequest request) {
+        
+        WorkOrder workOrder = workOrderService.updateSkiItemStatus(orderId, skiId, request.getStatus());
+        return ResponseEntity.ok(WorkOrderResponse.fromEntity(workOrder));
+    }
 
+    /**
+     * Delete a work order by ID.
+     * Note: WorkOrder is cascaded to delete from Customer.
+     * 
+     * @param id WorkOrder ID
+     * @return 200 OK if deleted, 404 if not found
+     */
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteWorkOrder(@PathVariable Long id) {
         if (workOrderRepository.existsById(id)) {

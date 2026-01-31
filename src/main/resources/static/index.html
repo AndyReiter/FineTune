@@ -83,6 +83,170 @@
     .error {
       color: red;
     }
+
+    .status-badge {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: bold;
+      text-align: center;
+      min-width: 80px;
+    }
+
+    .status-PENDING {
+      background: #fff3cd;
+      color: #856404;
+    }
+
+    .status-IN_PROGRESS {
+      background: #cce5ff;
+      color: #004085;
+    }
+
+    .status-DONE {
+      background: #d4edda;
+      color: #155724;
+    }
+
+    .status-RECEIVED {
+      background: #e7d4f5;
+      color: #5a1a7f;
+    }
+
+    .status-PICKED_UP {
+      background: #d1ecf1;
+      color: #0c5460;
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.5);
+    }
+
+    .modal-content {
+      background: #fff;
+      margin: 10% auto;
+      padding: 20px;
+      border-radius: 6px;
+      width: 500px;
+      max-width: 90%;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+    }
+
+    .modal-header {
+      margin-bottom: 15px;
+      border-bottom: 1px solid #ddd;
+      padding-bottom: 10px;
+    }
+
+    .modal-body {
+      margin: 15px 0;
+    }
+
+    .modal-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 15px;
+    }
+
+    .modal-footer button {
+      padding: 8px 16px;
+    }
+
+    .ski-status-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 0;
+      border-bottom: 1px solid #eee;
+    }
+
+    .ski-status-row:last-child {
+      border-bottom: none;
+    }
+
+    .ski-info {
+      flex: 1;
+    }
+
+    .ski-status-select {
+      padding: 6px 12px;
+      font-size: 14px;
+    }
+
+    .action-buttons {
+      display: flex;
+      gap: 5px;
+    }
+
+    .action-buttons button {
+      padding: 6px 12px;
+      font-size: 12px;
+    }
+
+    .btn-primary {
+      background: #007bff;
+      color: white;
+      border: none;
+      border-radius: 4px;
+    }
+
+    .btn-primary:hover {
+      background: #0056b3;
+    }
+
+    .btn-primary:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+
+    .btn-secondary {
+      background: #6c757d;
+      color: white;
+      border: none;
+      border-radius: 4px;
+    }
+
+    .btn-secondary:hover {
+      background: #545b62;
+    }
+
+    .btn-danger {
+      background: #dc3545;
+      color: white;
+      border: none;
+      border-radius: 4px;
+    }
+
+    .btn-danger:hover {
+      background: #c82333;
+    }
+
+    .btn-success {
+      background: #28a745;
+      color: white;
+      border: none;
+      border-radius: 4px;
+    }
+
+    .btn-success:hover {
+      background: #218838;
+    }
+
+    .empty-message {
+      text-align: center;
+      padding: 20px;
+      color: #999;
+      font-style: italic;
+    }
   </style>
 </head>
 <body>
@@ -136,14 +300,33 @@
         <th>Phone</th>
         <th>Email</th>
         <th>Skis</th>
-        <th>Status</th>
+        <th>Work Order Status</th>
         <th>Created At</th>
+        <th>Actions</th>
       </tr>
     </thead>
     <tbody id="workOrdersTable"></tbody>
   </table>
 
   <div id="listMessage" class="message"></div>
+</div>
+
+<!-- ===============================
+     Edit Work Order Modal
+     =============================== -->
+<div id="editModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3 id="modalTitle">Edit Work Order Status</h3>
+    </div>
+    <div id="modalBody" class="modal-body"></div>
+    <div class="modal-footer">
+      <button type="button" class="btn-secondary" onclick="closeEditModal()">Cancel</button>
+      <button type="button" id="pickupBtn" class="btn-success" onclick="markAsPickup()" style="display: none;">
+        Ready for Pickup
+      </button>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -153,6 +336,142 @@
   const formMessage = document.getElementById("formMessage");
   const listMessage = document.getElementById("listMessage");
   const skiItemsTable = document.getElementById("skiItemsTable");
+  const editModal = document.getElementById("editModal");
+  const modalBody = document.getElementById("modalBody");
+  const pickupBtn = document.getElementById("pickupBtn");
+
+  let currentEditingOrderId = null;
+
+  /* ===============================
+     Modal Functions
+     =============================== */
+  function openEditModal(orderId) {
+    currentEditingOrderId = orderId;
+    editModal.style.display = "block";
+    loadOrderForEditing(orderId);
+  }
+
+  function closeEditModal() {
+    editModal.style.display = "none";
+    currentEditingOrderId = null;
+    modalBody.innerHTML = "";
+  }
+
+  window.onclick = function(event) {
+    if (event.target === editModal) {
+      closeEditModal();
+    }
+  };
+
+  /* ===============================
+     Load Order for Editing
+     =============================== */
+  async function loadOrderForEditing(orderId) {
+    try {
+      const response = await fetch(`${API_BASE}/${orderId}`);
+      const order = await response.json();
+
+      modalBody.innerHTML = `
+        <div style="margin-bottom: 15px;">
+          <strong>Customer:</strong> ${order.customerName}<br>
+          <strong>Work Order Status:</strong> 
+          <span class="status-badge status-${order.status}">${order.status}</span>
+          ${order.status === "PICKED_UP" ? '<div style="color: #28a745; margin-top: 10px; font-weight: bold;">✓ Order has been picked up</div>' : ''}
+        </div>
+
+        <h4>Ski Items</h4>
+        <div id="skiStatusItems"></div>
+      `;
+
+      const skiStatusItems = document.getElementById("skiStatusItems");
+
+      if (!order.skiItems || order.skiItems.length === 0) {
+        skiStatusItems.innerHTML = '<div class="empty-message">No skis in this work order</div>';
+        pickupBtn.style.display = "none";
+      } else {
+        skiStatusItems.innerHTML = order.skiItems.map(ski => `
+          <div class="ski-status-row">
+            <div class="ski-info">
+              <strong>${ski.skiMake} ${ski.skiModel}</strong> (${ski.serviceType})<br>
+              <span style="font-size: 12px; color: #666;">Current status: 
+                <span class="status-badge status-${ski.status}">${ski.status}</span>
+              </span>
+            </div>
+            <select class="ski-status-select" data-ski-id="${ski.id}" onchange="updateSkiStatus(${orderId}, ${ski.id}, this.value)" ${ski.status === "PICKED_UP" ? "disabled" : ""}>
+              <option value="PENDING" ${ski.status === "PENDING" ? "selected" : ""}>PENDING</option>
+              <option value="IN_PROGRESS" ${ski.status === "IN_PROGRESS" ? "selected" : ""}>IN_PROGRESS</option>
+              <option value="DONE" ${ski.status === "DONE" ? "selected" : ""}>DONE</option>
+              <option value="PICKED_UP" ${ski.status === "PICKED_UP" ? "selected" : ""}>PICKED_UP</option>
+            </select>
+          </div>
+        `).join("");
+
+        // Check if all items are DONE (not picked up yet)
+        const allDone = order.skiItems.every(ski => ski.status === "DONE");
+        const allPickedUp = order.skiItems.every(ski => ski.status === "PICKED_UP");
+        
+        // Show pickup button only if all items are DONE and order not yet picked up
+        pickupBtn.style.display = (allDone && !allPickedUp) ? "block" : "none";
+      }
+    } catch (error) {
+      console.error(error);
+      modalBody.innerHTML = '<div class="error">Failed to load work order.</div>';
+      pickupBtn.style.display = "none";
+    }
+  }
+
+  /* ===============================
+     Update Ski Status
+     =============================== */
+  async function updateSkiStatus(orderId, skiId, newStatus) {
+    try {
+      const response = await fetch(`${API_BASE}/${orderId}/skis/${skiId}/status`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: newStatus })
+      });
+
+      if (!response.ok) throw new Error("Failed to update status");
+
+      // Reload the modal to reflect changes
+      loadOrderForEditing(orderId);
+      // Reload the main list
+      fetchWorkOrders();
+    } catch (error) {
+      console.error(error);
+      alert("Error updating ski status: " + error.message);
+    }
+  }
+
+  /* ===============================
+     Mark as Pickup (Ready for Pickup)
+     =============================== */
+  async function markAsPickup() {
+    if (!currentEditingOrderId) return;
+
+    try {
+      const response = await fetch(`${API_BASE}/${currentEditingOrderId}/pickup`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" }
+      });
+
+      if (!response.ok) throw new Error("Failed to mark as pickup");
+
+      alert("Work order marked as Ready for Pickup!");
+      closeEditModal();
+      fetchWorkOrders();
+    } catch (error) {
+      console.error(error);
+      alert("Error marking as pickup: " + error.message);
+    }
+  }
+
+  /* ===============================
+     Get Status Badge HTML
+     =============================== */
+  function getStatusBadge(status) {
+    return `<span class="status-badge status-${status}">${status}</span>`;
+  }
 
   /* ===============================
      Ski Rows
@@ -191,23 +510,34 @@
 
       tableBody.innerHTML = "";
 
+      if (data.length === 0) {
+        tableBody.innerHTML = '<tr><td colspan="8" class="empty-message">No work orders yet</td></tr>';
+        return;
+      }
+
       data.forEach(order => {
         const row = document.createElement("tr");
 
+        // Count skis by status
+        const skiItems = order.skiItems || [];
+        const doneCount = skiItems.filter(ski => ski.status === "DONE").length;
+        const totalCount = skiItems.length;
+
+        const skiSummary = skiItems.length > 0 
+          ? `${skiItems.map(ski => `${ski.skiMake} ${ski.skiModel} (${ski.serviceType}) <span class="status-badge status-${ski.status}">${ski.status}</span>`).join("<br>")}`
+          : "No skis";
+
         row.innerHTML = `
           <td>${order.id}</td>
-          <td>${order.customerFirstName} ${order.customerLastName}</td>
-          <td>${order.phone || ""}</td>
-          <td>${order.email || ""}</td>
-          <td>
-            <ul>
-              ${(order.skiItems || []).map(ski =>
-                `<li>${ski.skiMake} ${ski.skiModel} (${ski.serviceType})</li>`
-              ).join("")}
-            </ul>
-          </td>
-          <td>${order.status}</td>
+          <td>${order.customerName || ""}</td>
+          <td>${order.customerPhone || ""}</td>
+          <td>${order.customerEmail || ""}</td>
+          <td>${skiSummary}</td>
+          <td>${getStatusBadge(order.status)}<br><small>${doneCount}/${totalCount} items done</small></td>
           <td>${order.createdAt || ""}</td>
+          <td class="action-buttons">
+            <button type="button" class="btn-primary" onclick="openEditModal(${order.id})">Manage Status</button>
+          </td>
         `;
 
         tableBody.appendChild(row);
@@ -236,7 +566,7 @@
       const inputs = row.querySelectorAll("input, select");
       return {
         skiMake: inputs[0].value.trim(),
-        skiModel: inputs[1].value.trim,
+        skiModel: inputs[1].value.trim(),
         serviceType: inputs[2].value
       };
     });

@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Entity
 @Table(name = "work_orders")
@@ -14,10 +15,11 @@ public class WorkOrder {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String customerFirstName;
-    private String customerLastName;
-    private String phone;
-    private String email;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "customer_id", nullable = false)
+    @JsonIgnore 
+    private Customer customer;
+
     private String status;
 
     private LocalDateTime createdAt;
@@ -36,6 +38,34 @@ public class WorkOrder {
         this.skiItems.add(skiItem);
     }
 
+    /**
+     * Determines if this work order is "open" (has items that haven't been picked up).
+     * An open work order has status != "PICKED_UP".
+     * This is used to determine if new ski items should be merged into this order.
+     */
+    public boolean isOpen() {
+        return !("PICKED_UP".equals(this.status));
+    }
+
+    /**
+     * Updates the work order status based on all ski items.
+     * Status is DONE only when all ski items have status "DONE".
+     * This ensures the order is only marked complete when all work is finished.
+     */
+    public void updateStatusBasedOnItems() {
+        if (this.skiItems.isEmpty()) {
+            this.status = "RECEIVED";
+            return;
+        }
+
+        boolean allDone = this.skiItems.stream()
+            .allMatch(item -> "DONE".equals(item.getStatus()));
+
+        if (allDone) {
+            this.status = "DONE";
+        }
+    }
+
     public Long getId() {
         return id;
     }
@@ -44,35 +74,12 @@ public class WorkOrder {
         this.id = id;
     }
 
-    public String getCustomerFirstName() {
-        return customerFirstName;
-    }
-    public String getCustomerLastName() {
-        return customerLastName;
+    public Customer getCustomer() {
+        return customer;
     }
 
-    public void setCustomerFirstName(String customerFirstName) {
-        this.customerFirstName = customerFirstName;
-    }
-
-    public void setCustomerLastName(String customerLastName) {
-        this.customerLastName = customerLastName;
-    }
-
-    public String getPhone() {
-        return phone;
-    }
-
-    public void setPhone(String phone) {
-        this.phone = phone;
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
+    public void setCustomer(Customer customer) {
+        this.customer = customer;
     }
 
     public String getStatus() {
@@ -89,5 +96,13 @@ public class WorkOrder {
 
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public List<SkiItem> getSkiItems() {
+        return skiItems;
+    }
+
+    public void setSkiItems(List<SkiItem> skiItems) {
+        this.skiItems = skiItems;
     }
 }
