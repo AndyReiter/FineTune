@@ -480,8 +480,18 @@
     const row = document.createElement("tr");
 
     row.innerHTML = `
-      <td><input required placeholder="Make" /></td>
-      <td><input required placeholder="Model" /></td>
+      <td>
+        <!-- Ski Make dropdown populated from /brands (value = brand id, text = brand name) -->
+        <select class="ski-make" required>
+          <option value="">Select Make</option>
+        </select>
+      </td>
+      <td>
+        <!-- Ski Model dropdown populated from /brands/{id}/models (value/text = model name) -->
+        <select class="ski-model" required>
+          <option value="">Select Model</option>
+        </select>
+      </td>
       <td>
         <select required>
           <option value="">Select</option>
@@ -496,8 +506,65 @@
     `;
 
     skiItemsTable.appendChild(row);
+
+    // Populate brand dropdown, then wire dependent models dropdown
+    const makeSelect = row.querySelector(".ski-make");
+    const modelSelect = row.querySelector(".ski-model");
+
+    populateBrandSelect(makeSelect).then(() => {
+      // When make changes, fetch models for that brand and populate
+      makeSelect.addEventListener("change", async () => {
+        const brandId = makeSelect.value;
+        await populateModelSelect(modelSelect, brandId);
+      });
+    });
   }
 
+  // ===============================
+  // Brand/Model Dropdown Logic
+  // ===============================
+  const BRANDS_API = "http://localhost:8080/brands";
+  let brandsCache = null; // cache brands to minimize network calls
+
+  /**
+   * Fetch brands once and populate a given select element.
+   * Option value = brand.id, option text = brand.name
+   */
+  async function populateBrandSelect(selectEl) {
+    try {
+      if (!brandsCache) {
+        const res = await fetch(BRANDS_API);
+        brandsCache = await res.json();
+      }
+      // Reset options (preserve placeholder)
+      selectEl.innerHTML = '<option value="">Select Make</option>' +
+        brandsCache.map(b => `<option value="${b.id}">${b.name}</option>`).join("");
+    } catch (err) {
+      console.error("Failed to load brands", err);
+    }
+  }
+
+  /**
+   * Populate models for a selected brand id.
+   * Option value/text = model.name to submit STRINGs as required.
+   */
+  async function populateModelSelect(selectEl, brandId) {
+    try {
+      if (!brandId) {
+        selectEl.innerHTML = '<option value="">Select Model</option>';
+        return;
+      }
+      const res = await fetch(`${BRANDS_API}/${brandId}/models`);
+      const models = await res.json();
+      selectEl.innerHTML = '<option value="">Select Model</option>' +
+        models.map(m => `<option value="${m.name}">${m.name}</option>`).join("");
+    } catch (err) {
+      console.error("Failed to load models", err);
+      selectEl.innerHTML = '<option value="">Select Model</option>';
+    }
+  }
+
+  // Initialize first ski row after dropdown helpers are defined
   addSkiRow();
 
   /* ===============================
@@ -563,11 +630,14 @@
     }
 
     const skis = skiRows.map(row => {
-      const inputs = row.querySelectorAll("input, select");
+      const makeSelect = row.querySelector(".ski-make");
+      const modelSelect = row.querySelector(".ski-model");
+      const serviceSelect = row.querySelector("td:nth-child(3) select");
       return {
-        skiMake: inputs[0].value.trim(),
-        skiModel: inputs[1].value.trim(),
-        serviceType: inputs[2].value
+        // Submit STRING values (brand name via selected option text, model via value)
+        skiMake: makeSelect.options[makeSelect.selectedIndex]?.text || "",
+        skiModel: (modelSelect.value || "").trim(),
+        serviceType: serviceSelect.value
       };
     });
 

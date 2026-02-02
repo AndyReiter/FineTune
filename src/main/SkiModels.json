@@ -1,0 +1,84 @@
+{
+  "brands": [
+    {
+      "name": "Armada",
+      "makes": ["ARV 96","ARV 106","Declivity 92 Ti","ARW 94","ARW 106","JJ","Whitewalker 104","BDOG Edgeless","Sovereign","Magic J","Tracer","Stranger","Bantam","Victa","Kirti"]
+    },
+    {
+      "name": "Atomic",
+      "makes": ["Maverick 95 C","Maverick 96 CTI","Bent Chetler 100","Bent Chetler 120","Redster G9","Redster S9","Backland 95","Backland 85","Vantage 97 Ti","Vantage 100 CTI","Bent 110","Bent 90","Punx 7","Punx 5","Hawx Ultra XTD"]
+    },
+    {
+      "name": "Salomon",
+      "makes": ["QST 94","QST 106","QST 99","QST Blank","Stance 102","Strive 92","Shift MNC 13","S/LAB MTN","MTN Explore 88","MTN Explore 95","NFX","X‑Drive 8.3","X‑Drive 10 Ti","Sense 88","Sense 96"]
+    },
+    {
+      "name": "Rossignol",
+      "makes": ["Soul 7 HD","Rallybird Soul 92","Experience 88","Experience 94","Sender Free 110","Experience 84 AI","Blackops Sender 118","Sky 7 HD","Smash 7","Hero Elite ST","Hero Athlete","RC/RC4","Temptation 88","Smashtic 10","Nova 6"]
+    },
+    {
+      "name": "Head",
+      "makes": ["Kore 93","Kore 99","Kore 100 Ti","Worldcup Rebels i.Race","Worldcup Rebels e‑RS","Supershape i.Magnum","Supershape e‑Speed","V‑Shape V6","V‑Shape V4","Monster 88","Joy SLR","Power Joy","Peak 95","Glory 81","Shape 88"]
+    },
+    {
+      "name": "Völkl",
+      "makes": ["Mantra M6","Blaze 94","Revolt 104","M5 Mantra","M7 Mantra","Kendo 88","Deacon 84","V‑Werks 100","RTM 84","RTM 7.8","RTM 7.6","RTM 8.4","VTA 88","BMT 94","Skiwerk Women’s 82"]
+    },
+    {
+      "name": "Blizzard",
+      "makes": ["Rustler 11","Brahma 88","Bonafide 97","Zero G 95","Black Pearl 88","Anomaly 94","Cochise 106","Sheeva 10","Rustler 9","Black Pearl 82","Black Pearl 78","Bonafide 88","Zero G 105","Brahma 82","Rustler 7"]
+    },
+    {
+      "name": "Nordica",
+      "makes": ["Enforcer 98","Enforcer 104 Free","Santa Ana 97","Navigator 85","Wild Belle 104","Dobermann Spitfire","Promachine 88","Promachine 98","Dobermann SLR","GT 82","Heavenly 88","Big Belle 104","Enforcer 94","Enforcer 110","Ace of Spades"]
+    },
+    {
+      "name": "K2",
+      "makes": ["Mindbender 99C","Mindbender 108Ti","Pinnacle 95","Reckoner 112","Disruption 82Ti","Apache 76","Talkback 88","Wayback 96","Konic 75","Konic 76","Konic 78","Konic 82 Ti","Luv Machine 74 Ti","Luv Machine 80Ti","Anthem 78"]
+    },
+    {
+      "name": "Elan",
+      "makes": ["Ripstick 96","Ripstick 94 W","Ripstick 88","Wingman 82 Ti","Wingman 78 Ti","Amphibio 84 X","Amphibio 88 C","Element 84","Element 82","SLX Fusion","SCX Fusion","Explore 92","Explore 104","Ripstick 106","Ripstick 102"]
+    },
+    {
+      "name": "Dynastar",
+      "makes": ["M‑Free 100","M‑Free 107","Legend 96","Legend 88","Speed Zone 10 Ti","Speed Zone 12 Ti","Intense 10","Intense 12","Track 98","Track 106","Cham 97","Cham 107","Alpha 88","Alpha 98","Team speed series"]
+    },
+    {
+      "name": "Line",
+      "makes": ["Vision 98","Outline 104","Pescado","Pandora 94","Chronic 94","Sick Day 104","Blade 98","Honey Badger","Supernatural 92","Vision 92","Pandora 88","Blade 104","Skis from Shredtopia series","Vision 110","Blade 112"]
+    },
+    {
+      "name": "Black Crows",
+      "makes": ["Camox","Atris","Corvus","Navis Freebird","Anima","Serpo","Octo","Mirus Cor","Captis","Birdie","Atris Birdie","Sato","Freebird Camox","Freebird Corvus","Orbis"]
+    },
+    {
+      "name": "DPS",
+      "makes": ["Pagoda Tour CFL 112","Pagoda Tour CF","Pagoda Tour 106","Lotus 124","Wailer 112 RP","Wailer 106 RP","Wailer 112 RP AS","Alchemist Tour 124","Cassiar 106","Cassiar 112","Lotus 98","Foundation 95","Foundation 99","Foundation 88","Dragonfly 84"]
+    },
+    {
+      "name": "Faction",
+      "makes": ["Prodigy 1.0","Prodigy 2.0","Dancer 1","Dancer 2","Dictator 1","Dictator 2","Agent 2.0","Agent 3.0","CT 3.0","Prime 3.0","Candide 1.0","Candide 2.0","Prodigy 4.0","Prodigy 5.0","Night Bird"]
+    },
+    {
+      "name": "4FRNT",
+      "makes": ["MSP 91","MSP 99","Raven","Hoji","Renegade","Switch","Devastator","MSP CC","Hoji Collection CC","Inthayne"]
+    },
+    {
+      "name": "ON3P",
+      "makes": ["Billy Goat","Kartel","Jeff","Wiley","Boris","Klon","Alchemist","Cheyenne","Kendo","Fitzgerald"]
+    },
+    {
+      "name": "Icelantic",
+      "makes": ["Nomad 94","Nomad 100","Nomad 106","Nomad 112","Maiden 94","Maiden 102","Maiden 108","Pioneer X","Pioneer 86","Pioneer 96","Pioneer 109","Riveter 85","Riveter 95","Riveter 104","Shaman 99","Shaman 110","Natural 101","Nia Pro 105","Saba Pro 117","Scout 75","Scout 85","Scout 88","Mystic 97"]
+    },
+    {
+      "name": "Moment",
+      "makes": ["Deathwish 96","Deathwish 104","Deathwish 112","Wildcat 101","Wildcat 108","Wildcat 118","Countach 98","Countach 104","Countach 110","Sierra 96","Sierra 104","Bella 101","Bella 108","Siren 98","Siren 104","Deathwish Tour 104","Deathwish Tour 112","Wildcat Tour 108","Wildcat Tour 118","Frankenski","Carson","Meridian","Chipotle Banana","Ghost Train","Frankenski"]
+    },
+    {
+      "name": "Kastle",
+      "makes": ["XT84","MX74","Legend 1956","Paragon 101","Terra Series (various models)","DX Line skis","KX Line skis","TX Series skis","ZX Series skis","M Series skis","RX Series skis"]
+    }
+  ]
+}
