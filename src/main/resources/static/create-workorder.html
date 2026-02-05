@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Create Work Order - Ski Shop</title>
+  <link rel="stylesheet" href="shared.css">
+</head>
+<body>
+
+<div class="container">
+  <h1>Create Work Order</h1>
+  <p>Fill out the form below to create a new work order for ski services.</p>
+
+  <!-- ===============================
+       Work Order Creation Form
+       =============================== -->
+  <form id="createForm">
+    <input type="text" id="firstName" placeholder="First Name" required />
+    <input type="text" id="lastName" placeholder="Last Name" required />
+    <input type="text" id="phone" placeholder="Phone (10 digits)" required />
+    <input type="email" id="email" placeholder="Email" required />
+    <div></div>
+
+    <div class="full-width">
+      <h3>Skis</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Make</th>
+            <th>Model</th>
+            <th>Service</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="skiItemsTable"></tbody>
+      </table>
+      <button type="button" onclick="addSkiRow()">+ Add Ski</button>
+    </div>
+
+    <button type="submit" class="full-width btn-primary">Create Work Order</button>
+  </form>
+
+  <div id="formMessage" class="message"></div>
+
+  <!-- ===============================
+       Success/Navigation Section
+       =============================== -->
+  <div id="successSection" style="display: none; margin-top: 20px; padding: 15px; background: #d4edda; border: 1px solid #c3e6cb; border-radius: 6px;">
+    <h3 style="color: #155724; margin: 0 0 10px 0;">Work Order Created Successfully!</h3>
+    <p style="color: #155724; margin: 0;">
+      Your work order has been submitted. You will receive updates via email and phone when your skis are ready for pickup.
+    </p>
+    <div style="margin-top: 10px;">
+      <button type="button" class="btn-primary" onclick="createAnother()">Create Another Work Order</button>
+    </div>
+  </div>
+
+  <!-- ===============================
+       Information Section
+       =============================== -->
+  <div style="margin-top: 30px; padding: 20px; background: #f8f9fa; border-radius: 6px; border: 1px solid #dee2e6;">
+    <h3>Service Information</h3>
+    <p><strong>Tune:</strong> Edge sharpening, base repair, and wax application</p>
+    <p><strong>Mount:</strong> Binding installation and adjustment</p>
+    <p><strong>Repair:</strong> Base repair, edge repair, or other maintenance</p>
+    <p style="margin-top: 15px; font-size: 14px; color: #666;">
+      <em>For staff access to manage work orders, please visit the <a href="dashboard.html">Staff Dashboard</a>.</em>
+    </p>
+  </div>
+</div>
+
+<!-- Include shared JavaScript utilities -->
+<script src="shared.js"></script>
+
+<script>
+  // Page-specific variables
+  const skiItemsTable = document.getElementById("skiItemsTable");
+  const successSection = document.getElementById("successSection");
+
+  /* ===============================
+     Ski Row Management
+     =============================== */
+  function addSkiRow() {
+    const row = document.createElement("tr");
+
+    row.innerHTML = `
+      <td>
+        <!-- Ski Make dropdown populated from /brands (value = brand id, text = brand name) -->
+        <select class="ski-make" required>
+          <option value="">Select Make</option>
+        </select>
+      </td>
+      <td>
+        <!-- Ski Model dropdown populated from /brands/{id}/models (value/text = model name) -->
+        <select class="ski-model" required>
+          <option value="">Select Model</option>
+        </select>
+      </td>
+      <td>
+        <select required>
+          <option value="">Select Service</option>
+          <option value="TUNE">Tune</option>
+          <option value="MOUNT">Mount</option>
+          <option value="REPAIR">Repair</option>
+        </select>
+      </td>
+      <td>
+        <button type="button" class="btn-danger" onclick="this.closest('tr').remove(); checkSkiCount();">✕</button>
+      </td>
+    `;
+
+    skiItemsTable.appendChild(row);
+
+    // Populate brand dropdown, then wire dependent models dropdown
+    const makeSelect = row.querySelector(".ski-make");
+    const modelSelect = row.querySelector(".ski-model");
+
+    populateBrandSelect(makeSelect).then(() => {
+      // When make changes, fetch models for that brand and populate
+      makeSelect.addEventListener("change", async () => {
+        const brandId = makeSelect.value;
+        await populateModelSelect(modelSelect, brandId);
+      });
+    });
+  }
+
+  // Check if we have at least one ski row
+  function checkSkiCount() {
+    if (skiItemsTable.children.length === 0) {
+      addSkiRow(); // Always maintain at least one row
+    }
+  }
+
+  /* ===============================
+     Form Submission
+     =============================== */
+  document.getElementById("createForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    // Clear any previous messages
+    ValidationUtils.clearMessage('formMessage');
+
+    // Get form data
+    const firstName = document.getElementById("firstName").value.trim();
+    const lastName = document.getElementById("lastName").value.trim();
+    const phone = document.getElementById("phone").value.trim();
+    const email = document.getElementById("email").value.trim();
+
+    // Validate required fields
+    if (!firstName || !lastName || !phone || !email) {
+      ValidationUtils.showMessage('formMessage', 'Please fill in all required fields.', true);
+      return;
+    }
+
+    // Validate email format
+    if (!ValidationUtils.isValidEmail(email)) {
+      ValidationUtils.showMessage('formMessage', 'Please enter a valid email address.', true);
+      return;
+    }
+
+    // Validate phone format
+    if (!ValidationUtils.isValidPhone(phone)) {
+      ValidationUtils.showMessage('formMessage', 'Please enter a valid 10-digit phone number.', true);
+      return;
+    }
+
+    // Get ski data
+    const skiRows = [...skiItemsTable.children];
+
+    if (skiRows.length === 0) {
+      ValidationUtils.showMessage('formMessage', 'At least one ski is required.', true);
+      return;
+    }
+
+    // Validate ski data and build payload
+    const skis = [];
+    let hasValidationError = false;
+
+    for (let row of skiRows) {
+      const makeSelect = row.querySelector(".ski-make");
+      const modelSelect = row.querySelector(".ski-model");
+      const serviceSelect = row.querySelector("td:nth-child(3) select");
+
+      const skiMake = makeSelect.options[makeSelect.selectedIndex]?.text || "";
+      const skiModel = (modelSelect.value || "").trim();
+      const serviceType = serviceSelect.value;
+
+      if (!skiMake || !skiModel || !serviceType) {
+        ValidationUtils.showMessage('formMessage', 'Please complete all ski information.', true);
+        hasValidationError = true;
+        break;
+      }
+
+      skis.push({
+        skiMake: skiMake,
+        skiModel: skiModel,
+        serviceType: serviceType
+      });
+    }
+
+    if (hasValidationError) {
+      return;
+    }
+
+    // Build and submit payload
+    const payload = {
+      customerFirstName: firstName,
+      customerLastName: lastName,
+      phone: phone,
+      email: email,
+      skis: skis
+    };
+
+    try {
+      const response = await fetch(API_CONFIG.WORKORDERS, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to create work order");
+      }
+
+      // Success - show success section and hide form
+      document.getElementById("createForm").style.display = "none";
+      successSection.style.display = "block";
+
+    } catch (error) {
+      console.error("Error creating work order:", error);
+      ValidationUtils.showMessage('formMessage', 'Error creating work order. Please try again.', true);
+    }
+  });
+
+  /* ===============================
+     Create Another Work Order
+     =============================== */
+  function createAnother() {
+    // Reset form
+    document.getElementById("createForm").reset();
+    
+    // Clear ski items and add fresh row
+    skiItemsTable.innerHTML = "";
+    addSkiRow();
+    
+    // Show form and hide success section
+    document.getElementById("createForm").style.display = "block";
+    successSection.style.display = "none";
+    
+    // Clear messages
+    ValidationUtils.clearMessage('formMessage');
+  }
+
+  /* ===============================
+     Initialize Page
+     =============================== */
+  // Initialize with first ski row
+  addSkiRow();
+
+</script>
+
+</body>
+</html>

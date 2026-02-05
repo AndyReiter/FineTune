@@ -49,8 +49,12 @@ public class WorkOrder {
 
     /**
      * Updates the work order status based on all ski items.
-     * Status is DONE only when all ski items have status "DONE".
-     * This ensures the order is only marked complete when all work is finished.
+     * Logic:
+     * - Status is "COMPLETED" when all ski items are "PICKED_UP"
+     * - Status is "READY_FOR_PICKUP" when all ski items are "DONE" 
+     * - Status is "IN_PROGRESS" when any ski item is "IN_PROGRESS" or "DONE"
+     * - Status remains "RECEIVED" when all items are "PENDING"
+     * This ensures proper workflow progression and immediate status updates.
      */
     public void updateStatusBasedOnItems() {
         if (this.skiItems.isEmpty()) {
@@ -58,12 +62,35 @@ public class WorkOrder {
             return;
         }
 
+        // Check if all items are PICKED_UP -> COMPLETED
+        boolean allPickedUp = this.skiItems.stream()
+            .allMatch(item -> "PICKED_UP".equals(item.getStatus()));
+        
+        if (allPickedUp) {
+            this.status = "COMPLETED";
+            return;
+        }
+
+        // Check if all items are DONE -> READY_FOR_PICKUP
         boolean allDone = this.skiItems.stream()
             .allMatch(item -> "DONE".equals(item.getStatus()));
-
+        
         if (allDone) {
-            this.status = "DONE";
+            this.status = "READY_FOR_PICKUP";
+            return;
         }
+
+        // Check if any item is IN_PROGRESS or DONE -> IN_PROGRESS
+        boolean anyInProgressOrDone = this.skiItems.stream()
+            .anyMatch(item -> "IN_PROGRESS".equals(item.getStatus()) || "DONE".equals(item.getStatus()));
+        
+        if (anyInProgressOrDone) {
+            this.status = "IN_PROGRESS";
+            return;
+        }
+
+        // All items are PENDING -> RECEIVED
+        this.status = "RECEIVED";
     }
 
     public Long getId() {

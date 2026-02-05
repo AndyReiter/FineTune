@@ -33,6 +33,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -194,5 +195,43 @@ public class WorkOrderService {
      */
     public WorkOrder save(WorkOrder order) {
         return workOrderRepository.save(order);
+    }
+
+    // === STAFF DASHBOARD METHODS ===
+
+    /**
+     * Get all work orders for staff dashboard, ordered by creation date (oldest first).
+     * 
+     * @return list of all work orders
+     */
+    public List<WorkOrder> getAllWorkOrdersForStaff() {
+        return workOrderRepository.findAllOrderByCreatedAtAsc();
+    }
+
+    /**
+     * Get work orders filtered by status for staff dashboard.
+     * 
+     * @param status the status to filter by
+     * @return list of work orders with the specified status
+     */
+    public List<WorkOrder> getWorkOrdersByStatus(String status) {
+        return workOrderRepository.findByStatusOrderByCreatedAtAsc(status);
+    }
+
+    /**
+     * Update work order status.
+     * 
+     * @param workOrderId the work order ID
+     * @param newStatus the new status
+     * @return the updated work order
+     * @throws RuntimeException if work order not found
+     */
+    @Transactional
+    public WorkOrder updateWorkOrderStatus(Long workOrderId, String newStatus) {
+        WorkOrder workOrder = workOrderRepository.findById(workOrderId)
+            .orElseThrow(() -> new RuntimeException("WorkOrder not found with id: " + workOrderId));
+        
+        workOrder.setStatus(newStatus);
+        return workOrderRepository.save(workOrder);
     }
 }

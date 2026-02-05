@@ -35,4 +35,33 @@ public interface WorkOrderRepository extends JpaRepository<WorkOrder, Long> {
      */
     @Query("SELECT w FROM WorkOrder w WHERE w.customer = :customer AND w.status != 'PICKED_UP' ORDER BY w.createdAt DESC LIMIT 1")
     Optional<WorkOrder> findMostRecentOpenWorkOrder(@Param("customer") Customer customer);
+
+    /**
+     * Find all work orders by status, ordered by creation date (oldest first).
+     * Used for staff dashboard filtering.
+     *
+     * @param status the status to filter by
+     * @return list of work orders with the specified status
+     */
+    @Query("SELECT w FROM WorkOrder w WHERE w.status = :status ORDER BY w.createdAt ASC")
+    List<WorkOrder> findByStatusOrderByCreatedAtAsc(@Param("status") String status);
+
+    /**
+     * Find all work orders with any of the specified statuses, ordered by creation date (oldest first).
+     * Used for staff dashboard filtering when multiple statuses should be shown together.
+     *
+     * @param statuses the list of statuses to filter by
+     * @return list of work orders with any of the specified statuses
+     */
+    @Query("SELECT w FROM WorkOrder w WHERE w.status IN :statuses ORDER BY w.createdAt ASC")
+    List<WorkOrder> findByStatusInOrderByCreatedAtAsc(@Param("statuses") List<String> statuses);
+
+    /**
+     * Find all work orders ordered by creation date (oldest first).
+     * Used for staff dashboard.
+     *
+     * @return list of all work orders ordered by creation date
+     */
+    @Query("SELECT w FROM WorkOrder w ORDER BY w.createdAt ASC")
+    List<WorkOrder> findAllOrderByCreatedAtAsc();
 }

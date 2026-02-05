@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Staff Dashboard - Ski Shop</title>
+  <link rel="stylesheet" href="shared.css">
+</head>
+<body>
+
+<div class="container">
+  <!-- ===============================
+       Authentication Section
+       =============================== -->
+  <div id="loginSection" class="login-section">
+    <h2>Staff Login</h2>
+    <div class="login-form">
+      <input type="email" id="loginEmail" placeholder="Email" required />
+      <input type="password" id="loginPassword" placeholder="Password" required />
+      <button type="button" class="btn-primary" onclick="handleLogin()">Login</button>
+    </div>
+    <div id="loginMessage" class="message"></div>
+  </div>
+
+  <div id="authenticatedSection" style="display: none;">
+    <div class="user-info">
+      <h1>Staff Dashboard</h1>
+      <div>
+        <span>Welcome, <span id="userEmail"></span></span>
+        <button type="button" class="logout-btn" onclick="handleLogout()">Logout</button>
+      </div>
+    </div>
+
+    <!-- ===============================
+         Work Orders Management
+         =============================== -->
+    <div style="margin: 20px 0;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h2 style="margin: 0;">Work Orders</h2>
+        <button type="button" class="btn-primary" onclick="openCreateModal()" style="font-size: 16px; padding: 12px 24px;">
+          + Create New Work Order
+        </button>
+      </div>
+      
+      <!-- Tab Navigation -->
+      <div class="tab-container" style="margin-bottom: 20px;">
+        <div class="tab-nav">
+          <button class="tab-button active" data-status="RECEIVED" onclick="switchTab('RECEIVED', this)">Received</button>
+          <button class="tab-button" data-status="IN_PROGRESS" onclick="switchTab('IN_PROGRESS', this)">In Progress</button>
+          <button class="tab-button" data-status="READY_FOR_PICKUP" onclick="switchTab('READY_FOR_PICKUP', this)">Ready for Pickup</button>
+          <button class="tab-button" data-status="COMPLETED" onclick="switchTab('COMPLETED', this)">Completed</button>
+        </div>
+        <button type="button" class="btn-secondary" onclick="refreshCurrentTab()" style="margin-left: 20px;">
+          Refresh
+        </button>
+      </div>
+
+      <!-- Work Orders Table -->
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Customer</th>
+            <th>Phone</th>
+            <th>Email</th>
+            <th>Skis</th>
+            <th>Work Order Status</th>
+            <th>Created At</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="workOrdersTable"></tbody>
+      </table>
+
+      <div id="listMessage" class="message"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===============================
+     Edit Work Order Modal
+     =============================== -->
+<div id="editModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3 id="modalTitle">Edit Work Order Status</h3>
+    </div>
+    <div id="modalBody" class="modal-body"></div>
+    <div class="modal-footer">
+      <button type="button" class="btn-secondary" onclick="closeEditModal()">Cancel</button>
+      <button type="button" id="pickupBtn" class="btn-success" onclick="markAsPickup()" style="display: none;">
+        Ready for Pickup
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ===============================
+     Create Work Order Modal
+     =============================== -->
+<div id="createModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3>Create New Work Order</h3>
+      <button type="button" class="modal-close" onclick="closeCreateModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <form id="createWorkOrderForm">
+        <input type="text" id="createFirstName" placeholder="First Name" required />
+        <input type="text" id="createLastName" placeholder="Last Name" required />
+        <input type="text" id="createPhone" placeholder="Phone (10 digits)" required />
+        <input type="email" id="createEmail" placeholder="Email" required />
+        <div></div>
+
+        <div class="full-width">
+          <h4>Skis</h4>
+          <table>
+            <thead>
+              <tr>
+                <th>Make</th>
+                <th>Model</th>
+                <th>Service</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="createSkiItemsTable"></tbody>
+          </table>
+          <button type="button" onclick="addCreateSkiRow()">+ Add Ski</button>
+        </div>
+
+        <div id="createFormMessage" class="message"></div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn-secondary" onclick="closeCreateModal()">Cancel</button>
+      <button type="submit" form="createWorkOrderForm" class="btn-primary">Create Work Order</button>
+    </div>
+  </div>
+</div>
+
+<!-- Include shared JavaScript utilities -->
+<script src="shared.js"></script>
+
+<script>
+  // Page-specific variables
+  const tableBody = document.getElementById("workOrdersTable");
+  const editModal = document.getElementById("editModal");
+  const modalBody = document.getElementById("modalBody");
+  const pickupBtn = document.getElementById("pickupBtn");
+  const createModal = document.getElementById("createModal");
+  const createSkiItemsTable = document.getElementById("createSkiItemsTable");
+
+  let currentEditingOrderId = null;
+  let currentActiveTab = 'RECEIVED'; // Track the currently active tab
+
+  /* ===============================
+     Authentication Management
+     =============================== */
+  function handleLogin() {
+    const email = document.getElementById("loginEmail").value.trim();
+    const password = document.getElementById("loginPassword").value.trim();
+
+    ValidationUtils.clearMessage('loginMessage');
+
+    if (!email || !password) {
+      ValidationUtils.showMessage('loginMessage', 'Please enter both email and password.', true);
+      return;
+    }
+
+    if (!ValidationUtils.isValidEmail(email)) {
+      ValidationUtils.showMessage('loginMessage', 'Please enter a valid email address.', true);
+      return;
+    }
+
+    // Attempt login
+    AuthUtils.login(email, password)
+      .then(response => {
+        document.getElementById("userEmail").textContent = email;
+        showAuthenticatedView();
+        fetchWorkOrdersByStatus(currentActiveTab);
+      })
+      .catch(error => {
+        ValidationUtils.showMessage('loginMessage', 'Invalid credentials. Please try again.', true);
+      });
+  }
+
+  function handleLogout() {
+    AuthUtils.logout();
+  }
+
+  function showAuthenticatedView() {
+    document.getElementById("loginSection").style.display = "none";
+    document.getElementById("authenticatedSection").style.display = "block";
+  }
+
+  function showLoginView() {
+    document.getElementById("loginSection").style.display = "block";
+    document.getElementById("authenticatedSection").style.display = "none";
+    ValidationUtils.clearMessage('loginMessage');
+  }
+
+  /* ===============================
+     Modal Functions
+     =============================== */
+  function openEditModal(orderId) {
+    currentEditingOrderId = orderId;
+    editModal.style.display = "block";
+    loadOrderForEditing(orderId);
+  }
+
+  function closeEditModal() {
+    editModal.style.display = "none";
+    currentEditingOrderId = null;
+    modalBody.innerHTML = "";
+  }
+
+  window.onclick = function(event) {
+    if (event.target === editModal) {
+      closeEditModal();
+    }
+  };
+
+  /* ===============================
+     Load Order for Editing
+     =============================== */
+  async function loadOrderForEditing(orderId) {
+    try {
+      const response = await APIUtils.authenticatedFetch(`${API_CONFIG.WORKORDERS}/${orderId}`);
+      const order = await response.json();
+
+      modalBody.innerHTML = `
+        <div style="margin-bottom: 15px;">
+          <strong>Customer:</strong> ${order.customerName}<br>
+          <strong>Work Order Status:</strong> 
+          <span class="status-badge status-${order.status}">${order.status}</span>
+          ${order.status === "PICKED_UP" ? '<div style="color: #28a745; margin-top: 10px; font-weight: bold;">✓ Order has been picked up</div>' : ''}
+        </div>
+
+        <h4>Ski Items</h4>
+        <div id="skiStatusItems"></div>
+      `;
+
+      const skiStatusItems = document.getElementById("skiStatusItems");
+
+      if (!order.skiItems || order.skiItems.length === 0) {
+        skiStatusItems.innerHTML = '<div class="empty-message">No skis in this work order</div>';
+        pickupBtn.style.display = "none";
+      } else {
+        skiStatusItems.innerHTML = order.skiItems.map(ski => `
+          <div class="ski-status-row">
+            <div class="ski-info">
+              <strong>${ski.skiMake} ${ski.skiModel}</strong> (${ski.serviceType})<br>
+              <span style="font-size: 12px; color: #666;">Current status: 
+                <span class="status-badge status-${ski.status}">${ski.status}</span>
+              </span>
+            </div>
+            <select class="ski-status-select" data-ski-id="${ski.id}" onchange="updateSkiStatus(${orderId}, ${ski.id}, this.value)" ${ski.status === "PICKED_UP" ? "disabled" : ""}>
+              <option value="PENDING" ${ski.status === "PENDING" ? "selected" : ""}>PENDING</option>
+              <option value="IN_PROGRESS" ${ski.status === "IN_PROGRESS" ? "selected" : ""}>IN_PROGRESS</option>
+              <option value="DONE" ${ski.status === "DONE" ? "selected" : ""}>DONE</option>
+              <option value="PICKED_UP" ${ski.status === "PICKED_UP" ? "selected" : ""}>PICKED_UP</option>
+            </select>
+          </div>
+        `).join("");
+
+        // Check if all items are DONE (not picked up yet)
+        const allDone = order.skiItems.every(ski => ski.status === "DONE");
+        const allPickedUp = order.skiItems.every(ski => ski.status === "PICKED_UP");
+        
+        // Show pickup button only if all items are DONE and order not yet picked up
+        pickupBtn.style.display = (allDone && !allPickedUp) ? "block" : "none";
+      }
+    } catch (error) {
+      console.error(error);
+      if (error.message === "Authentication required") {
+        showLoginView();
+      } else {
+        modalBody.innerHTML = '<div class="error">Failed to load work order.</div>';
+        pickupBtn.style.display = "none";
+      }
+    }
+  }
+
+  /* ===============================
+     Update Ski Status
+     =============================== */
+  async function updateSkiStatus(orderId, skiId, newStatus) {
+    try {
+      const response = await APIUtils.authenticatedFetch(`${API_CONFIG.WORKORDERS}/${orderId}/skis/${skiId}/status`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: newStatus })
+      });
+
+      if (!response.ok) throw new Error("Failed to update status");
+
+      // Reload the modal to reflect changes
+      loadOrderForEditing(orderId);
+      // Reload the main list
+      refreshCurrentTab();
+    } catch (error) {
+      console.error(error);
+      if (error.message === "Authentication required") {
+        showLoginView();
+      } else {
+        alert("Error updating ski status: " + error.message);
+      }
+    }
+  }
+
+  /* ===============================
+     Mark as Pickup (Ready for Pickup)
+     =============================== */
+  async function markAsPickup() {
+    if (!currentEditingOrderId) return;
+
+    try {
+      const response = await APIUtils.authenticatedFetch(`${API_CONFIG.WORKORDERS}/${currentEditingOrderId}/pickup`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" }
+      });
+
+      if (!response.ok) throw new Error("Failed to mark as pickup");
+
+      alert("Work order marked as Ready for Pickup!");
+      closeEditModal();
+      refreshCurrentTab();
+    } catch (error) {
+      console.error(error);
+      if (error.message === "Authentication required") {
+        showLoginView();
+      } else {
+        alert("Error marking as pickup: " + error.message);
+      }
+    }
+  }
+
+  /* ===============================
+     Tab Management Functions
+     =============================== */
+  function switchTab(status, buttonElement) {
+    // Update active tab
+    currentActiveTab = status;
+    
+    // Update button states
+    document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+    buttonElement.classList.add('active');
+    
+    // For COMPLETED tab, we need to fetch both DONE and PICKED_UP work orders
+    if (status === 'COMPLETED') {
+      fetchMultipleStatuses(['DONE', 'PICKED_UP']);
+    } else {
+      // Fetch work orders for the selected status
+      fetchWorkOrdersByStatus(status);
+    }
+  }
+
+  function refreshCurrentTab() {
+    if (currentActiveTab === 'COMPLETED') {
+      fetchMultipleStatuses(['DONE', 'PICKED_UP']);
+    } else {
+      fetchWorkOrdersByStatus(currentActiveTab);
+    }
+  }
+
+  /* ===============================
+     Fetch Multiple Status Work Orders (for Completed Tab)
+     =============================== */
+  async function fetchMultipleStatuses(statuses) {
+    if (!AuthUtils.isAuthenticated()) {
+      showLoginView();
+      return;
+    }
+
+    try {
+      // Fetch work orders for each status and combine results
+      const promises = statuses.map(status => 
+        APIUtils.authenticatedFetch(`${API_CONFIG.WORKORDERS}?status=${encodeURIComponent(status)}`)
+          .then(response => response.json())
+      );
+      
+      const results = await Promise.all(promises);
+      const allWorkOrders = results.flat(); // Combine all arrays into one
+      
+      // Debug logging
+      console.log('Fetching work orders with statuses:', statuses);
+      console.log('Combined results:', allWorkOrders);
+
+      tableBody.innerHTML = "";
+      ValidationUtils.clearMessage('listMessage');
+
+      if (allWorkOrders.length === 0) {
+        tableBody.innerHTML = '<tr><td colspan="8" class="empty-message">No work orders found</td></tr>';
+        return;
+      }
+
+      // Sort by creation date (oldest first)
+      allWorkOrders.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+
+      allWorkOrders.forEach(order => {
+        const row = document.createElement("tr");
+
+        // Count skis by status
+        const skiItems = order.skiItems || [];
+        const doneCount = skiItems.filter(ski => ski.status === "DONE").length;
+        const totalCount = skiItems.length;
+
+        const skiSummary = skiItems.length > 0 
+          ? `${skiItems.map(ski => `${ski.skiMake} ${ski.skiModel} (${ski.serviceType}) ${getStatusBadge(ski.status)}`).join("<br>")}`
+          : "No skis";
+
+        row.innerHTML = `
+          <td>${order.id}</td>
+          <td>${order.customerName || ""}</td>
+          <td>${order.customerPhone || ""}</td>
+          <td>${order.customerEmail || ""}</td>
+          <td>${skiSummary}</td>
+          <td>${getStatusBadge(order.status)}<br><small>${doneCount}/${totalCount} items done</small></td>
+          <td>${order.createdAt || ""}</td>
+          <td class="action-buttons">
+            <button type="button" class="btn-primary" onclick="openEditModal(${order.id})">Manage Status</button>
+          </td>
+        `;
+
+        tableBody.appendChild(row);
+      });
+    } catch (error) {
+      console.error("Error fetching work orders:", error);
+      if (error.message === "Authentication required") {
+        showLoginView();
+      } else {
+        ValidationUtils.showMessage('listMessage', 'Failed to load work orders.', true);
+      }
+    }
+  }
+
+  /* ===============================
+     Create Work Order Modal Functions
+     =============================== */
+  function openCreateModal() {
+    createModal.style.display = "block";
+    resetCreateForm();
+    addCreateSkiRow(); // Ensure at least one ski row
+  }
+
+  function closeCreateModal() {
+    createModal.style.display = "none";
+    resetCreateForm();
+  }
+
+  function resetCreateForm() {
+    document.getElementById("createWorkOrderForm").reset();
+    createSkiItemsTable.innerHTML = "";
+    ValidationUtils.clearMessage('createFormMessage');
+  }
+
+  // Close modal when clicking outside or on close button
+  window.onclick = function(event) {
+    if (event.target === editModal) {
+      closeEditModal();
+    }
+    if (event.target === createModal) {
+      closeCreateModal();
+    }
+  };
+
+  // Close modal on Escape key
+  document.addEventListener('keydown', function(event) {
+    if (event.key === 'Escape') {
+      if (editModal.style.display === 'block') {
+        closeEditModal();
+      }
+      if (createModal.style.display === 'block') {
+        closeCreateModal();
+      }
+    }
+  });
+
+  /* ===============================
+     Create Work Order Ski Row Management
+     =============================== */
+  function addCreateSkiRow() {
+    const row = document.createElement("tr");
+
+    row.innerHTML = `
+      <td>
+        <select class="ski-make" required>
+          <option value="">Select Make</option>
+        </select>
+      </td>
+      <td>
+        <select class="ski-model" required>
+          <option value="">Select Model</option>
+        </select>
+      </td>
+      <td>
+        <select required>
+          <option value="">Select Service</option>
+          <option value="TUNE">Tune</option>
+          <option value="MOUNT">Mount</option>
+          <option value="REPAIR">Repair</option>
+        </select>
+      </td>
+      <td>
+        <button type="button" class="btn-danger" onclick="this.closest('tr').remove(); checkCreateSkiCount();">✕</button>
+      </td>
+    `;
+
+    createSkiItemsTable.appendChild(row);
+
+    // Populate brand dropdown, then wire dependent models dropdown
+    const makeSelect = row.querySelector(".ski-make");
+    const modelSelect = row.querySelector(".ski-model");
+
+    populateBrandSelect(makeSelect).then(() => {
+      makeSelect.addEventListener("change", async () => {
+        const brandId = makeSelect.value;
+        await populateModelSelect(modelSelect, brandId);
+      });
+    });
+  }
+
+  function checkCreateSkiCount() {
+    if (createSkiItemsTable.children.length === 0) {
+      addCreateSkiRow(); // Always maintain at least one row
+    }
+  }
+
+  /* ===============================
+     Create Work Order Form Submission
+     =============================== */
+  document.getElementById("createWorkOrderForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    ValidationUtils.clearMessage('createFormMessage');
+
+    // Get form data
+    const firstName = document.getElementById("createFirstName").value.trim();
+    const lastName = document.getElementById("createLastName").value.trim();
+    const phone = document.getElementById("createPhone").value.trim();
+    const email = document.getElementById("createEmail").value.trim();
+
+    // Validate required fields
+    if (!firstName || !lastName || !phone || !email) {
+      ValidationUtils.showMessage('createFormMessage', 'Please fill in all required fields.', true);
+      return;
+    }
+
+    // Validate email format
+    if (!ValidationUtils.isValidEmail(email)) {
+      ValidationUtils.showMessage('createFormMessage', 'Please enter a valid email address.', true);
+      return;
+    }
+
+    // Validate phone format
+    if (!ValidationUtils.isValidPhone(phone)) {
+      ValidationUtils.showMessage('createFormMessage', 'Please enter a valid 10-digit phone number.', true);
+      return;
+    }
+
+    // Get ski data
+    const skiRows = [...createSkiItemsTable.children];
+
+    if (skiRows.length === 0) {
+      ValidationUtils.showMessage('createFormMessage', 'At least one ski is required.', true);
+      return;
+    }
+
+    // Validate ski data and build payload
+    const skis = [];
+    let hasValidationError = false;
+
+    for (let row of skiRows) {
+      const makeSelect = row.querySelector(".ski-make");
+      const modelSelect = row.querySelector(".ski-model");
+      const serviceSelect = row.querySelector("td:nth-child(3) select");
+
+      const skiMake = makeSelect.options[makeSelect.selectedIndex]?.text || "";
+      const skiModel = (modelSelect.value || "").trim();
+      const serviceType = serviceSelect.value;
+
+      if (!skiMake || !skiModel || !serviceType) {
+        ValidationUtils.showMessage('createFormMessage', 'Please complete all ski information.', true);
+        hasValidationError = true;
+        break;
+      }
+
+      skis.push({
+        skiMake: skiMake,
+        skiModel: skiModel,
+        serviceType: serviceType
+      });
+    }
+
+    if (hasValidationError) {
+      return;
+    }
+
+    // Build and submit payload
+    const payload = {
+      customerFirstName: firstName,
+      customerLastName: lastName,
+      phone: phone,
+      email: email,
+      skis: skis
+    };
+
+    try {
+      const response = await APIUtils.authenticatedFetch(API_CONFIG.WORKORDERS, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to create work order");
+      }
+
+      // Success - close modal and refresh current tab
+      closeCreateModal();
+      refreshCurrentTab();
+      ValidationUtils.showMessage('listMessage', 'Work order created successfully!', false);
+
+    } catch (error) {
+      console.error("Error creating work order:", error);
+      if (error.message === "Authentication required") {
+        showLoginView();
+      } else {
+        ValidationUtils.showMessage('createFormMessage', 'Error creating work order. Please try again.', true);
+      }
+    }
+  });
+
+  /* ===============================
+     Fetch Work Orders (Updated for Tabs)
+     =============================== */
+  async function fetchWorkOrdersByStatus(status) {
+    if (!AuthUtils.isAuthenticated()) {
+      showLoginView();
+      return;
+    }
+
+    try {
+      let url = API_CONFIG.WORKORDERS;
+      
+      // Add status filter parameter for the specific tab
+      if (status) {
+        url += `?status=${encodeURIComponent(status)}`;
+      }
+      
+      // Debug: Log the URL being called
+      console.log('Fetching work orders with URL:', url);
+      console.log('Status parameter:', status);
+
+      const response = await APIUtils.authenticatedFetch(url);
+      const data = await response.json();
+
+      tableBody.innerHTML = "";
+      ValidationUtils.clearMessage('listMessage');
+
+      if (data.length === 0) {
+        tableBody.innerHTML = '<tr><td colspan="8" class="empty-message">No work orders found</td></tr>';
+        return;
+      }
+
+      data.forEach(order => {
+        const row = document.createElement("tr");
+
+        // Count skis by status
+        const skiItems = order.skiItems || [];
+        const doneCount = skiItems.filter(ski => ski.status === "DONE").length;
+        const totalCount = skiItems.length;
+
+        const skiSummary = skiItems.length > 0 
+          ? `${skiItems.map(ski => `${ski.skiMake} ${ski.skiModel} (${ski.serviceType}) ${getStatusBadge(ski.status)}`).join("<br>")}`
+          : "No skis";
+
+        row.innerHTML = `
+          <td>${order.id}</td>
+          <td>${order.customerName || ""}</td>
+          <td>${order.customerPhone || ""}</td>
+          <td>${order.customerEmail || ""}</td>
+          <td>${skiSummary}</td>
+          <td>${getStatusBadge(order.status)}<br><small>${doneCount}/${totalCount} items done</small></td>
+          <td>${order.createdAt || ""}</td>
+          <td class="action-buttons">
+            <button type="button" class="btn-primary" onclick="openEditModal(${order.id})">Manage Status</button>
+          </td>
+        `;
+
+        tableBody.appendChild(row);
+      });
+    } catch (error) {
+      console.error("Error fetching work orders:", error);
+      if (error.message === "Authentication required") {
+        showLoginView();
+      } else {
+        ValidationUtils.showMessage('listMessage', 'Failed to load work orders.', true);
+      }
+    }
+  }
+
+  // Legacy function name for compatibility - just calls the new function
+  function fetchWorkOrders() {
+    fetchWorkOrdersByStatus(currentActiveTab);
+  }
+
+  /* ===============================
+     Initialize Page
+     =============================== */
+  // Check if user is already authenticated on page load
+  window.addEventListener('DOMContentLoaded', function() {
+    if (AuthUtils.isAuthenticated()) {
+      // Try to show authenticated view and fetch data for default tab
+      showAuthenticatedView();
+      fetchWorkOrdersByStatus(currentActiveTab); // Load default "RECEIVED" tab
+    } else {
+      showLoginView();
+    }
+
+    // Handle Enter key in login fields
+    document.getElementById("loginEmail").addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') {
+        handleLogin();
+      }
+    });
+
+    document.getElementById("loginPassword").addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') {
+        handleLogin();
+      }
+    });
+  });
+
+</script>
+
+</body>
+</html>

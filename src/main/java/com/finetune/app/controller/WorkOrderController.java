@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -53,12 +54,33 @@ public class WorkOrderController {
     private WorkOrderService workOrderService;
 
     /**
-     * Get all work orders.
+     * Get all work orders, optionally filtered by status.
      * Returns WorkOrderResponse DTOs to avoid circular references.
+     * 
+     * @param status optional status filter (e.g., "RECEIVED", "IN_PROGRESS", "READY_FOR_PICKUP", "COMPLETED")
+     *               Note: "COMPLETED" will return both "COMPLETED" and "PICKED_UP" work orders
+     * @return list of work orders, filtered by status if provided
      */
     @GetMapping
-    public List<WorkOrderResponse> getAllWorkOrders() {
-        return workOrderRepository.findAll().stream()
+    public List<WorkOrderResponse> getAllWorkOrders(@RequestParam(value = "status", required = false) String status) {
+        List<WorkOrder> workOrders;
+        
+        if (status != null && !status.trim().isEmpty()) {
+            String statusFilter = status.trim();
+            
+            if ("COMPLETED".equals(statusFilter)) {
+                // For "COMPLETED" tab, show both COMPLETED and PICKED_UP work orders
+                workOrders = workOrderRepository.findByStatusInOrderByCreatedAtAsc(List.of("COMPLETED", "PICKED_UP"));
+            } else {
+                // Filter by specific status
+                workOrders = workOrderRepository.findByStatusOrderByCreatedAtAsc(statusFilter);
+            }
+        } else {
+            // Return all work orders
+            workOrders = workOrderRepository.findAllOrderByCreatedAtAsc();
+        }
+        
+        return workOrders.stream()
             .map(WorkOrderResponse::fromEntity)
             .collect(Collectors.toList());
     }
