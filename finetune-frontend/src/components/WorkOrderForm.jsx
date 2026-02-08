@@ -109,7 +109,12 @@ const WorkOrderForm = ({ isEdit = false }) => {
             type="tel"
             name="phoneNumber"
             value={formData.phoneNumber}
-            onChange={handleChange}
+            onChange={(e) => {
+              const numericValue = e.target.value.replace(/[^0-9]/g, '').slice(0, 10);
+              setFormData({ ...formData, phoneNumber: numericValue });
+            }}
+            maxLength={10}
+            placeholder="1234567890 (10 digits only)"
             className="w-full border px-3 py-2 rounded"
           />
         </div>

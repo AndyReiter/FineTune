@@ -11,6 +11,17 @@ import com.fasterxml.jackson.annotation.JsonBackReference;
 @Table(name = "ski_items")
 public class SkiItem {
 
+    public enum SkiCondition {
+        NEW,
+        USED
+    }
+
+    public enum SkiAbilityLevel {
+        ADVANCED,
+        INTERMEDIATE,
+        BEGINNER
+    }
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -18,6 +29,25 @@ public class SkiItem {
     private String skiMake;
     private String skiModel;
     private String serviceType;
+
+    @Enumerated(EnumType.STRING)
+    private SkiCondition condition = SkiCondition.USED;  // Default for existing records
+
+    // Mount-specific fields
+    private String bindingBrand;
+    private String bindingModel;
+    private Integer heightInches; // Always store total inches in DB
+    private Integer weight;       // lbs
+    private Integer age;
+
+    @Enumerated(EnumType.STRING)
+    private SkiAbilityLevel skiAbilityLevel;
+
+    // Boot relationship (optional - only required for MOUNT service)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "boot_id", nullable = true)
+    @JsonBackReference
+    private Boot boot;
 
     /**
      * Individual status for this ski item (e.g., "PENDING", "IN_PROGRESS", "DONE")
@@ -33,6 +63,7 @@ public class SkiItem {
     // Constructor
     public SkiItem() {
         this.status = "PENDING";
+        this.condition = SkiCondition.USED;  // Default value for migration compatibility
     }
 
     public SkiItem(String skiMake, String skiModel, String serviceType) {
@@ -40,6 +71,7 @@ public class SkiItem {
         this.skiModel = skiModel;
         this.serviceType = serviceType;
         this.status = "PENDING";
+        this.condition = SkiCondition.USED;  // Default value for migration compatibility
     }
 
     // getters + setters
@@ -89,5 +121,69 @@ public class SkiItem {
 
     public void setWorkOrder(WorkOrder workOrder) {
         this.workOrder = workOrder;
+    }
+    
+    public SkiCondition getCondition() {
+        return condition;
+    }
+
+    public void setCondition(SkiCondition condition) {
+        this.condition = condition;
+    }
+
+    public String getBindingBrand() {
+        return bindingBrand;
+    }
+
+    public void setBindingBrand(String bindingBrand) {
+        this.bindingBrand = bindingBrand;
+    }
+
+    public String getBindingModel() {
+        return bindingModel;
+    }
+
+    public void setBindingModel(String bindingModel) {
+        this.bindingModel = bindingModel;
+    }
+
+    public Boot getBoot() {
+        return boot;
+    }
+
+    public void setBoot(Boot boot) {
+        this.boot = boot;
+    }
+
+    public Integer getHeightInches() {
+        return heightInches;
+    }
+
+    public void setHeightInches(Integer heightInches) {
+        this.heightInches = heightInches;
+    }
+
+    public Integer getWeight() {
+        return weight;
+    }
+
+    public void setWeight(Integer weight) {
+        this.weight = weight;
+    }
+
+    public Integer getAge() {
+        return age;
+    }
+
+    public void setAge(Integer age) {
+        this.age = age;
+    }
+
+    public SkiAbilityLevel getSkiAbilityLevel() {
+        return skiAbilityLevel;
+    }
+
+    public void setSkiAbilityLevel(SkiAbilityLevel skiAbilityLevel) {
+        this.skiAbilityLevel = skiAbilityLevel;
     }
 }

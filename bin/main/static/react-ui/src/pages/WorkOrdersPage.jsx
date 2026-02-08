@@ -6,11 +6,9 @@ export default function WorkOrdersPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [showForm, setShowForm] = useState(false);
-  const [formData, setFormData] = useState({ customerName: '', phone: '', email: '', status: 'RECEIVED' });
+  const [formData, setFormData] = useState({ customerName: '', phone: '', email: '' });
   const [editingId, setEditingId] = useState(null);
   const [successMessage, setSuccessMessage] = useState('');
-
-  const statuses = ['RECEIVED', 'IN_PROGRESS', 'READY_FOR_PICKUP', 'COMPLETED'];
 
   useEffect(() => {
     loadWorkOrders();
@@ -115,7 +113,7 @@ export default function WorkOrdersPage() {
           onClick={() => {
             setShowForm(!showForm);
             setEditingId(null);
-            setFormData({ customerName: '', phone: '', email: '', status: 'RECEIVED' });
+            setFormData({ customerName: '', phone: '', email: '' });
             setError('');
           }}
           className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
@@ -146,9 +144,13 @@ export default function WorkOrdersPage() {
               <label className="block text-sm font-semibold mb-1">Phone Number *</label>
               <input
                 type="tel"
-                placeholder="(555) 123-4567"
+                placeholder="1234567890 (10 digits only)"
                 value={formData.phone}
-                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                onChange={(e) => {
+                  const numericValue = e.target.value.replace(/[^0-9]/g, '').slice(0, 10);
+                  setFormData({ ...formData, phone: numericValue });
+                }}
+                maxLength={10}
                 className="w-full border rounded px-4 py-2"
                 required
               />
@@ -164,19 +166,10 @@ export default function WorkOrdersPage() {
                 required
               />
             </div>
-            <div>
-              <label className="block text-sm font-semibold mb-1">Status</label>
-              <select
-                value={formData.status}
-                onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                className="w-full border rounded px-4 py-2"
-              >
-                {statuses.map(status => (
-                  <option key={status} value={status}>
-                    {status.replace(/_/g, ' ')}
-                  </option>
-                ))}
-              </select>
+            {/* Work Order Status is automatically calculated from item statuses */}
+            <div className="text-sm text-gray-600 italic">
+              Work order status will be automatically calculated based on item progress.
+              <br />Initial status: RECEIVED (all items start as PENDING)
             </div>
             <button
               type="submit"

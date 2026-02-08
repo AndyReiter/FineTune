@@ -4,6 +4,7 @@ import com.finetune.app.model.entity.Customer;
 import com.finetune.app.repository.CustomerRepository;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -21,14 +22,21 @@ public class CustomerService {
         String email,
         String phone
     ) {
-        Customer customer = customerRepository
-            .findByEmailOrPhone(email, phone)
-            .orElseGet(() -> {
-                Customer c = new Customer();
-                c.setEmail(email);
-                c.setPhone(phone);
-                return c;
-            });
+        List<Customer> existingCustomers = customerRepository.findByEmailOrPhone(email, phone);
+        
+        Customer customer;
+        if (existingCustomers.isEmpty()) {
+            // No existing customer found, create new one
+            customer = new Customer();
+            customer.setEmail(email);
+            customer.setPhone(phone);
+        } else {
+            // Use the first matching customer (prefer exact email match if available)
+            customer = existingCustomers.stream()
+                .filter(c -> email.equals(c.getEmail()))
+                .findFirst()
+                .orElse(existingCustomers.get(0));
+        }
 
         // Always update names to most recent input
         customer.setFirstName(firstName);

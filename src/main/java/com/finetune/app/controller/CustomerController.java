@@ -2,6 +2,7 @@ package com.finetune.app.controller;
 
 import com.finetune.app.model.dto.CustomerResponse;
 import com.finetune.app.model.dto.WorkOrderResponse;
+import com.finetune.app.model.dto.BootResponse;
 import com.finetune.app.model.entity.Customer;
 import com.finetune.app.model.entity.WorkOrder;
 import com.finetune.app.repository.CustomerRepository;
@@ -75,6 +76,24 @@ public class CustomerController {
     }
 
     /**
+     * Lookup customer by email and phone for boot selection workflow.
+     * Returns CustomerResponse or 404 if not found.
+     * 
+     * @param email Customer email
+     * @param phone Customer phone number
+     * @return CustomerResponse or 404 if not found
+     */
+    @GetMapping("/lookup")
+    public ResponseEntity<CustomerResponse> lookupCustomer(
+        @RequestParam String email,
+        @RequestParam String phone
+    ) {
+        return customerRepository.findByEmailAndPhone(email, phone)
+            .map(customer -> ResponseEntity.ok(CustomerResponse.fromEntity(customer)))
+            .orElse(ResponseEntity.notFound().build());
+    }
+
+    /**
      * Get all work orders for a specific customer.
      * Returns a list of WorkOrderResponse DTOs with full ski item details.
      * 
@@ -90,6 +109,26 @@ public class CustomerController {
                     .map(WorkOrderResponse::fromEntity)
                     .collect(Collectors.toList());
                 return ResponseEntity.ok(workOrders);
+            })
+            .orElse(ResponseEntity.notFound().build());
+    }
+
+    /**
+     * Get all boots for a specific customer.
+     * Returns a list of BootResponse DTOs.
+     * 
+     * @param id Customer ID
+     * @return List of BootResponse objects, or 404 if customer not found
+     */
+    @GetMapping("/{id}/boots")
+    public ResponseEntity<List<BootResponse>> getCustomerBoots(@PathVariable Long id) {
+        return customerRepository.findById(id)
+            .map(customer -> {
+                List<BootResponse> boots = customer.getBoots()
+                    .stream()
+                    .map(BootResponse::fromEntity)
+                    .collect(Collectors.toList());
+                return ResponseEntity.ok(boots);
             })
             .orElse(ResponseEntity.notFound().build());
     }

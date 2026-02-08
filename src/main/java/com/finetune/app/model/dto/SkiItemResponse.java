@@ -5,6 +5,7 @@ import com.finetune.app.model.entity.SkiItem;
 /**
  * DTO for SkiItem responses.
  * Does not include the WorkOrder reference to prevent circular references.
+ * Includes boot information for mount services.
  */
 public class SkiItemResponse {
 
@@ -13,6 +14,18 @@ public class SkiItemResponse {
     private String skiModel;
     private String serviceType;
     private String status;
+    
+    // Mount-specific fields
+    private String bindingBrand;
+    private String bindingModel;
+    private Integer heightInches;
+    private Integer weight;
+    private Integer age;
+    private String skiAbilityLevel;
+    private String condition;
+    
+    // Boot information (when applicable)
+    private BootResponse boot;
 
     public SkiItemResponse() {}
 
@@ -26,6 +39,23 @@ public class SkiItemResponse {
         response.skiModel = skiItem.getSkiModel();
         response.serviceType = skiItem.getServiceType();
         response.status = skiItem.getStatus();
+        
+        // Include mount-specific data if present
+        response.bindingBrand = skiItem.getBindingBrand();
+        response.bindingModel = skiItem.getBindingModel();
+        response.heightInches = skiItem.getHeightInches();
+        response.weight = skiItem.getWeight();
+        response.age = skiItem.getAge();
+        response.skiAbilityLevel = skiItem.getSkiAbilityLevel() != null ? 
+            skiItem.getSkiAbilityLevel().name() : null;
+        response.condition = skiItem.getCondition() != null ? 
+            skiItem.getCondition().name() : null;
+            
+        // Include boot information if present
+        if (skiItem.getBoot() != null) {
+            response.boot = BootResponse.fromEntity(skiItem.getBoot());
+        }
+        
         return response;
     }
 
@@ -68,5 +98,69 @@ public class SkiItemResponse {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public String getBindingBrand() {
+        return bindingBrand;
+    }
+
+    public void setBindingBrand(String bindingBrand) {
+        this.bindingBrand = bindingBrand;
+    }
+
+    public String getBindingModel() {
+        return bindingModel;
+    }
+
+    public void setBindingModel(String bindingModel) {
+        this.bindingModel = bindingModel;
+    }
+
+    public Integer getHeightInches() {
+        return heightInches;
+    }
+
+    public void setHeightInches(Integer heightInches) {
+        this.heightInches = heightInches;
+    }
+
+    public Integer getWeight() {
+        return weight;
+    }
+
+    public void setWeight(Integer weight) {
+        this.weight = weight;
+    }
+
+    public Integer getAge() {
+        return age;
+    }
+
+    public void setAge(Integer age) {
+        this.age = age;
+    }
+
+    public String getSkiAbilityLevel() {
+        return skiAbilityLevel;
+    }
+
+    public void setSkiAbilityLevel(String skiAbilityLevel) {
+        this.skiAbilityLevel = skiAbilityLevel;
+    }
+
+    public String getCondition() {
+        return condition;
+    }
+
+    public void setCondition(String condition) {
+        this.condition = condition;
+    }
+
+    public BootResponse getBoot() {
+        return boot;
+    }
+
+    public void setBoot(BootResponse boot) {
+        this.boot = boot;
     }
 }

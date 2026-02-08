@@ -64,4 +64,14 @@ public interface WorkOrderRepository extends JpaRepository<WorkOrder, Long> {
      */
     @Query("SELECT w FROM WorkOrder w ORDER BY w.createdAt ASC")
     List<WorkOrder> findAllOrderByCreatedAtAsc();
+
+    /**
+     * Find the first work order for a specific customer with any of the given statuses.
+     * Used for merging logic to find active work orders (RECEIVED or IN_PROGRESS).
+     *
+     * @param customerId the ID of the customer
+     * @param statuses the list of statuses to match
+     * @return the first work order matching criteria, or empty if none exist
+     */
+    Optional<WorkOrder> findFirstByCustomerIdAndStatusIn(Long customerId, List<String> statuses);
 }

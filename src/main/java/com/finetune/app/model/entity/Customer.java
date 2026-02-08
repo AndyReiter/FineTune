@@ -7,11 +7,14 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.UniqueConstraint;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.EnumType;
 import java.util.List;
 import java.util.ArrayList;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.CascadeType;
+import com.finetune.app.model.entity.SkiItem.SkiAbilityLevel;
 
 @Entity
 @Table(
@@ -31,6 +34,12 @@ public class Customer {
     private String email;
     private String phone;
 
+    // Skier profile fields (optional)
+    private Integer heightInches;
+    private Integer weight;
+    @Enumerated(EnumType.STRING)
+    private SkiAbilityLevel skiAbilityLevel;
+
     @OneToMany(
         mappedBy = "customer",
         cascade = CascadeType.ALL,
@@ -38,6 +47,14 @@ public class Customer {
     )
     @JsonManagedReference
     private List<WorkOrder> workOrders = new ArrayList<>();
+
+    @OneToMany(
+        mappedBy = "customer",
+        cascade = CascadeType.ALL,
+        orphanRemoval = true
+    )
+    @JsonManagedReference
+    private List<Boot> boots = new ArrayList<>();
 
     public void addWorkOrder(WorkOrder workOrder) {
         if (workOrder == null) {
@@ -96,5 +113,64 @@ public class Customer {
 
     public void setWorkOrders(List<WorkOrder> workOrders) {
         this.workOrders = workOrders;
+    }
+
+    public Integer getHeightInches() {
+        return heightInches;
+    }
+
+    public void setHeightInches(Integer heightInches) {
+        this.heightInches = heightInches;
+    }
+
+    public Integer getWeight() {
+        return weight;
+    }
+
+    public void setWeight(Integer weight) {
+        this.weight = weight;
+    }
+
+    public SkiAbilityLevel getSkiAbilityLevel() {
+        return skiAbilityLevel;
+    }
+
+    public void setSkiAbilityLevel(SkiAbilityLevel skiAbilityLevel) {
+        this.skiAbilityLevel = skiAbilityLevel;
+    }
+
+    public List<Boot> getBoots() {
+        return boots;
+    }
+
+    public void setBoots(List<Boot> boots) {
+        this.boots = boots;
+    }
+
+    /**
+     * Adds a boot to this customer and sets the bidirectional relationship.
+     */
+    public void addBoot(Boot boot) {
+        if (boot == null) {
+            throw new IllegalArgumentException("Boot cannot be null");
+        }
+        if (!boots.contains(boot)) {
+            boots.add(boot);
+        }
+        boot.setCustomer(this);
+    }
+
+    /**
+     * Finds an existing boot with the same brand, model, and BSL.
+     * Returns null if no matching boot is found.
+     */
+    public Boot findMatchingBoot(String brand, String model, Integer bsl) {
+        return boots.stream()
+                .filter(boot -> 
+                    (boot.getBrand() == null ? brand == null : boot.getBrand().equals(brand)) &&
+                    (boot.getModel() == null ? model == null : boot.getModel().equals(model)) &&
+                    (boot.getBsl() == null ? bsl == null : boot.getBsl().equals(bsl)))
+                .findFirst()
+                .orElse(null);
     }
 }

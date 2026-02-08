@@ -15,32 +15,171 @@
        Work Order Creation Form
        =============================== -->
   <form id="createForm">
-    <input type="text" id="firstName" placeholder="First Name" required />
-    <input type="text" id="lastName" placeholder="Last Name" required />
-    <input type="text" id="phone" placeholder="Phone (10 digits)" required />
-    <input type="email" id="email" placeholder="Email" required />
+    <input type="text" id="customer_firstName" placeholder="First Name" required />
+    <input type="text" id="customer_lastName" placeholder="Last Name" required />
+    <input type="text" id="customer_phone" placeholder="1234567890 (10 digits only)" required 
+           maxlength="10" 
+           pattern="[0-9]{10}" 
+           oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10)" />
+    <input type="email" id="customer_email" placeholder="Email" required />
     <div></div>
 
     <div class="full-width">
       <h3>Skis</h3>
-      <table>
-        <thead>
-          <tr>
-            <th>Make</th>
-            <th>Model</th>
-            <th>Service</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody id="skiItemsTable"></tbody>
-      </table>
+      <div id="skiItemsContainer"></div>
       <button type="button" onclick="addSkiRow()">+ Add Ski</button>
     </div>
 
-    <button type="submit" class="full-width btn-primary">Create Work Order</button>
+    <button type="submit" id="submitBtn" class="full-width btn-primary">Create Work Order</button>
   </form>
 
   <div id="formMessage" class="message"></div>
+
+  <!-- ===============================
+       Boot Selection Modal
+       =============================== -->
+  <div id="bootModal" class="modal" style="display: none;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="bootModalTitle">Boot Selection</h2>
+        <button type="button" class="close" onclick="closeBootModal()">&times;</button>
+      </div>
+
+      <div id="bootModalContent">
+        <!-- Customer lookup section -->
+        <div id="bootCustomerLookup">
+          <p>Looking up customer information...</p>
+        </div>
+
+        <!-- Boot selection section (for existing boots) -->
+        <div id="bootSelectionDiv" style="display: none;">
+          <h3>Select an existing boot:</h3>
+          <div id="existingBootsList"></div>
+        </div>
+
+        <!-- Boot creation section (for new boots) -->
+        <div id="bootCreationDiv" style="display: none;">
+          <h3>Create a new boot:</h3>
+          <div class="form-grid">
+            <div>
+              <label for="newBootBrand">Boot Brand *</label>
+              <input type="text" id="newBootBrand" placeholder="e.g., Salomon, Tecnica, Lange" required>
+            </div>
+            <div>
+              <label for="newBootModel">Boot Model *</label>
+              <input type="text" id="newBootModel" placeholder="e.g., X-Pro 100, Mach1" required>
+            </div>
+            <div>
+              <label for="newBootBsl">BSL (mm) *</label>
+              <input type="number" id="newBootBsl" placeholder="e.g., 295, 305" min="250" max="400" required>
+            </div>
+            <div>
+              <label>Height *</label>
+              <div class="height-input">
+                <select id="newBootHeightFeet" required>
+                  <option value="">Feet</option>
+                  <option value="4">4</option>
+                  <option value="5">5</option>
+                  <option value="6">6</option>
+                  <option value="7">7</option>
+                  <option value="8">8</option>
+                </select>
+                <select id="newBootHeightInches" required>
+                  <option value="">Inches</option>
+                  <option value="0">0</option>
+                  <option value="1">1</option>
+                  <option value="2">2</option>
+                  <option value="3">3</option>
+                  <option value="4">4</option>
+                  <option value="5">5</option>
+                  <option value="6">6</option>
+                  <option value="7">7</option>
+                  <option value="8">8</option>
+                  <option value="9">9</option>
+                  <option value="10">10</option>
+                  <option value="11">11</option>
+                </select>
+              </div>
+            </div>
+            <div>
+              <label for="newBootWeight">Weight (lbs) *</label>
+              <input type="number" id="newBootWeight" placeholder="e.g., 180" min="50" max="400" required>
+            </div>
+            <div>
+              <label for="newBootAge">Age *</label>
+              <input type="number" id="newBootAge" placeholder="e.g., 25" min="5" max="120" required>
+            </div>
+            <div>
+              <label for="newBootAbility">Skier Type *</label>
+              <select id="newBootAbility" required>
+                <option value="">Select Level</option>
+                <option value="BEGINNER">Beginner</option>
+                <option value="INTERMEDIATE">Intermediate</option>
+                <option value="ADVANCED">Advanced</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Selected boot info display -->
+        <div id="selectedBootInfo" style="display: none;">
+          <h3>Selected Boot Information:</h3>
+          <div id="bootInfoDisplay"></div>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button type="button" id="bootBackBtn" class="btn-secondary">Back to Work Order</button>
+        <button type="button" id="bootProceedBtn" class="btn-primary" style="display: none;">Proceed with Boot</button>
+        <button type="button" id="bootCreateBtn" class="btn-primary" style="display: none;">Create Work Order</button>
+      </div>
+
+      <div id="bootMessage" class="message"></div>
+    </div>
+  </div>
+
+  <!-- ===============================
+       Mount Modal for Boot Selection
+       =============================== -->
+  <div id="mountModal" class="modal" style="display: none;">
+    <div class="modal-content">
+      <h2>Mount Service Configuration</h2>
+      <p>Complete boot and binding information for mount services.</p>
+      
+      <!-- Step 1: Customer Lookup -->
+      <div id="customerLookupSection">
+        <h3>Step 1: Customer Lookup</h3>
+        <div class="form-row">
+          <input type="text" id="lookupFirstName" placeholder="First Name" required />
+          <input type="text" id="lookupLastName" placeholder="Last Name" required />
+          <input type="text" id="lookupPhone" placeholder="Phone (10 digits)" required maxlength="10" pattern="[0-9]{10}" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10)" />
+        </div>
+        <button type="button" id="lookupCustomerBtn" class="btn-primary">Lookup Customer</button>
+        <div id="lookupMessage" class="message"></div>
+      </div>
+
+      <!-- Step 2: Boot Selection (hidden initially) -->
+      <div id="bootSelectionSection" style="display: none;">
+        <h3>Step 2: Boot Selection</h3>
+        <div class="form-row">
+          <select id="bootSelection">
+            <option value="new">Create New Boot</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Step 3: Mount Configuration -->
+      <div id="mountConfigSection" style="display: none;">
+        <h3>Step 3: Mount Configuration</h3>
+        <div id="mountItemsContainer"></div>
+        
+        <div class="modal-actions">
+          <button type="button" id="cancelMountBtn" class="btn-secondary">Cancel</button>
+          <button type="button" id="completeMountBtn" class="btn-primary">Complete Work Order</button>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <!-- ===============================
        Success/Navigation Section
@@ -72,48 +211,455 @@
 <!-- Include shared JavaScript utilities -->
 <script src="shared.js"></script>
 
+<style>
+.ski-item-card {
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 20px;
+  background: #f9f9f9;
+  position: relative;
+}
+
+.ski-item-card h4 {
+  margin-top: 0;
+  margin-bottom: 15px;
+  color: #333;
+}
+
+.remove-ski-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  width: 30px;
+  height: 30px;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.remove-ski-btn:hover {
+  background: #c82333;
+}
+
+.basic-fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr;
+  gap: 15px;
+  margin-bottom: 15px;
+}
+
+.mount-fields {
+  display: none;
+  border-top: 2px solid #007bff;
+  padding-top: 20px;
+  margin-top: 20px;
+}
+
+.mount-fields.show {
+  display: block;
+}
+
+.mount-fields h5 {
+  color: #007bff;
+  margin-bottom: 15px;
+  font-size: 16px;
+}
+
+.field-group {
+  margin-bottom: 20px;
+}
+
+.field-group h6 {
+  margin-bottom: 10px;
+  color: #555;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.field-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+  margin-bottom: 15px;
+}
+
+.height-fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.height-fields label {
+  font-size: 12px;
+  color: #666;
+  margin-bottom: 5px;
+  display: block;
+}
+
+.single-field {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 15px;
+  margin-bottom: 15px;
+}
+
+.ski-item-card input, 
+.ski-item-card select {
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.ski-item-card input:focus, 
+.ski-item-card select:focus {
+  outline: none;
+  border-color: #007bff;
+}
+
+/* Modal Styles */
+.modal {
+  position: fixed;
+  z-index: 1000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0,0,0,0.5);
+}
+
+.modal-content {
+  background-color: #fefefe;
+  margin: 50px auto;
+  padding: 30px;
+  border: none;
+  border-radius: 8px;
+  width: 90%;
+  max-width: 800px;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 15px;
+  margin-bottom: 15px;
+}
+
+.modal-actions {
+  margin-top: 30px;
+  text-align: right;
+  gap: 10px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.btn-secondary {
+  background-color: #6c757d;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.btn-secondary:hover {
+  background-color: #545b62;
+}
+
+.mount-item-config {
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 20px;
+  background: #f9f9f9;
+}
+
+.mount-item-config h4 {
+  margin-top: 0;
+  margin-bottom: 15px;
+  color: #333;
+}
+
+.boot-fields {
+  display: none;
+  border-top: 2px solid #28a745;
+  padding-top: 20px;
+  margin-top: 20px;
+}
+
+.boot-fields.show {
+  display: block;
+}
+
+.boot-fields h5 {
+  color: #28a745;
+  margin-bottom: 15px;
+  font-size: 16px;
+}
+
+/* Boot Modal Styles */
+.boot-option {
+  margin-bottom: 10px;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background: #f9f9f9;
+}
+
+.boot-radio-label {
+  display: block;
+  cursor: pointer;
+  margin: 0;
+  padding: 5px;
+}
+
+.boot-radio-label input[type="radio"] {
+  margin-right: 8px;
+}
+
+.boot-info-display {
+  padding: 15px;
+  background: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+}
+
+.boot-info-display p {
+  margin: 5px 0;
+}
+
+.height-input {
+  display: flex;
+  gap: 10px;
+}
+
+.height-input select {
+  flex: 1;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+}
+
+.form-grid > div {
+  display: flex;
+  flex-direction: column;
+}
+
+.form-grid label {
+  margin-bottom: 5px;
+  font-weight: bold;
+}
+
+.form-grid input,
+.form-grid select {
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+/* Responsive adjustments for boot modal */
+@media (max-width: 768px) {
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+</style>
+
 <script>
   // Page-specific variables
-  const skiItemsTable = document.getElementById("skiItemsTable");
+  const skiItemsContainer = document.getElementById("skiItemsContainer");
   const successSection = document.getElementById("successSection");
+  const mountModal = document.getElementById("mountModal");
+  let skiItemCounter = 0;
+  let currentCustomer = null;
+  let mountItems = [];
+  let formData = null;
 
   /* ===============================
      Ski Row Management
      =============================== */
-  function addSkiRow() {
-    const row = document.createElement("tr");
+  /* ===============================
+     Dynamic Button Text Update
+     =============================== */
+  function updateSubmitButtonText() {
+    const submitBtn = document.getElementById('submitBtn');
+    const skiItems = [...skiItemsContainer.children];
+    
+    const hasMountService = skiItems.some(skiItem => {
+      const serviceSelect = skiItem.querySelector(".service-type");
+      return serviceSelect && serviceSelect.value === 'MOUNT';
+    });
 
-    row.innerHTML = `
-      <td>
-        <!-- Ski Make dropdown populated from /brands (value = brand id, text = brand name) -->
-        <select class="ski-make" required>
-          <option value="">Select Make</option>
-        </select>
-      </td>
-      <td>
-        <!-- Ski Model dropdown populated from /brands/{id}/models (value/text = model name) -->
-        <select class="ski-model" required>
-          <option value="">Select Model</option>
-        </select>
-      </td>
-      <td>
-        <select required>
-          <option value="">Select Service</option>
-          <option value="TUNE">Tune</option>
-          <option value="MOUNT">Mount</option>
-          <option value="REPAIR">Repair</option>
-        </select>
-      </td>
-      <td>
-        <button type="button" class="btn-danger" onclick="this.closest('tr').remove(); checkSkiCount();">✕</button>
-      </td>
+    if (hasMountService) {
+      submitBtn.textContent = 'Proceed to fill out boot requirements';
+    } else {
+      submitBtn.textContent = 'Create Work Order';
+    }
+  }
+
+  // Call updateSubmitButtonText whenever ski items change
+  function addSkiRow() {
+    skiItemCounter++;
+    const timestamp = Date.now();
+    const uniqueId = `skiapp_${timestamp}_${skiItemCounter}`;
+    const skiDiv = document.createElement("div");
+    skiDiv.className = "ski-item-card";
+    skiDiv.setAttribute("data-ski-id", skiItemCounter);
+
+    skiDiv.innerHTML = `
+      <button type="button" class="remove-ski-btn" onclick="removeSkiItem(this)" title="Remove Ski">✕</button>
+      <h4>Ski Item ${skiItemCounter}</h4>
+      
+      <div class="basic-fields">
+        <div>
+          <label for="${uniqueId}_make">Make *</label>
+          <select id="${uniqueId}_make" class="ski-make" required>
+            <option value="">Select Make</option>
+          </select>
+        </div>
+        <div>
+          <label for="${uniqueId}_model">Model *</label>
+          <select id="${uniqueId}_model" class="ski-model" required>
+            <option value="">Select Model</option>
+          </select>
+        </div>
+        <div>
+          <label for="${uniqueId}_service">Service *</label>
+          <select id="${uniqueId}_service" class="service-type" required onchange="toggleMountFields(this)">
+            <option value="">Select Service</option>
+            <option value="TUNE">Tune</option>
+            <option value="MOUNT">Mount</option>
+            <option value="REPAIR">Repair</option>
+          </select>
+        </div>
+        <div>
+          <label for="${uniqueId}_condition">Condition *</label>
+          <select id="${uniqueId}_condition" class="condition" required>
+            <option value="">Select Condition</option>
+            <option value="NEW">New</option>
+            <option value="USED">Used</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="mount-fields">
+        <h5>Mount-Specific Information</h5>
+        
+        <div class="field-group">
+          <h6>Binding Information</h6>
+          <div class="field-row">
+            <div>
+              <label for="${uniqueId}_binding_brand">Binding Brand *</label>
+              <input type="text" id="${uniqueId}_binding_brand" class="binding-brand" placeholder="e.g., Marker, Look, Salomon">
+            </div>
+            <div>
+              <label for="${uniqueId}_binding_model">Binding Model</label>
+              <input type="text" id="${uniqueId}_binding_model" class="binding-model" placeholder="e.g., Griffon 13, SPX 12">
+            </div>
+          </div>
+        </div>
+
+        <div class="field-group">
+          <h6>Boot Information</h6>
+          <div class="field-row">
+            <div>
+              <label for="${uniqueId}_boot_brand">Boot Brand *</label>
+              <input type="text" id="${uniqueId}_boot_brand" class="boot-brand" placeholder="e.g., Salomon, Tecnica, Lange">
+            </div>
+            <div>
+              <label for="${uniqueId}_boot_model">Boot Model *</label>
+              <input type="text" id="${uniqueId}_boot_model" class="boot-model" placeholder="e.g., X-Pro 100, Mach1">
+            </div>
+          </div>
+          <div class="single-field">
+            <div>
+              <label for="${uniqueId}_bsl">BSL (Boot Sole Length in mm) *</label>
+              <input type="number" id="${uniqueId}_bsl" class="bsl" placeholder="e.g., 295, 305, 320" min="250" max="400">
+            </div>
+          </div>
+        </div>
+
+        <div class="field-group">
+          <h6>Skier Profile</h6>
+          <div class="field-row">
+            <div>
+              <label>Height *</label>
+              <div class="height-fields">
+                <div>
+                  <label for="${uniqueId}_height_feet">Feet</label>
+                  <select id="${uniqueId}_height_feet" class="height-feet">
+                    <option value="">-</option>
+                    <option value="0">0</option>
+                    <option value="1">1</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5</option>
+                    <option value="6">6</option>
+                    <option value="7">7</option>
+                    <option value="8">8</option>
+                  </select>
+                </div>
+                <div>
+                  <label for="${uniqueId}_height_inches">Inches</label>
+                  <select id="${uniqueId}_height_inches" class="height-inches">
+                    <option value="">-</option>
+                    <option value="0">0</option>
+                    <option value="1">1</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5</option>
+                    <option value="6">6</option>
+                    <option value="7">7</option>
+                    <option value="8">8</option>
+                    <option value="9">9</option>
+                    <option value="10">10</option>
+                    <option value="11">11</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+            <div>
+              <label for="${uniqueId}_weight">Weight (lbs) *</label>
+              <input type="number" id="${uniqueId}_weight" class="weight" placeholder="e.g., 180" min="50" max="400">
+            </div>
+          </div>
+          <div class="field-row">
+            <div>
+              <label for="${uniqueId}_age">Age *</label>
+              <input type="number" id="${uniqueId}_age" class="age" placeholder="e.g., 25" min="5" max="120">
+            </div>
+            <div>
+              <label for="${uniqueId}_ability">Ski Ability Level *</label>
+              <select id="${uniqueId}_ability" class="ability-level">
+                <option value="">Select Level</option>
+                <option value="BEGINNER">Beginner</option>
+                <option value="INTERMEDIATE">Intermediate</option>
+                <option value="ADVANCED">Advanced</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
     `;
 
-    skiItemsTable.appendChild(row);
+    skiItemsContainer.appendChild(skiDiv);
 
     // Populate brand dropdown, then wire dependent models dropdown
-    const makeSelect = row.querySelector(".ski-make");
-    const modelSelect = row.querySelector(".ski-model");
+    const makeSelect = skiDiv.querySelector(".ski-make");
+    const modelSelect = skiDiv.querySelector(".ski-model");
 
     populateBrandSelect(makeSelect).then(() => {
       // When make changes, fetch models for that brand and populate
@@ -122,11 +668,91 @@
         await populateModelSelect(modelSelect, brandId);
       });
     });
+
+    // Add event listener for service type changes to update button text
+    const serviceSelect = skiDiv.querySelector(".service-type");
+    if (serviceSelect) {
+      serviceSelect.addEventListener("change", updateSubmitButtonText);
+    }
+
+    // Update button text after adding the ski item
+    updateSubmitButtonText();
+  }
+
+  function removeSkiItem(button) {
+    const skiItem = button.closest('.ski-item-card');
+    skiItem.remove();
+    checkSkiCount();
+    // Update button text when ski item is removed
+    updateSubmitButtonText();
+  }
+
+  function toggleMountFields(serviceSelect) {
+    const skiItem = serviceSelect.closest('.ski-item-card');
+    const mountFields = skiItem.querySelector('.mount-fields');
+    
+    if (serviceSelect.value === 'MOUNT') {
+      mountFields.classList.add('show');
+      // Make mount fields required
+      setMountFieldsRequired(skiItem, true);
+    } else {
+      mountFields.classList.remove('show');
+      // Remove required from mount fields and clear values
+      setMountFieldsRequired(skiItem, false);
+      clearMountFields(skiItem);
+    }
+  }
+
+  function setMountFieldsRequired(skiItem, required) {
+    const requiredFields = [
+      '.binding-brand',
+      '.boot-brand',
+      '.boot-model',
+      '.bsl',
+      '.height-feet',
+      '.height-inches',
+      '.weight',
+      '.age',
+      '.ability-level'
+    ];
+
+    requiredFields.forEach(selector => {
+      const field = skiItem.querySelector(selector);
+      if (field) {
+        if (required) {
+          field.setAttribute('required', '');
+        } else {
+          field.removeAttribute('required');
+        }
+      }
+    });
+  }
+
+  function clearMountFields(skiItem) {
+    const fields = [
+      '.binding-brand',
+      '.binding-model',
+      '.boot-brand',
+      '.boot-model',
+      '.bsl',
+      '.height-feet',
+      '.height-inches',
+      '.weight',
+      '.age',
+      '.ability-level'
+    ];
+
+    fields.forEach(selector => {
+      const field = skiItem.querySelector(selector);
+      if (field) {
+        field.value = '';
+      }
+    });
   }
 
   // Check if we have at least one ski row
   function checkSkiCount() {
-    if (skiItemsTable.children.length === 0) {
+    if (skiItemsContainer.children.length === 0) {
       addSkiRow(); // Always maintain at least one row
     }
   }
@@ -141,10 +767,10 @@
     ValidationUtils.clearMessage('formMessage');
 
     // Get form data
-    const firstName = document.getElementById("firstName").value.trim();
-    const lastName = document.getElementById("lastName").value.trim();
-    const phone = document.getElementById("phone").value.trim();
-    const email = document.getElementById("email").value.trim();
+    const firstName = document.getElementById("customer_firstName").value.trim();
+    const lastName = document.getElementById("customer_lastName").value.trim();
+    const phone = document.getElementById("customer_phone").value.trim();
+    const email = document.getElementById("customer_email").value.trim();
 
     // Validate required fields
     if (!firstName || !lastName || !phone || !email) {
@@ -165,9 +791,44 @@
     }
 
     // Get ski data
-    const skiRows = [...skiItemsTable.children];
+    const skiItems = [...skiItemsContainer.children];
 
-    if (skiRows.length === 0) {
+    if (skiItems.length === 0) {
+      ValidationUtils.showMessage('formMessage', 'At least one ski is required.', true);
+      return;
+    }
+
+    // Check if any ski item has MOUNT service
+    const hasMountService = skiItems.some(skiItem => {
+      const serviceSelect = skiItem.querySelector(".service-type");
+      return serviceSelect.value === 'MOUNT';
+    });
+
+    // Store form data for later use
+    formData = {
+      customerFirstName: firstName,
+      customerLastName: lastName,
+      phone: phone,
+      email: email
+    };
+
+    if (hasMountService) {
+      // Open boot selection modal instead of direct submission
+      await openBootModal(skiItems);
+    } else {
+      // Process normally for non-mount items
+      await submitWorkOrder(skiItems);
+    }
+  });
+    if (!ValidationUtils.isValidPhone(phone)) {
+      ValidationUtils.showMessage('formMessage', 'Please enter a valid 10-digit phone number.', true);
+      return;
+    }
+
+    // Get ski data
+    const skiItems = [...skiItemsContainer.children];
+
+    if (skiItems.length === 0) {
       ValidationUtils.showMessage('formMessage', 'At least one ski is required.', true);
       return;
     }
@@ -176,26 +837,67 @@
     const skis = [];
     let hasValidationError = false;
 
-    for (let row of skiRows) {
-      const makeSelect = row.querySelector(".ski-make");
-      const modelSelect = row.querySelector(".ski-model");
-      const serviceSelect = row.querySelector("td:nth-child(3) select");
+    for (let skiItem of skiItems) {
+      const makeSelect = skiItem.querySelector(".ski-make");
+      const modelSelect = skiItem.querySelector(".ski-model");
+      const serviceSelect = skiItem.querySelector(".service-type");
+      const conditionSelect = skiItem.querySelector(".condition");
 
       const skiMake = makeSelect.options[makeSelect.selectedIndex]?.text || "";
       const skiModel = (modelSelect.value || "").trim();
       const serviceType = serviceSelect.value;
+      const condition = conditionSelect.value;
 
-      if (!skiMake || !skiModel || !serviceType) {
-        ValidationUtils.showMessage('formMessage', 'Please complete all ski information.', true);
+      if (!skiMake || !skiModel || !serviceType || !condition) {
+        ValidationUtils.showMessage('formMessage', 'Please complete all basic ski information.', true);
         hasValidationError = true;
         break;
       }
 
-      skis.push({
+      const skiData = {
         skiMake: skiMake,
         skiModel: skiModel,
-        serviceType: serviceType
-      });
+        serviceType: serviceType,
+        condition: condition
+      };
+
+      // Add mount-specific fields if service type is MOUNT
+      if (serviceType === 'MOUNT') {
+        const bindingBrand = skiItem.querySelector('.binding-brand').value.trim();
+        const bindingModel = skiItem.querySelector('.binding-model').value.trim();
+        const bootBrand = skiItem.querySelector('.boot-brand').value.trim();
+        const bootModel = skiItem.querySelector('.boot-model').value.trim();
+        const bsl = skiItem.querySelector('.bsl').value;
+        const heightFeet = skiItem.querySelector('.height-feet').value;
+        const heightInches = skiItem.querySelector('.height-inches').value;
+        const weight = skiItem.querySelector('.weight').value;
+        const age = skiItem.querySelector('.age').value;
+        const abilityLevel = skiItem.querySelector('.ability-level').value;
+
+        // Validate required mount fields
+        if (!bindingBrand || !bootBrand || !bootModel || !bsl || 
+            heightFeet === '' || heightInches === '' || !weight || !age || !abilityLevel) {
+          ValidationUtils.showMessage('formMessage', 'Please complete all required mount information.', true);
+          hasValidationError = true;
+          break;
+        }
+
+        // Convert height to total inches
+        const totalInches = (parseInt(heightFeet) * 12) + parseInt(heightInches);
+
+        // Add mount fields to ski data
+        skiData.bindingBrand = bindingBrand;
+        skiData.bindingModel = bindingModel || null;
+        skiData.bootBrand = bootBrand;
+        skiData.bootModel = bootModel;
+        skiData.bsl = parseInt(bsl);
+        skiData.heightInches = totalInches;
+        skiData.weight = parseInt(weight);
+        skiData.age = parseInt(age);
+        skiData.skiAbilityLevel = abilityLevel;
+      }
+
+      skis.push(skiData);
     }
 
     if (hasValidationError) {
@@ -233,6 +935,489 @@
   });
 
   /* ===============================
+     Mount Modal Functions
+     =============================== */
+  async function openMountModal(skiItems) {
+    // Reset modal state
+    currentCustomer = null;
+    mountItems = [];
+    document.getElementById('customerLookupSection').style.display = 'block';
+    document.getElementById('bootSelectionSection').style.display = 'none';
+    document.getElementById('mountConfigSection').style.display = 'none';
+    ValidationUtils.clearMessage('lookupMessage');
+    
+    // Pre-populate lookup fields
+    document.getElementById('lookupFirstName').value = formData.customerFirstName;
+    document.getElementById('lookupLastName').value = formData.customerLastName;
+    document.getElementById('lookupPhone').value = formData.phone;
+    
+    // Store mount items for later processing
+    for (let skiItem of skiItems) {
+      const serviceSelect = skiItem.querySelector(\".service-type\");
+      if (serviceSelect.value === 'MOUNT') {
+        mountItems.push(skiItem);
+      }
+    }
+    
+    // Show modal
+    mountModal.style.display = 'block';
+  }
+
+  async function lookupCustomer() {
+    const firstName = document.getElementById('lookupFirstName').value.trim();
+    const lastName = document.getElementById('lookupLastName').value.trim();
+    const phone = document.getElementById('lookupPhone').value.trim();
+
+    if (!firstName || !lastName || !phone) {
+      ValidationUtils.showMessage('lookupMessage', 'Please fill in all customer information.', true);
+      return;
+    }
+
+    if (!ValidationUtils.isValidPhone(phone)) {
+      ValidationUtils.showMessage('lookupMessage', 'Please enter a valid 10-digit phone number.', true);
+      return;
+    }
+
+    try {
+      // TODO: Replace with actual API call to WorkOrderService.findCustomerForMountWorkflow
+      // const response = await fetch(`/api/customers/lookup?firstName=${firstName}&lastName=${lastName}&phone=${phone}`);
+      
+      // Simulate customer found with boots - this will be replaced with actual API
+      currentCustomer = {
+        id: 1,
+        firstName: firstName,
+        lastName: lastName,
+        phone: phone,
+        boots: [
+          { id: 1, brand: 'Salomon', model: 'X-Pro 100', bsl: 295 },
+          { id: 2, brand: 'Tecnica', model: 'Mach1', bsl: 305 }
+        ]
+      };
+
+      // Populate boot selection
+      populateBootSelection(currentCustomer.boots);
+      
+      // Show next sections
+      document.getElementById('bootSelectionSection').style.display = 'block';
+      document.getElementById('mountConfigSection').style.display = 'block';
+      
+      // Generate mount configuration forms
+      generateMountConfig();
+      
+      ValidationUtils.showMessage('lookupMessage', 'Customer found! Please select boot and complete mount configuration.', false);
+      
+    } catch (error) {
+      console.error('Error looking up customer:', error);
+      ValidationUtils.showMessage('lookupMessage', 'Customer not found. Please verify the information and try again.', true);
+    }
+  }
+
+  function populateBootSelection(boots) {
+    const bootSelect = document.getElementById('bootSelection');
+    bootSelect.innerHTML = '<option value=\"new\">Create New Boot</option>';
+    
+    if (boots && boots.length > 0) {
+      boots.forEach(boot => {
+        const option = document.createElement('option');
+        option.value = boot.id;
+        option.textContent = `${boot.brand} - ${boot.model} (${boot.bsl}mm)`;
+        bootSelect.appendChild(option);
+      });
+    } else {
+      // No boots found - hide dropdown and default to create new
+      bootSelect.style.display = 'none';
+      ValidationUtils.showMessage('lookupMessage', 'No existing boots found. Will create new boot.', false);
+    }
+    
+    // Add event listener for boot selection change (remove existing first)
+    const newBootSelect = bootSelect.cloneNode(true);
+    bootSelect.parentNode.replaceChild(newBootSelect, bootSelect);
+    newBootSelect.addEventListener('change', handleBootSelectionChange);
+  }
+
+  function handleBootSelectionChange() {
+    const bootSelect = document.getElementById('bootSelection');
+    const isNewBoot = bootSelect.value === 'new';
+    
+    // Update all mount config forms based on selection
+    mountItems.forEach((skiItem, index) => {
+      const configDiv = document.getElementById(`mountConfig${index}`);
+      if (configDiv) {
+        const bootFields = configDiv.querySelector('.boot-fields');
+        if (isNewBoot) {
+          bootFields.classList.add('show');
+        } else {
+          bootFields.classList.remove('show');
+        }
+      }
+    });
+  }
+
+  function generateMountConfig() {
+    const container = document.getElementById('mountItemsContainer');
+    container.innerHTML = '';
+    
+    mountItems.forEach((skiItem, index) => {
+      const makeSelect = skiItem.querySelector(\".ski-make\");
+      const modelSelect = skiItem.querySelector(\".ski-model\");
+      const skiMake = makeSelect.options[makeSelect.selectedIndex]?.text || \"\";
+      const skiModel = (modelSelect.value || \"\").trim();
+      
+      const configDiv = document.createElement('div');
+      configDiv.className = 'mount-item-config';
+      configDiv.id = `mountConfig${index}`;
+      
+      // Generate unique IDs for this mount config
+      const timestamp = Date.now();
+      const uniquePrefix = `mount_${timestamp}_${index}`;
+      
+      configDiv.innerHTML = `
+        <h4>Mount Configuration: ${skiMake} ${skiModel}</h4>
+        
+        <!-- Always show binding fields -->
+        <div class=\"field-group\">
+          <h5>Binding Information</h5>
+          <div class=\"field-row\">
+            <div>
+              <label for=\"${uniquePrefix}_binding_brand\">Binding Brand *</label>
+              <input type=\"text\" id=\"${uniquePrefix}_binding_brand\" class=\"binding-brand\" placeholder=\"e.g., Marker, Look, Salomon\" required>
+            </div>
+            <div>
+              <label for=\"${uniquePrefix}_binding_model\">Binding Model</label>
+              <input type=\"text\" id=\"${uniquePrefix}_binding_model\" class=\"binding-model\" placeholder=\"e.g., Griffon 13, SPX 12\">
+            </div>
+          </div>
+        </div>
+        
+        <!-- Boot fields - shown only when creating new boot -->
+        <div class=\"boot-fields show\">
+          <h5>New Boot Information</h5>
+          <div class=\"field-row\">
+            <div>
+              <label for=\"${uniquePrefix}_boot_brand\">Boot Brand *</label>
+              <input type=\"text\" id=\"${uniquePrefix}_boot_brand\" class=\"boot-brand\" placeholder=\"e.g., Salomon, Tecnica, Lange\" required>
+            </div>
+            <div>
+              <label for=\"${uniquePrefix}_boot_model\">Boot Model *</label>
+              <input type=\"text\" id=\"${uniquePrefix}_boot_model\" class=\"boot-model\" placeholder=\"e.g., X-Pro 100, Mach1\" required>
+            </div>
+            <div>
+              <label for=\"${uniquePrefix}_bsl\">BSL (mm) *</label>
+              <input type=\"number\" id=\"${uniquePrefix}_bsl\" class=\"bsl\" placeholder=\"e.g., 295, 305\" min=\"250\" max=\"400\" required>
+            </div>
+          </div>
+          
+          <div class=\"field-group\">
+            <h6>Skier Profile</h6>
+            <div class=\"field-row\">
+              <div>
+                <label>Height *</label>
+                <div class=\"height-fields\">
+                  <div>
+                    <label for=\"${uniquePrefix}_height_feet\">Feet</label>
+                    <select id=\"${uniquePrefix}_height_feet\" class=\"height-feet\" required>
+                      <option value=\"\">-</option>
+                      <option value=\"4\">4</option>
+                      <option value=\"5\">5</option>
+                      <option value=\"6\">6</option>
+                      <option value=\"7\">7</option>
+                      <option value=\"8\">8</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label for=\"${uniquePrefix}_height_inches\">Inches</label>
+                    <select id=\"${uniquePrefix}_height_inches\" class=\"height-inches\" required>
+                      <option value=\"\">-</option>
+                      <option value=\"0\">0</option>
+                      <option value=\"1\">1</option>
+                      <option value=\"2\">2</option>
+                      <option value=\"3\">3</option>
+                      <option value=\"4\">4</option>
+                      <option value=\"5\">5</option>
+                      <option value=\"6\">6</option>
+                      <option value=\"7\">7</option>
+                      <option value=\"8\">8</option>
+                      <option value=\"9\">9</option>
+                      <option value=\"10\">10</option>
+                      <option value=\"11\">11</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+              <div>
+                <label for=\"${uniquePrefix}_weight\">Weight (lbs) *</label>
+                <input type=\"number\" id=\"${uniquePrefix}_weight\" class=\"weight\" placeholder=\"e.g., 180\" min=\"50\" max=\"400\" required>
+              </div>
+              <div>
+                <label for=\"${uniquePrefix}_age\">Age *</label>
+                <input type=\"number\" id=\"${uniquePrefix}_age\" class=\"age\" placeholder=\"e.g., 25\" min=\"5\" max=\"120\" required>
+              </div>
+            </div>
+            <div class=\"field-row\">
+              <div>
+                <label for=\"${uniquePrefix}_ability_level\">Ability Level *</label>
+                <select id=\"${uniquePrefix}_ability_level\" class=\"ability-level\" required>
+                  <option value=\"\">Select Level</option>
+                  <option value=\"BEGINNER\">Beginner</option>
+                  <option value=\"INTERMEDIATE\">Intermediate</option>
+                  <option value=\"ADVANCED\">Advanced</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+      
+      container.appendChild(configDiv);
+    });
+  }
+
+  async function completeMountWorkOrder() {
+    // Validate all mount configurations
+    let hasValidationError = false;
+    const skis = [];
+    
+    // Process all ski items (mount and non-mount)
+    const allSkiItems = [...skiItemsContainer.children];
+    
+    for (let skiItem of allSkiItems) {
+      const makeSelect = skiItem.querySelector(\".ski-make\");
+      const modelSelect = skiItem.querySelector(\".ski-model\");
+      const serviceSelect = skiItem.querySelector(\".service-type\");
+      const conditionSelect = skiItem.querySelector(\".condition\");
+
+      const skiMake = makeSelect.options[makeSelect.selectedIndex]?.text || \"\";
+      const skiModel = (modelSelect.value || \"\").trim();
+      const serviceType = serviceSelect.value;
+      const condition = conditionSelect.value;
+
+      if (!skiMake || !skiModel || !serviceType || !condition) {
+        ValidationUtils.showMessage('formMessage', 'Please complete all basic ski information.', true);
+        hasValidationError = true;
+        break;
+      }
+
+      const skiData = {
+        skiMake: skiMake,
+        skiModel: skiModel,
+        serviceType: serviceType,
+        condition: condition
+      };
+
+      // Add mount-specific fields if service type is MOUNT
+      if (serviceType === 'MOUNT') {
+        const mountIndex = mountItems.findIndex(item => item === skiItem);
+        const configDiv = document.getElementById(`mountConfig${mountIndex}`);
+        
+        if (!configDiv) {
+          ValidationUtils.showMessage('formMessage', 'Mount configuration error. Please try again.', true);
+          hasValidationError = true;
+          break;
+        }
+        
+        // Validate and include binding information (ALWAYS REQUIRED)
+        const bindingBrand = configDiv.querySelector('.binding-brand').value.trim();
+        const bindingModel = configDiv.querySelector('.binding-model').value.trim();
+        
+        if (!bindingBrand) {
+          ValidationUtils.showMessage('formMessage', 'Binding brand is required for mount services.', true);
+          hasValidationError = true;
+          break;
+        }
+        
+        // Always include binding fields
+        skiData.bindingBrand = bindingBrand;
+        if (bindingModel) {
+          skiData.bindingModel = bindingModel;
+        }
+        
+        const bootSelect = document.getElementById('bootSelection');
+        
+        if (bootSelect.value === 'new') {
+          // Creating new boot - validate all required fields
+          const bootBrand = configDiv.querySelector('.boot-brand').value.trim();
+          const bootModel = configDiv.querySelector('.boot-model').value.trim();
+          const bsl = configDiv.querySelector('.bsl').value;
+          const heightFeet = configDiv.querySelector('.height-feet').value;
+          const heightInches = configDiv.querySelector('.height-inches').value;
+          const weight = configDiv.querySelector('.weight').value;
+          const age = configDiv.querySelector('.age').value;
+          const abilityLevel = configDiv.querySelector('.ability-level').value;
+          
+          // Validate required boot fields
+          if (!bootBrand || !bootModel || !bsl) {
+            ValidationUtils.showMessage('formMessage', 'Boot brand, model, and BSL are required when creating new boot.', true);
+            hasValidationError = true;
+            break;
+          }
+          
+          if (heightFeet === '' || heightInches === '') {
+            ValidationUtils.showMessage('formMessage', 'Height is required when creating new boot.', true);
+            hasValidationError = true;
+            break;
+          }
+          
+          if (!weight || !age || !abilityLevel) {
+            ValidationUtils.showMessage('formMessage', 'Weight, age, and ability level are required when creating new boot.', true);
+            hasValidationError = true;
+            break;
+          }
+          
+          // Convert height to total inches
+          const totalInches = (parseInt(heightFeet) * 12) + parseInt(heightInches);
+          
+          // Include new boot fields (DO NOT include bootId)
+          skiData.bootBrand = bootBrand;
+          skiData.bootModel = bootModel;
+          skiData.bsl = parseInt(bsl);
+          skiData.heightInches = totalInches;
+          skiData.weight = parseInt(weight);
+          skiData.age = parseInt(age);
+          skiData.skiAbilityLevel = abilityLevel;
+          
+        } else {
+          // Using existing boot - validate bootId exists
+          const selectedBootId = parseInt(bootSelect.value);
+          if (isNaN(selectedBootId) || selectedBootId <= 0) {
+            ValidationUtils.showMessage('formMessage', 'Please select a valid boot.', true);
+            hasValidationError = true;
+            break;
+          }
+          
+          // Include only bootId (DO NOT include boot creation fields)
+          skiData.bootId = selectedBootId;
+        }
+      }
+
+      skis.push(skiData);
+    }
+
+    if (hasValidationError) {
+      return;
+    }
+
+    // Build and submit payload - clean JSON only including non-null/non-empty values
+    const payload = {
+      customerFirstName: formData.customerFirstName,
+      customerLastName: formData.customerLastName,
+      phone: formData.phone,
+      email: formData.email,
+      skis: skis
+    };
+
+    console.log('Submitting mount payload:', JSON.stringify(payload, null, 2));
+
+    try {
+      const response = await fetch(API_CONFIG.WORKORDERS, {
+        method: \"POST\",
+        headers: { \"Content-Type\": \"application/json\" },
+        body: JSON.stringify(payload)
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Server error response:', errorText);
+        throw new Error(`Failed to create work order: ${response.status} - ${errorText}`);
+      }
+
+      // Success - hide modal and show success section
+      mountModal.style.display = 'none';
+      document.getElementById(\"createForm\").style.display = \"none\";
+      successSection.style.display = \"block\";
+
+    } catch (error) {
+      console.error(\"Error creating work order:\", error);
+      ValidationUtils.showMessage('formMessage', 'Error creating work order. Please check browser console for details.', true);
+    }
+  }
+
+  async function submitWorkOrder(skiItems) {
+    // Submission logic for non-mount items only
+    const skis = [];
+    let hasValidationError = false;
+
+    for (let skiItem of skiItems) {
+      const makeSelect = skiItem.querySelector(\".ski-make\");
+      const modelSelect = skiItem.querySelector(\".ski-model\");
+      const serviceSelect = skiItem.querySelector(\".service-type\");
+      const conditionSelect = skiItem.querySelector(\".condition\");
+
+      const skiMake = makeSelect.options[makeSelect.selectedIndex]?.text || \"\";
+      const skiModel = (modelSelect.value || \"\").trim();
+      const serviceType = serviceSelect.value;
+      const condition = conditionSelect.value;
+
+      if (!skiMake || !skiModel || !serviceType || !condition) {
+        ValidationUtils.showMessage('formMessage', 'Please complete all basic ski information.', true);
+        hasValidationError = true;
+        break;
+      }
+
+      const skiData = {
+        skiMake: skiMake,
+        skiModel: skiModel,
+        serviceType: serviceType,
+        condition: condition
+      };
+
+      // Should not have MOUNT items here since they go through modal
+      if (serviceType === 'MOUNT') {
+        console.error('MOUNT service found in non-mount submission - this should not happen');
+        ValidationUtils.showMessage('formMessage', 'Mount services should be processed through the mount modal.', true);
+        hasValidationError = true;
+        break;
+      }
+
+      skis.push(skiData);
+    }
+
+    if (hasValidationError) {
+      return;
+    }
+
+    const payload = {
+      customerFirstName: formData.customerFirstName,
+      customerLastName: formData.customerLastName,
+      phone: formData.phone,
+      email: formData.email,
+      skis: skis
+    };
+
+    console.log('Submitting non-mount payload:', JSON.stringify(payload, null, 2));
+
+    try {
+      const response = await fetch(API_CONFIG.WORKORDERS, {
+        method: \"POST\",
+        headers: { \"Content-Type\": \"application/json\" },
+        body: JSON.stringify(payload)
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Server error:', errorText);
+        throw new Error(`Failed to create work order: ${response.status}`);
+      }
+
+      // Success - show success section and hide form
+      document.getElementById(\"createForm\").style.display = \"none\";
+      successSection.style.display = \"block\";
+
+    } catch (error) {
+      console.error(\"Error creating work order:\", error);
+      ValidationUtils.showMessage('formMessage', 'Error creating work order. Please check console and try again.', true);
+    }
+  }
+
+  /* ===============================
+     Mount Modal Event Listeners
+     =============================== */
+  document.getElementById('lookupCustomerBtn').addEventListener('click', lookupCustomer);
+  document.getElementById('cancelMountBtn').addEventListener('click', () => {
+    mountModal.style.display = 'none';
+  });
+  document.getElementById('completeMountBtn').addEventListener('click', completeMountWorkOrder);
+
+  /* ===============================
      Create Another Work Order
      =============================== */
   function createAnother() {
@@ -240,15 +1425,315 @@
     document.getElementById("createForm").reset();
     
     // Clear ski items and add fresh row
-    skiItemsTable.innerHTML = "";
+    skiItemsContainer.innerHTML = "";
+    skiItemCounter = 0;
     addSkiRow();
     
     // Show form and hide success section
     document.getElementById("createForm").style.display = "block";
     successSection.style.display = "none";
     
+    // Reset modal state
+    mountModal.style.display = 'none';
+    currentCustomer = null;
+    mountItems = [];
+    formData = null;
+    
     // Clear messages
     ValidationUtils.clearMessage('formMessage');
+    ValidationUtils.clearMessage('lookupMessage');
+  }
+
+  /* ===============================
+     Boot Selection Modal Functions
+     =============================== */
+  let bootModalCurrentCustomer = null;
+  let bootModalSkiItems = [];
+  let selectedBoot = null;
+
+  async function openBootModal(skiItems) {
+    // Store ski items for processing
+    bootModalSkiItems = skiItems;
+    selectedBoot = null;
+    
+    // Show modal
+    const bootModal = document.getElementById('bootModal');
+    bootModal.style.display = 'block';
+    
+    // Show loading state and look up customer
+    document.getElementById('bootModalTitle').textContent = 'Boot Selection';
+    document.getElementById('bootCustomerLookup').style.display = 'block';
+    document.getElementById('bootSelectionDiv').style.display = 'none';
+    document.getElementById('bootCreationDiv').style.display = 'none';
+    document.getElementById('selectedBootInfo').style.display = 'none';
+    
+    // Clear messages
+    ValidationUtils.clearMessage('bootMessage');
+    
+    // Look up customer and boots
+    await lookupCustomerForBoots();
+  }
+
+  async function lookupCustomerForBoots() {
+    try {
+      // Use email and phone from form data to look up customer
+      const email = formData.email;
+      const phone = formData.phone;
+      
+      // Call customer service to find customer by email + phone
+      const response = await fetch(`${API_CONFIG.BASE_URL}/customers/lookup?email=${encodeURIComponent(email)}&phone=${encodeURIComponent(phone)}`);
+      
+      if (response.ok) {
+        const customer = await response.json();
+        bootModalCurrentCustomer = customer;
+        await loadCustomerBoots(customer.id);
+      } else if (response.status === 404) {
+        // Customer not found - this means they have no existing boots
+        bootModalCurrentCustomer = null;
+        showBootCreationForm();
+      } else {
+        throw new Error(`Failed to lookup customer: ${response.status}`);
+      }
+    } catch (error) {
+      console.error('Error looking up customer:', error);
+      ValidationUtils.showMessage('bootMessage', 'Unable to lookup customer information. Please try again.', true);
+    }
+  }
+
+  async function loadCustomerBoots(customerId) {
+    try {
+      // Fetch customer's boots
+      const response = await fetch(`${API_CONFIG.BASE_URL}/customers/${customerId}/boots`);
+      
+      if (response.ok) {
+        const boots = await response.json();
+        
+        if (boots && boots.length > 0) {
+          showBootSelection(boots);
+        } else {
+          showBootCreationForm();
+        }
+      } else {
+        throw new Error(`Failed to load boots: ${response.status}`);
+      }
+    } catch (error) {
+      console.error('Error loading boots:', error);
+      showBootCreationForm(); // Fall back to boot creation
+    }
+  }
+
+  function showBootSelection(boots) {
+    document.getElementById('bootModalTitle').textContent = 'Select Your Boot';
+    document.getElementById('bootCustomerLookup').style.display = 'none';
+    document.getElementById('bootSelectionDiv').style.display = 'block';
+    
+    const bootsList = document.getElementById('existingBootsList');
+    bootsList.innerHTML = '';
+    
+    boots.forEach(boot => {
+      const bootOption = document.createElement('div');
+      bootOption.className = 'boot-option';
+      bootOption.innerHTML = `
+        <label class="boot-radio-label">
+          <input type="radio" name="bootSelection" value="${boot.id}" data-boot='${JSON.stringify(boot)}'>
+          <strong>${boot.brand} ${boot.model}</strong> (BSL: ${boot.bsl}mm)
+          ${boot.heightInches ? `- Height: ${Math.floor(boot.heightInches/12)}'${boot.heightInches%12}"` : ''}
+          ${boot.weight ? `- Weight: ${boot.weight}lbs` : ''}
+          ${boot.abilityLevel ? `- Level: ${boot.abilityLevel}` : ''}
+        </label>
+      `;
+      bootsList.appendChild(bootOption);
+    });
+    
+    // Add "Create New Boot" option
+    const newBootOption = document.createElement('div');
+    newBootOption.className = 'boot-option';
+    newBootOption.innerHTML = `
+      <label class="boot-radio-label">
+        <input type="radio" name="bootSelection" value="new">
+        <strong>Create a new boot</strong>
+      </label>
+    `;
+    bootsList.appendChild(newBootOption);
+    
+    // Add event listeners for boot selection
+    bootsList.addEventListener('change', handleBootSelection);
+    
+    // Show proceed button
+    document.getElementById('bootProceedBtn').style.display = 'inline-block';
+  }
+
+  function handleBootSelection(event) {
+    if (event.target.name === 'bootSelection') {
+      if (event.target.value === 'new') {
+        selectedBoot = null;
+        showBootCreationForm();
+      } else {
+        selectedBoot = JSON.parse(event.target.getAttribute('data-boot'));
+        showSelectedBootInfo(selectedBoot);
+      }
+    }
+  }
+
+  function showSelectedBootInfo(boot) {
+    document.getElementById('bootSelectionDiv').style.display = 'none';
+    document.getElementById('selectedBootInfo').style.display = 'block';
+    
+    const bootInfoDisplay = document.getElementById('bootInfoDisplay');
+    bootInfoDisplay.innerHTML = `
+      <div class="boot-info-display">
+        <p><strong>Boot:</strong> ${boot.brand} ${boot.model}</p>
+        <p><strong>BSL:</strong> ${boot.bsl}mm</p>
+        ${boot.heightInches ? `<p><strong>Height:</strong> ${Math.floor(boot.heightInches/12)}'${boot.heightInches%12}"</p>` : ''}
+        ${boot.weight ? `<p><strong>Weight:</strong> ${boot.weight}lbs</p>` : ''}
+        ${boot.age ? `<p><strong>Age:</strong> ${boot.age}</p>` : ''}
+        ${boot.abilityLevel ? `<p><strong>Ability Level:</strong> ${boot.abilityLevel}</p>` : ''}
+      </div>
+    `;
+    
+    // Show create work order button
+    document.getElementById('bootProceedBtn').style.display = 'none';
+    document.getElementById('bootCreateBtn').style.display = 'inline-block';
+  }
+
+  function showBootCreationForm() {
+    document.getElementById('bootModalTitle').textContent = 'Create New Boot';
+    document.getElementById('bootCustomerLookup').style.display = 'none';
+    document.getElementById('bootSelectionDiv').style.display = 'none';
+    document.getElementById('selectedBootInfo').style.display = 'none';
+    document.getElementById('bootCreationDiv').style.display = 'block';
+    
+    // Show create work order button
+    document.getElementById('bootProceedBtn').style.display = 'none';
+    document.getElementById('bootCreateBtn').style.display = 'inline-block';
+  }
+
+  function closeBootModal() {
+    document.getElementById('bootModal').style.display = 'none';
+    bootModalCurrentCustomer = null;
+    bootModalSkiItems = [];
+    selectedBoot = null;
+  }
+
+  function goBackToWorkOrder() {
+    closeBootModal();
+  }
+
+  async function proceedWithBootSelection() {
+    if (selectedBoot) {
+      showSelectedBootInfo(selectedBoot);
+    } else {
+      ValidationUtils.showMessage('bootMessage', 'Please select a boot or create a new one.', true);
+    }
+  }
+
+  async function createWorkOrderWithBoot() {
+    try {
+      let bootData = null;
+      
+      if (selectedBoot) {
+        // Use existing boot
+        bootData = { bootId: selectedBoot.id };
+      } else {
+        // Create new boot - validate form
+        const brand = document.getElementById('newBootBrand').value.trim();
+        const model = document.getElementById('newBootModel').value.trim();
+        const bsl = document.getElementById('newBootBsl').value;
+        const heightFeet = document.getElementById('newBootHeightFeet').value;
+        const heightInches = document.getElementById('newBootHeightInches').value;
+        const weight = document.getElementById('newBootWeight').value;
+        const age = document.getElementById('newBootAge').value;
+        const ability = document.getElementById('newBootAbility').value;
+        
+        if (!brand || !model || !bsl || !heightFeet || heightInches === '' || !weight || !age || !ability) {
+          ValidationUtils.showMessage('bootMessage', 'Please fill in all required boot information.', true);
+          return;
+        }
+        
+        const totalInches = (parseInt(heightFeet) * 12) + parseInt(heightInches);
+        
+        bootData = {
+          bootBrand: brand,
+          bootModel: model,
+          bsl: parseInt(bsl),
+          heightInches: totalInches,
+          weight: parseInt(weight),
+          age: parseInt(age),
+          skiAbilityLevel: ability
+        };
+      }
+      
+      // Create ski items array with boot data for mount services
+      const skiItemsData = [];
+      const allSkiItems = [...skiItemsContainer.children];
+      
+      for (let skiItem of allSkiItems) {
+        const makeSelect = skiItem.querySelector(".ski-make");
+        const modelSelect = skiItem.querySelector(".ski-model");
+        const serviceSelect = skiItem.querySelector(".service-type");
+        const conditionSelect = skiItem.querySelector(".condition");
+
+        const skiData = {
+          skiMake: makeSelect.options[makeSelect.selectedIndex]?.text || "",
+          skiModel: modelSelect.value.trim(),
+          serviceType: serviceSelect.value,
+          condition: conditionSelect.value
+        };
+        
+        // Add boot data for mount services
+        if (serviceSelect.value === 'MOUNT') {
+          Object.assign(skiData, bootData);
+        }
+        
+        skiItemsData.push(skiData);
+      }
+      
+      // Submit work order
+      await submitWorkOrderWithSkiData(skiItemsData);
+      
+      // Close modal on success
+      closeBootModal();
+      
+    } catch (error) {
+      console.error('Error creating work order with boot:', error);
+      ValidationUtils.showMessage('bootMessage', 'Failed to create work order. Please try again.', true);
+    }
+  }
+
+  async function submitWorkOrderWithSkiData(skiItemsData) {
+    const requestData = {
+      customerFirstName: formData.customerFirstName,
+      customerLastName: formData.customerLastName,
+      phone: formData.phone,
+      email: formData.email,
+      skis: skiItemsData
+    };
+
+    const response = await fetch(`${API_CONFIG.BASE_URL}/workorders`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(requestData)
+    });
+
+    if (response.ok) {
+      const workOrder = await response.json();
+      ValidationUtils.showMessage('formMessage', `Work order #${workOrder.id} created successfully!`, false);
+      successSection.style.display = 'block';
+      document.getElementById("createForm").style.display = "none";
+    } else {
+      const errorText = await response.text();
+      throw new Error(`Failed to create work order: ${response.status} - ${errorText}`);
+    }
+  }
+
+  // Add event listeners for boot modal buttons
+  document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('bootBackBtn').addEventListener('click', goBackToWorkOrder);
+    document.getElementById('bootProceedBtn').addEventListener('click', proceedWithBootSelection);
+    document.getElementById('bootCreateBtn').addEventListener('click', createWorkOrderWithBoot);
+  });
   }
 
   /* ===============================

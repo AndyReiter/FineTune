@@ -1,6 +1,7 @@
 package com.finetune.app.model.entity;
 
 import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.finetune.app.model.enums.WorkOrderStatus;
 import java.util.ArrayList;
 import java.util.List;
 import jakarta.persistence.*;
@@ -34,63 +35,91 @@ public class WorkOrder {
     private List<SkiItem> skiItems = new ArrayList<>();
 
     public void addSkiItem(SkiItem skiItem) {
+        if (skiItem == null) {
+            throw new IllegalArgumentException("SkiItem cannot be null");
+        }
+        if (!this.skiItems.contains(skiItem)) {
+            this.skiItems.add(skiItem);
+        }
         skiItem.setWorkOrder(this);
-        this.skiItems.add(skiItem);
     }
 
     /**
-     * Determines if this work order is "open" (has items that haven't been picked up).
-     * An open work order has status != "PICKED_UP".
+     * Determines if this work order is "open" for accepting new ski items.
+     * An open work order allows new items to be merged into it.
+     * 
+     * Open statuses: RECEIVED, IN_PROGRESS, READY_FOR_PICKUP
+     * Closed statuses: COMPLETED (ready for pickup - no more items)
+     * 
      * This is used to determine if new ski items should be merged into this order.
      */
     public boolean isOpen() {
-        return !("PICKED_UP".equals(this.status));
+        return !("COMPLETED".equals(this.status));
     }
 
     /**
-     * Updates the work order status based on all ski items.
-     * Logic:
-     * - Status is "COMPLETED" when all ski items are "PICKED_UP"
-     * - Status is "READY_FOR_PICKUP" when all ski items are "DONE" 
-     * - Status is "IN_PROGRESS" when any ski item is "IN_PROGRESS" or "DONE"
-     * - Status remains "RECEIVED" when all items are "PENDING"
-     * This ensures proper workflow progression and immediate status updates.
+     * Calculates and updates the work order status based on all ski items.
+     * This method enforces item-driven state transitions per business rules:
+     * 
+     * BUSINESS RULES:
+     * - RECEIVED: all items are PENDING
+     * - IN_PROGRESS: at least one item is IN_PROGRESS 
+     * - READY_FOR_PICKUP: all items are DONE (customer not notified)
+     * - AWAITING_PICKUP: customer notified, awaiting pickup
+     * - COMPLETED: all items are PICKED_UP
+     * 
+     * This is the ONLY method that should change work order status.
+     * Manual status changes via setStatus() violate the item-driven workflow.
+     * 
+     * Note: AWAITING_PICKUP status is preserved once set via notification,
+     * even if item statuses would normally trigger READY_FOR_PICKUP.
      */
     public void updateStatusBasedOnItems() {
         if (this.skiItems.isEmpty()) {
-            this.status = "RECEIVED";
+            this.status = WorkOrderStatus.RECEIVED.name();
             return;
         }
 
-        // Check if all items are PICKED_UP -> COMPLETED
+        // Rule: COMPLETED when all items are PICKED_UP
         boolean allPickedUp = this.skiItems.stream()
             .allMatch(item -> "PICKED_UP".equals(item.getStatus()));
         
         if (allPickedUp) {
-            this.status = "COMPLETED";
+            this.status = WorkOrderStatus.COMPLETED.name();
             return;
         }
 
-        // Check if all items are DONE -> READY_FOR_PICKUP
+        // Rule: Preserve COMPLETED status once set (no downgrades from COMPLETED)
+        if (WorkOrderStatus.COMPLETED.name().equals(this.status)) {
+            return; // Keep COMPLETED - this is a terminal state
+        }
+
+        // Rule: Preserve AWAITING_PICKUP once customer is notified
+        // (Don't revert to READY_FOR_PICKUP even if all items are DONE)
+        if (WorkOrderStatus.AWAITING_PICKUP.name().equals(this.status)) {
+            return; // Keep AWAITING_PICKUP until pickup occurs
+        }
+
+        // Rule: READY_FOR_PICKUP when all items are DONE (and not yet notified)
         boolean allDone = this.skiItems.stream()
             .allMatch(item -> "DONE".equals(item.getStatus()));
         
         if (allDone) {
-            this.status = "READY_FOR_PICKUP";
+            this.status = WorkOrderStatus.READY_FOR_PICKUP.name();
             return;
         }
 
-        // Check if any item is IN_PROGRESS or DONE -> IN_PROGRESS
-        boolean anyInProgressOrDone = this.skiItems.stream()
-            .anyMatch(item -> "IN_PROGRESS".equals(item.getStatus()) || "DONE".equals(item.getStatus()));
+        // Rule: IN_PROGRESS when at least one item is IN_PROGRESS
+        boolean anyInProgress = this.skiItems.stream()
+            .anyMatch(item -> "IN_PROGRESS".equals(item.getStatus()));
         
-        if (anyInProgressOrDone) {
-            this.status = "IN_PROGRESS";
+        if (anyInProgress) {
+            this.status = WorkOrderStatus.IN_PROGRESS.name();
             return;
         }
 
-        // All items are PENDING -> RECEIVED
-        this.status = "RECEIVED";
+        // Rule: RECEIVED when all items are PENDING (default state)
+        this.status = WorkOrderStatus.RECEIVED.name();
     }
 
     public Long getId() {
