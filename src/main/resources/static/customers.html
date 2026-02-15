@@ -1,0 +1,1108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Customer Management - Equipment Management</title>
+  <link rel="stylesheet" href="shared.css">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <style>
+/* Modern SaaS Dashboard Styles */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  background: #f8fafc;
+  margin: 0;
+  padding: 0;
+  line-height: 1.6;
+  color: #334155;
+}
+
+.dashboard-container {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  min-height: 100vh;
+}
+
+.sidebar {
+  background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+  color: white;
+  padding: 24px 0;
+  position: fixed;
+  width: 280px;
+  height: 100vh;
+  overflow-y: auto;
+}
+
+.sidebar-header {
+  padding: 0 24px 24px;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.2);
+  margin-bottom: 24px;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 20px;
+  font-weight: 700;
+  color: white;
+  text-decoration: none;
+}
+
+.logo i {
+  font-size: 24px;
+  color: #3b82f6;
+}
+
+.nav-menu {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.nav-item {
+  margin-bottom: 4px;
+}
+
+.nav-link {
+  display: flex;
+  align-items: center;
+  padding: 12px 24px;
+  color: #cbd5e1;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  border-right: 3px solid transparent;
+}
+
+.nav-link:hover {
+  background: rgba(148, 163, 184, 0.1);
+  color: white;
+  border-right-color: #3b82f6;
+}
+
+.nav-link.active {
+  background: rgba(59, 130, 246, 0.1);
+  color: white;
+  border-right-color: #3b82f6;
+}
+
+.nav-link i {
+  width: 20px;
+  margin-right: 12px;
+  text-align: center;
+}
+
+.main-content {
+  margin-left: 280px;
+  padding: 32px;
+}
+
+.top-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 32px;
+  background: white;
+  padding: 20px 24px;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.page-title {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.user-section {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.user-info-text {
+  text-align: right;
+}
+
+.user-name {
+  font-weight: 600;
+  color: #334155;
+}
+
+.user-role {
+  font-size: 14px;
+  color: #64748b;
+}
+
+.modern-card {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e2e8f0;
+  overflow: hidden;
+  margin-bottom: 24px;
+}
+
+.card-header {
+  padding: 24px;
+  border-bottom: 1px solid #e2e8f0;
+  background: #f8fafc;
+}
+
+.card-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.card-content {
+  padding: 24px;
+}
+
+.status-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 24px;
+  background: #f1f5f9;
+  padding: 8px;
+  border-radius: 12px;
+}
+
+.tab-button {
+  flex: 1;
+  padding: 12px 16px;
+  border: none;
+  background: transparent;
+  border-radius: 8px;
+  font-weight: 500;
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.tab-button:hover {
+  background: rgba(59, 130, 246, 0.1);
+  color: #3b82f6;
+}
+
+.tab-button.active {
+  background: #3b82f6;
+  color: white;
+  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);
+}
+
+.primary-button {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.2);
+}
+
+.primary-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.secondary-button {
+  background: white;
+  color: #64748b;
+  border: 2px solid #e2e8f0;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.secondary-button:hover {
+  border-color: #cbd5e1;
+  color: #475569;
+  background: #f8fafc;
+}
+
+.modern-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.modern-table th {
+  background: #f8fafc;
+  color: #475569;
+  font-weight: 600;
+  padding: 16px;
+  text-align: left;
+  border-bottom: 2px solid #e2e8f0;
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.modern-table td {
+  padding: 16px;
+  border-bottom: 1px solid #e2e8f0;
+  vertical-align: middle;
+}
+
+.modern-table tr:hover {
+  background: #f8fafc;
+}
+
+.modern-table tr:last-child td {
+  border-bottom: none;
+}
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  gap: 6px;
+}
+
+.badge-received { background: #fef3c7; color: #92400e; }
+.badge-in-progress { background: #dbeafe; color: #1d4ed8; }
+.badge-ready { background: #d1fae5; color: #065f46; }
+.badge-awaiting { background: #e0e7ff; color: #3730a3; }
+.badge-completed { background: #dcfce7; color: #166534; }
+
+.action-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.action-btn {
+  padding: 8px 12px;
+  border: none;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-edit {
+  background: #3b82f6;
+  color: white;
+}
+
+.btn-edit:hover {
+  background: #2563eb;
+  transform: translateY(-1px);
+}
+
+.login-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  margin: 0;
+}
+
+.login-card {
+  background: white;
+  padding: 48px;
+  border-radius: 16px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  width: 100%;
+  max-width: 400px;
+}
+
+.login-header {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.login-title {
+  font-size: 24px;
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: 8px;
+}
+
+.login-subtitle {
+  color: #64748b;
+  font-size: 16px;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-label {
+  display: block;
+  margin-bottom: 6px;
+  font-weight: 600;
+  color: #374151;
+}
+
+.form-input {
+  width: 100%;
+  padding: 12px 16px;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 16px;
+  transition: all 0.2s ease;
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.login-button {
+  width: 100%;
+  padding: 12px;
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.login-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 25px rgba(59, 130, 246, 0.3);
+}
+
+.empty-state {
+  text-align: center;
+  padding: 48px 24px;
+  color: #64748b;
+}
+
+.empty-state i {
+  font-size: 48px;
+  color: #cbd5e1;
+  margin-bottom: 16px;
+}
+
+.empty-state h3 {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: #475569;
+}
+  </style>
+</head>
+<body>
+
+<div id="loginSection" class="login-container">
+  <div class="login-card">
+    <div class="login-header">
+      <h1 class="login-title">Staff Dashboard</h1>
+      <p class="login-subtitle">Sign in to access the equipment management system</p>
+    </div>
+    <form id="loginForm">
+      <div class="form-group">
+        <label class="form-label" for="loginEmail">Email Address</label>
+        <input type="email" id="loginEmail" class="form-input" placeholder="Enter your email" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="loginPassword">Password</label>
+        <input type="password" id="loginPassword" class="form-input" placeholder="Enter your password" required>
+      </div>
+      <button type="button" class="login-button" onclick="handleLogin()">
+        <i class="fas fa-sign-in-alt"></i> Sign In
+      </button>
+    </form>
+    <div id="loginMessage" class="message"></div>
+  </div>
+</div>
+
+<div id="authenticatedSection" class="dashboard-container" style="display: none;">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <a href="dashboard.html" class="logo">
+        <i class="fas fa-tools"></i>
+        FineTune
+      </a>
+    </div>
+    <nav>
+      <ul class="nav-menu">
+        <li class="nav-item">
+          <a href="dashboard.html" class="nav-link">
+            <i class="fas fa-tachometer-alt"></i>
+            Dashboard
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="#" class="nav-link">
+            <i class="fas fa-clipboard-list"></i>
+            Work Orders
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="customers.html" class="nav-link active">
+            <i class="fas fa-users"></i>
+            Customers
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="#" class="nav-link">
+            <i class="fas fa-skiing"></i>
+            Equipment
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="#" class="nav-link">
+            <i class="fas fa-chart-bar"></i>
+            Analytics
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="#" class="nav-link">
+            <i class="fas fa-cog"></i>
+            Settings
+          </a>
+        </li>
+      </ul>
+    </nav>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    <div class="top-bar">
+      <h1 class="page-title">Customer Management</h1>
+      <div class="user-section">
+        <div class="user-info-text">
+          <div class="user-name">Welcome, <span id="userEmail"></span></div>
+          <div class="user-role">Staff Member</div>
+        </div>
+        <button type="button" class="secondary-button" onclick="handleLogout()">
+          <i class="fas fa-sign-out-alt"></i> Logout
+        </button>
+      </div>
+    </div>
+
+    <!-- Customer Management Card -->
+    <div id="customersSection" class="modern-card">
+      <div class="card-header">
+        <div class="card-title">
+          <span><i class="fas fa-users"></i> Customer Management</span>
+          <div style="display: flex; gap: 8px; align-items: center;">
+            <div style="position: relative;">
+              <input 
+                type="text" 
+                id="customerSearchInput" 
+                placeholder="Search by name or phone..."
+                oninput="handleCustomerSearch(this.value)"
+                style="padding: 10px 40px 10px 16px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px; width: 300px; transition: all 0.2s ease;"
+                onfocus="this.style.borderColor='#3b82f6'; this.style.boxShadow='0 0 0 3px rgba(59, 130, 246, 0.1)'"
+                onblur="this.style.borderColor='#e2e8f0'; this.style.boxShadow='none'"
+              />
+              <button 
+                type="button" 
+                id="clearSearchBtn"
+                onclick="clearCustomerSearch()"
+                style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: transparent; border: none; color: #64748b; cursor: pointer; padding: 4px 8px; border-radius: 4px; display: none;"
+                onmouseover="this.style.color='#ef4444'"
+                onmouseout="this.style.color='#64748b'"
+              >
+                <i class="fas fa-times-circle"></i>
+              </button>
+            </div>
+            <button type="button" class="secondary-button" onclick="refreshCustomers()" title="Refresh customer list">
+              <i class="fas fa-sync"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+      
+      <div class="card-content">
+        <!-- Customers Table -->
+        <table class="modern-table">
+          <thead>
+            <tr>
+              <th><i class="fas fa-hashtag"></i> ID</th>
+              <th><i class="fas fa-user"></i> Name</th>
+              <th><i class="fas fa-envelope"></i> Email</th>
+              <th><i class="fas fa-phone"></i> Phone</th>
+              <th><i class="fas fa-clipboard-list"></i> Work Orders</th>
+              <th><i class="fas fa-tools"></i> Actions</th>
+            </tr>
+          </thead>
+          <tbody id="customersTable"></tbody>
+        </table>
+
+        <div id="customersMessage" class="message"></div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- ===============================
+     Customer Details Modal
+     =============================== -->
+<div id="customerModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3 id="customerModalTitle">Customer Details</h3>
+    </div>
+    <div class="modal-body">
+      <div id="customerInfoSection">
+        <!-- Customer info will be populated here -->
+      </div>
+      
+      <!-- Customer Modal Tabs -->
+      <div class="status-tabs" style="margin-top: 24px;">
+        <button class="tab-button active" onclick="switchCustomerModalTab('workOrders', this)">
+          <i class="fas fa-clipboard-list"></i> Work Orders
+        </button>
+        <button class="tab-button" onclick="switchCustomerModalTab('equipment', this)">
+          <i class="fas fa-skiing"></i> Equipment
+        </button>
+        <button class="tab-button" onclick="switchCustomerModalTab('boots', this)">
+          <i class="fas fa-shoe-prints"></i> Boots
+        </button>
+      </div>
+      
+      <!-- Tab Content Containers -->
+      <div id="customerWorkOrdersTab" class="customer-tab-content" style="display: block;">
+        <!-- Work orders content will be loaded here -->
+      </div>
+      <div id="customerEquipmentTab" class="customer-tab-content" style="display: none;">
+        <!-- Equipment content will be loaded here -->
+      </div>
+      <div id="customerBootsTab" class="customer-tab-content" style="display: none;">
+        <!-- Boots content will be loaded here -->
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="secondary-button" onclick="closeCustomerModal()">
+        <i class="fas fa-times"></i> Close
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Include shared JavaScript utilities -->
+<script src="shared.js"></script>
+
+<script>
+  // Page-specific variables
+  const customerModal = document.getElementById("customerModal");
+  let allCustomers = []; // Store all customers for search filtering
+
+  /* ===============================
+     UI Helper Functions
+     =============================== */
+  function getModernStatusBadge(status) {
+    const badges = {
+      'RECEIVED': '<span class="status-badge badge-received"><i class="fas fa-inbox"></i> New</span>',
+      'IN_PROGRESS': '<span class="status-badge badge-in-progress"><i class="fas fa-cog"></i> In Progress</span>',
+      'READY_FOR_PICKUP': '<span class="status-badge badge-ready"><i class="fas fa-check-circle"></i> Ready</span>',
+      'AWAITING_PICKUP': '<span class="status-badge badge-awaiting"><i class="fas fa-clock"></i> Awaiting</span>',
+      'COMPLETED': '<span class="status-badge badge-completed"><i class="fas fa-check-double"></i> Completed</span>',
+      'PENDING': '<span class="status-badge badge-received"><i class="fas fa-hourglass-half"></i> Pending</span>',
+      'DONE': '<span class="status-badge badge-ready"><i class="fas fa-check"></i> Done</span>',
+      'PICKED_UP': '<span class="status-badge badge-completed"><i class="fas fa-check-double"></i> Picked Up</span>'
+    };
+    return badges[status] || `<span class="status-badge">${status}</span>`;
+  }
+  
+  function formatDate(dateString) {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { 
+      year: 'numeric', 
+      month: 'short', 
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  }
+
+  /* ===============================
+     Authentication Management
+     =============================== */
+  function handleLogin() {
+    const email = document.getElementById("loginEmail").value.trim();
+    const password = document.getElementById("loginPassword").value.trim();
+
+    ValidationUtils.clearMessage('loginMessage');
+
+    if (!email || !password) {
+      ValidationUtils.showMessage('loginMessage', 'Please enter both email and password.', true);
+      return;
+    }
+
+    if (!ValidationUtils.isValidEmail(email)) {
+      ValidationUtils.showMessage('loginMessage', 'Please enter a valid email address.', true);
+      return;
+    }
+
+    // Attempt login
+    AuthUtils.login(email, password)
+      .then(response => {
+        document.getElementById("userEmail").textContent = email;
+        showAuthenticatedView();
+        fetchAllCustomers();
+      })
+      .catch(error => {
+        ValidationUtils.showMessage('loginMessage', 'Invalid credentials. Please try again.', true);
+      });
+  }
+
+  function handleLogout() {
+    AuthUtils.logout();
+  }
+
+  function showAuthenticatedView() {
+    document.getElementById("loginSection").style.display = "none";
+    document.getElementById("authenticatedSection").style.display = "block";
+  }
+
+  function showLoginView() {
+    document.getElementById("loginSection").style.display = "block";
+    document.getElementById("authenticatedSection").style.display = "none";
+    ValidationUtils.clearMessage('loginMessage');
+  }
+
+  /* ===============================
+     Customer Modal Functions
+     =============================== */
+  async function openCustomerModal(customerId) {
+    try {
+      const response = await APIUtils.authenticatedFetch(`${API_CONFIG.CUSTOMERS}/${customerId}`);
+      const customer = await response.json();
+
+      const customerInfoSection = document.getElementById('customerInfoSection');
+      customerInfoSection.innerHTML = `
+        <div style="margin-bottom: 20px;">
+          <div style="display: grid; grid-template-columns: 150px 1fr; gap: 15px; font-size: 14px;">
+            <div style="font-weight: 600; color: #64748b;">Full Name:</div>
+            <div style="color: #1e293b;">${customer.firstName} ${customer.lastName}</div>
+            
+            <div style="font-weight: 600; color: #64748b;">Email:</div>
+            <div style="color: #1e293b;">${customer.email || 'N/A'}</div>
+            
+            <div style="font-weight: 600; color: #64748b;">Phone:</div>
+            <div style="color: #1e293b;">${customer.phone || 'N/A'}</div>
+            
+            <div style="font-weight: 600; color: #64748b;">Total Work Orders:</div>
+            <div style="color: #1e293b;">${customer.workOrderCount || 0}</div>
+            
+            <div style="font-weight: 600; color: #64748b;">Total Equipment:</div>
+            <div style="color: #1e293b;">${customer.equipmentCount || 0}</div>
+            
+            <div style="font-weight: 600; color: #64748b;">Total Boots:</div>
+            <div style="color: #1e293b;">${customer.bootCount || 0}</div>
+          </div>
+        </div>
+      `;
+
+      // Reset to first tab
+      switchCustomerModalTab('workOrders', document.querySelector('#customerModal .tab-button'));
+
+      // Load customer work orders
+      await loadCustomerWorkOrders(customerId);
+
+      // Load customer equipment
+      await loadCustomerEquipment(customerId);
+
+      // Load customer boots
+      await loadCustomerBoots(customerId);
+
+      customerModal.style.display = "block";
+    } catch (error) {
+      console.error("Error fetching customer details:", error);
+      ValidationUtils.showMessage('customersMessage', 'Failed to load customer details.', true);
+    }
+  }
+
+  function closeCustomerModal() {
+    customerModal.style.display = "none";
+    document.getElementById('customerInfoSection').innerHTML = "";
+    // Clear tab content
+    document.getElementById('customerWorkOrdersTab').innerHTML = "";
+    document.getElementById('customerEquipmentTab').innerHTML = "";
+    document.getElementById('customerBootsTab').innerHTML = "";
+  }
+
+  function switchCustomerModalTab(tabName, clickedButton) {
+    // Remove active class from all tab buttons in customer modal
+    const tabButtons = document.querySelectorAll('#customerModal .tab-button');
+    tabButtons.forEach(btn => btn.classList.remove('active'));
+    
+    // Add active class to clicked button
+    if (clickedButton) {
+      clickedButton.classList.add('active');
+    }
+    
+    // Hide all tab content
+    document.getElementById('customerWorkOrdersTab').style.display = 'none';
+    document.getElementById('customerEquipmentTab').style.display = 'none';
+    document.getElementById('customerBootsTab').style.display = 'none';
+    
+    // Show selected tab content
+    switch(tabName) {
+      case 'workOrders':
+        document.getElementById('customerWorkOrdersTab').style.display = 'block';
+        break;
+      case 'equipment':
+        document.getElementById('customerEquipmentTab').style.display = 'block';
+        break;
+      case 'boots':
+        document.getElementById('customerBootsTab').style.display = 'block';
+        break;
+    }
+  }
+
+  async function loadCustomerWorkOrders(customerId) {
+    try {
+      const response = await APIUtils.authenticatedFetch(`${API_CONFIG.CUSTOMERS}/${customerId}/workorders`);
+      const workOrders = await response.json();
+
+      const workOrdersTab = document.getElementById('customerWorkOrdersTab');
+
+      if (workOrders.length === 0) {
+        workOrdersTab.innerHTML = `
+          <div class="empty-state">
+            <i class="fas fa-clipboard-list"></i>
+            <h3>No work orders found</h3>
+            <p>This customer has no work orders yet.</p>
+          </div>
+        `;
+        return;
+      }
+
+      workOrdersTab.innerHTML = `
+        <table class="modern-table">
+          <thead>
+            <tr>
+              <th><i class="fas fa-hashtag"></i> ID</th>
+              <th><i class="fas fa-info-circle"></i> Status</th>
+              <th><i class="fas fa-clock"></i> Promised By</th>
+              <th><i class="fas fa-calendar"></i> Created</th>
+              <th><i class="fas fa-skiing"></i> Equipment Count</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${workOrders.map(order => `
+              <tr>
+                <td>${order.id}</td>
+                <td>${getModernStatusBadge(order.status)}</td>
+                <td style="color: ${order.promisedBy ? '#059669' : '#6b7280'}; font-weight: ${order.promisedBy ? '600' : 'normal'};">${order.promisedBy ? formatDate(order.promisedBy) : 'Not Set'}</td>
+                <td>${formatDate(order.createdAt) || ''}</td>
+                <td>${order.equipmentCount || 0}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      `;
+    } catch (error) {
+      console.error('Error loading customer work orders:', error);
+      document.getElementById('customerWorkOrdersTab').innerHTML = `
+        <div class="empty-state">
+          <i class="fas fa-exclamation-circle"></i>
+          <h3>Error loading work orders</h3>
+          <p>Failed to load work orders for this customer.</p>
+        </div>
+      `;
+    }
+  }
+
+  async function loadCustomerEquipment(customerId) {
+    try {
+      const response = await APIUtils.authenticatedFetch(`${API_CONFIG.CUSTOMERS}/${customerId}/equipment`);
+      const equipment = await response.json();
+
+      const equipmentTab = document.getElementById('customerEquipmentTab');
+
+      if (equipment.length === 0) {
+        equipmentTab.innerHTML = `
+          <div class="empty-state">
+            <i class="fas fa-skiing"></i>
+            <h3>No equipment found</h3>
+            <p>This customer has no equipment records yet.</p>
+          </div>
+        `;
+        return;
+      }
+
+      equipmentTab.innerHTML = `
+        <table class="modern-table">
+          <thead>
+            <tr>
+              <th><i class="fas fa-tag"></i> Brand</th>
+              <th><i class="fas fa-skiing"></i> Model</th>
+              <th><i class="fas fa-ruler"></i> Size</th>
+              <th><i class="fas fa-calendar"></i> Created</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${equipment.map(item => `
+              <tr>
+                <td>${item.brand || 'N/A'}</td>
+                <td>${item.model || 'N/A'}</td>
+                <td>${item.size || 'N/A'}</td>
+                <td>${formatDate(item.createdAt) || ''}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      `;
+    } catch (error) {
+      console.error('Error loading customer equipment:', error);
+      document.getElementById('customerEquipmentTab').innerHTML = `
+        <div class="empty-state">
+          <i class="fas fa-exclamation-circle"></i>
+          <h3>Error loading equipment</h3>
+          <p>Failed to load equipment for this customer.</p>
+        </div>
+      `;
+    }
+  }
+
+  async function loadCustomerBoots(customerId) {
+    try {
+      const response = await APIUtils.authenticatedFetch(`${API_CONFIG.CUSTOMERS}/${customerId}/boots`);
+      const boots = await response.json();
+
+      const bootsTab = document.getElementById('customerBootsTab');
+
+      if (boots.length === 0) {
+        bootsTab.innerHTML = `
+          <div class="empty-state">
+            <i class="fas fa-shoe-prints"></i>
+            <h3>No boots found</h3>
+            <p>This customer has no boot records yet.</p>
+          </div>
+        `;
+        return;
+      }
+
+      bootsTab.innerHTML = `
+        <table class="modern-table">
+          <thead>
+            <tr>
+              <th><i class="fas fa-tag"></i> Brand</th>
+              <th><i class="fas fa-shoe-prints"></i> Model</th>
+              <th><i class="fas fa-ruler"></i> Size</th>
+              <th><i class="fas fa-arrows-alt-h"></i> BSL</th>
+              <th><i class="fas fa-calendar"></i> Created</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${boots.map(boot => `
+              <tr>
+                <td>${boot.brand || 'N/A'}</td>
+                <td>${boot.model || 'N/A'}</td>
+                <td>${boot.size || 'N/A'}</td>
+                <td>${boot.bsl || 'N/A'}</td>
+                <td>${formatDate(boot.createdAt) || ''}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      `;
+    } catch (error) {
+      console.error('Error loading customer boots:', error);
+      document.getElementById('customerBootsTab').innerHTML = `
+        <div class="empty-state">
+          <i class="fas fa-exclamation-circle"></i>
+          <h3>Error loading boots</h3>
+          <p>Failed to load boots for this customer.</p>
+        </div>
+      `;
+    }
+  }
+
+  // Click outside modal to close
+  window.onclick = function(event) {
+    if (event.target === customerModal) {
+      closeCustomerModal();
+    }
+  };
+
+  function refreshCustomers() {
+    document.getElementById('customerSearchInput').value = '';
+    document.getElementById('clearSearchBtn').style.display = 'none';
+    fetchAllCustomers();
+  }
+
+  /* ===============================
+     Customer Search Functions
+     =============================== */
+  function handleCustomerSearch(searchTerm) {
+    const clearBtn = document.getElementById('clearSearchBtn');
+    
+    // Show/hide clear button
+    clearBtn.style.display = searchTerm.trim() ? 'block' : 'none';
+    
+    // Filter customers
+    const term = searchTerm.toLowerCase().trim();
+    
+    if (!term) {
+      // Show all customers if search is empty
+      displayCustomers(allCustomers);
+      return;
+    }
+    
+    const filteredCustomers = allCustomers.filter(customer => {
+      const firstName = (customer.firstName || '').toLowerCase();
+      const lastName = (customer.lastName || '').toLowerCase();
+      const fullName = `${firstName} ${lastName}`.trim();
+      const phone = (customer.phone || '').toLowerCase();
+      
+      return firstName.includes(term) || 
+             lastName.includes(term) || 
+             fullName.includes(term) ||
+             phone.includes(term);
+    });
+    
+    displayCustomers(filteredCustomers);
+  }
+  
+  function clearCustomerSearch() {
+    document.getElementById('customerSearchInput').value = '';
+    document.getElementById('clearSearchBtn').style.display = 'none';
+    displayCustomers(allCustomers);
+  }
+  
+  function displayCustomers(customers) {
+    const customersTableBody = document.getElementById("customersTable");
+    customersTableBody.innerHTML = "";
+    
+    if (customers.length === 0) {
+      const searchTerm = document.getElementById('customerSearchInput').value;
+      const message = searchTerm ? 
+        `<div class="empty-state">
+          <i class="fas fa-search"></i>
+          <h3>No customers found</h3>
+          <p>No customers match "${searchTerm}"</p>
+        </div>` :
+        `<div class="empty-state">
+          <i class="fas fa-users"></i>
+          <h3>No customers found</h3>
+          <p>No customers in the system yet.</p>
+        </div>`;
+      
+      customersTableBody.innerHTML = `<tr><td colspan="6">${message}</td></tr>`;
+      return;
+    }
+    
+    customers.forEach(customer => {
+      const row = document.createElement("tr");
+      const fullName = `${customer.firstName || ''} ${customer.lastName || ''}`.trim() || 'N/A';
+      
+      row.innerHTML = `
+        <td>${customer.id}</td>
+        <td><strong>${fullName}</strong></td>
+        <td>${customer.email || ""}</td>
+        <td>${customer.phone || ""}</td>
+        <td>${customer.workOrderCount || 0}</td>
+        <td class="action-buttons">
+          <button type="button" class="action-btn btn-edit" onclick="openCustomerModal(${customer.id})">
+            <i class="fas fa-eye"></i> View
+          </button>
+        </td>
+      `;
+      
+      customersTableBody.appendChild(row);
+    });
+  }
+
+  /* ===============================
+     Customer Data Loading
+     =============================== */
+  async function fetchAllCustomers() {
+    if (!AuthUtils.isAuthenticated()) {
+      showLoginView();
+      return;
+    }
+
+    try {
+      const response = await APIUtils.authenticatedFetch(API_CONFIG.CUSTOMERS);
+      const customers = await response.json();
+
+      if (!Array.isArray(customers)) {
+        console.error("Expected array but got:", customers);
+        ValidationUtils.showMessage('customersMessage', 'Invalid response from server.', true);
+        return;
+      }
+
+      // Store customers for search filtering
+      allCustomers = customers;
+      
+      ValidationUtils.clearMessage('customersMessage');
+      
+      // Display all customers
+      displayCustomers(customers);
+    } catch (error) {
+      console.error("Error fetching customers:", error);
+      if (error.message === "Authentication required") {
+        showLoginView();
+      } else {
+        ValidationUtils.showMessage('customersMessage', 'Failed to load customers.', true);
+      }
+    }
+  }
+
+  /* ===============================
+     Initialize Page
+     =============================== */
+  // Check if user is already authenticated on page load
+  window.addEventListener('DOMContentLoaded', function() {
+    if (AuthUtils.isAuthenticated()) {
+      // Try to show authenticated view and fetch customers
+      showAuthenticatedView();
+      fetchAllCustomers();
+    } else {
+      showLoginView();
+    }
+
+    // Handle Enter key in login fields
+    document.getElementById("loginEmail").addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') {
+        handleLogin();
+      }
+    });
+
+    document.getElementById("loginPassword").addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') {
+        handleLogin();
+      }
+    });
+  });
+
+</script>
+
+</body>
+</html>

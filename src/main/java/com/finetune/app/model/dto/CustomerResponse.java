@@ -115,7 +115,8 @@ public class CustomerResponse {
         private Long id;
         private String status;
         private String createdAt;
-        private Integer skiItemCount;
+        private String promisedBy;
+        private Integer equipmentCount;
 
         public WorkOrderSummary() {}
 
@@ -124,7 +125,8 @@ public class CustomerResponse {
             summary.id = workOrder.getId();
             summary.status = workOrder.getStatus();
             summary.createdAt = workOrder.getCreatedAt() != null ? workOrder.getCreatedAt().toString() : null;
-            summary.skiItemCount = workOrder.getSkiItems() != null ? workOrder.getSkiItems().size() : 0;
+            summary.promisedBy = workOrder.getPromisedBy() != null ? workOrder.getPromisedBy().toString() : null;
+            summary.equipmentCount = workOrder.getEquipment() != null ? workOrder.getEquipment().size() : 0;
             return summary;
         }
 
@@ -153,12 +155,20 @@ public class CustomerResponse {
             this.createdAt = createdAt;
         }
 
-        public Integer getSkiItemCount() {
-            return skiItemCount;
+        public String getPromisedBy() {
+            return promisedBy;
         }
 
-        public void setSkiItemCount(Integer skiItemCount) {
-            this.skiItemCount = skiItemCount;
+        public void setPromisedBy(String promisedBy) {
+            this.promisedBy = promisedBy;
+        }
+
+        public Integer getEquipmentCount() {
+            return equipmentCount;
+        }
+
+        public void setEquipmentCount(Integer equipmentCount) {
+            this.equipmentCount = equipmentCount;
         }
     }
 }

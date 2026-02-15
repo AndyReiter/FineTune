@@ -5,6 +5,7 @@ import com.finetune.app.model.enums.WorkOrderStatus;
 import java.util.ArrayList;
 import java.util.List;
 import jakarta.persistence.*;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
@@ -25,40 +26,41 @@ public class WorkOrder {
 
     private LocalDateTime createdAt;
 
+    @Column(name = "promised_by", nullable = false)
+    private LocalDate promisedBy;
+
     @OneToMany(
         mappedBy = "workOrder",
-        cascade = CascadeType.ALL,
-        orphanRemoval = true,
         fetch = FetchType.EAGER
     )
     @JsonManagedReference
-    private List<SkiItem> skiItems = new ArrayList<>();
+    private List<Equipment> equipment = new ArrayList<>();
 
-    public void addSkiItem(SkiItem skiItem) {
-        if (skiItem == null) {
-            throw new IllegalArgumentException("SkiItem cannot be null");
+    public void addEquipment(Equipment equipmentItem) {
+        if (equipmentItem == null) {
+            throw new IllegalArgumentException("Equipment cannot be null");
         }
-        if (!this.skiItems.contains(skiItem)) {
-            this.skiItems.add(skiItem);
+        if (!this.equipment.contains(equipmentItem)) {
+            this.equipment.add(equipmentItem);
         }
-        skiItem.setWorkOrder(this);
+        equipmentItem.setWorkOrder(this);
     }
 
     /**
-     * Determines if this work order is "open" for accepting new ski items.
+     * Determines if this work order is "open" for accepting new equipment items.
      * An open work order allows new items to be merged into it.
      * 
      * Open statuses: RECEIVED, IN_PROGRESS, READY_FOR_PICKUP
      * Closed statuses: COMPLETED (ready for pickup - no more items)
      * 
-     * This is used to determine if new ski items should be merged into this order.
+     * This is used to determine if new equipment items should be merged into this order.
      */
     public boolean isOpen() {
         return !("COMPLETED".equals(this.status));
     }
 
     /**
-     * Calculates and updates the work order status based on all ski items.
+     * Calculates and updates the work order status based on all equipment items.
      * This method enforces item-driven state transitions per business rules:
      * 
      * BUSINESS RULES:
@@ -75,13 +77,13 @@ public class WorkOrder {
      * even if item statuses would normally trigger READY_FOR_PICKUP.
      */
     public void updateStatusBasedOnItems() {
-        if (this.skiItems.isEmpty()) {
+        if (this.equipment.isEmpty()) {
             this.status = WorkOrderStatus.RECEIVED.name();
             return;
         }
 
         // Rule: COMPLETED when all items are PICKED_UP
-        boolean allPickedUp = this.skiItems.stream()
+        boolean allPickedUp = this.equipment.stream()
             .allMatch(item -> "PICKED_UP".equals(item.getStatus()));
         
         if (allPickedUp) {
@@ -101,7 +103,7 @@ public class WorkOrder {
         }
 
         // Rule: READY_FOR_PICKUP when all items are DONE (and not yet notified)
-        boolean allDone = this.skiItems.stream()
+        boolean allDone = this.equipment.stream()
             .allMatch(item -> "DONE".equals(item.getStatus()));
         
         if (allDone) {
@@ -110,7 +112,7 @@ public class WorkOrder {
         }
 
         // Rule: IN_PROGRESS when at least one item is IN_PROGRESS
-        boolean anyInProgress = this.skiItems.stream()
+        boolean anyInProgress = this.equipment.stream()
             .anyMatch(item -> "IN_PROGRESS".equals(item.getStatus()));
         
         if (anyInProgress) {
@@ -154,11 +156,19 @@ public class WorkOrder {
         this.createdAt = createdAt;
     }
 
-    public List<SkiItem> getSkiItems() {
-        return skiItems;
+    public LocalDate getPromisedBy() {
+        return promisedBy;
     }
 
-    public void setSkiItems(List<SkiItem> skiItems) {
-        this.skiItems = skiItems;
+    public void setPromisedBy(LocalDate promisedBy) {
+        this.promisedBy = promisedBy;
+    }
+
+    public List<Equipment> getEquipment() {
+        return equipment;
+    }
+
+    public void setEquipment(List<Equipment> equipment) {
+        this.equipment = equipment;
     }
 }

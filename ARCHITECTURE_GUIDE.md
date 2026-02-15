@@ -166,6 +166,7 @@ CREATE TABLE work_orders (
     customer_id BIGINT NOT NULL,
     status VARCHAR(50),
     created_at TIMESTAMP,
+    promised_by TIMESTAMP,
     FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE CASCADE
 );
 

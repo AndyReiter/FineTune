@@ -1,19 +1,26 @@
 package com.finetune.app.model.dto;
 
 import com.finetune.app.model.entity.Equipment;
+import com.finetune.app.model.entity.Equipment.EquipmentType;
+import com.finetune.app.model.entity.Equipment.Condition;
+import com.finetune.app.model.entity.Equipment.AbilityLevel;
 
 /**
- * DTO for Equipment responses (for ski items).
- * Does not include the WorkOrder reference to prevent circular references.
- * Includes boot information for mount services.
+ * DTO for Equipment responses.
+ * Returns equipment information without work order references to prevent circular dependencies.
+ * Includes all fields needed for work order equipment display including mount service details.
  */
-public class SkiItemResponse {
+public class EquipmentResponse {
 
     private Long id;
-    private String skiMake;
-    private String skiModel;
+    private EquipmentType type;
+    private String brand;
+    private String model;
+    private Integer length;
     private String serviceType;
     private String status;
+    private Condition condition;
+    private AbilityLevel abilityLevel;
     
     // Mount-specific fields
     private String bindingBrand;
@@ -21,24 +28,28 @@ public class SkiItemResponse {
     private Integer heightInches;
     private Integer weight;
     private Integer age;
-    private String skiAbilityLevel;
-    private String condition;
     
     // Boot information (when applicable)
     private BootResponse boot;
 
-    public SkiItemResponse() {}
+    // Constructors
+    public EquipmentResponse() {
+    }
 
     /**
      * Factory method to convert an Equipment entity to this DTO.
      */
-    public static SkiItemResponse fromEntity(Equipment equipment) {
-        SkiItemResponse response = new SkiItemResponse();
+    public static EquipmentResponse fromEntity(Equipment equipment) {
+        EquipmentResponse response = new EquipmentResponse();
         response.id = equipment.getId();
-        response.skiMake = equipment.getBrand();
-        response.skiModel = equipment.getModel();
+        response.type = equipment.getType();
+        response.brand = equipment.getBrand();
+        response.model = equipment.getModel();
+        response.length = equipment.getLength();
         response.serviceType = equipment.getServiceType();
         response.status = equipment.getStatus();
+        response.condition = equipment.getCondition();
+        response.abilityLevel = equipment.getAbilityLevel();
         
         // Include mount-specific data if present
         response.bindingBrand = equipment.getBindingBrand();
@@ -46,11 +57,7 @@ public class SkiItemResponse {
         response.heightInches = equipment.getHeightInches();
         response.weight = equipment.getWeight();
         response.age = equipment.getAge();
-        response.skiAbilityLevel = equipment.getAbilityLevel() != null ? 
-            equipment.getAbilityLevel().name() : null;
-        response.condition = equipment.getCondition() != null ? 
-            equipment.getCondition().name() : null;
-            
+        
         // Include boot information if present
         if (equipment.getBoot() != null) {
             response.boot = BootResponse.fromEntity(equipment.getBoot());
@@ -68,20 +75,36 @@ public class SkiItemResponse {
         this.id = id;
     }
 
-    public String getSkiMake() {
-        return skiMake;
+    public EquipmentType getType() {
+        return type;
     }
 
-    public void setSkiMake(String skiMake) {
-        this.skiMake = skiMake;
+    public void setType(EquipmentType type) {
+        this.type = type;
     }
 
-    public String getSkiModel() {
-        return skiModel;
+    public String getBrand() {
+        return brand;
     }
 
-    public void setSkiModel(String skiModel) {
-        this.skiModel = skiModel;
+    public void setBrand(String brand) {
+        this.brand = brand;
+    }
+
+    public String getModel() {
+        return model;
+    }
+
+    public void setModel(String model) {
+        this.model = model;
+    }
+
+    public Integer getLength() {
+        return length;
+    }
+
+    public void setLength(Integer length) {
+        this.length = length;
     }
 
     public String getServiceType() {
@@ -98,6 +121,22 @@ public class SkiItemResponse {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public Condition getCondition() {
+        return condition;
+    }
+
+    public void setCondition(Condition condition) {
+        this.condition = condition;
+    }
+
+    public AbilityLevel getAbilityLevel() {
+        return abilityLevel;
+    }
+
+    public void setAbilityLevel(AbilityLevel abilityLevel) {
+        this.abilityLevel = abilityLevel;
     }
 
     public String getBindingBrand() {
@@ -138,22 +177,6 @@ public class SkiItemResponse {
 
     public void setAge(Integer age) {
         this.age = age;
-    }
-
-    public String getSkiAbilityLevel() {
-        return skiAbilityLevel;
-    }
-
-    public void setSkiAbilityLevel(String skiAbilityLevel) {
-        this.skiAbilityLevel = skiAbilityLevel;
-    }
-
-    public String getCondition() {
-        return condition;
-    }
-
-    public void setCondition(String condition) {
-        this.condition = condition;
     }
 
     public BootResponse getBoot() {

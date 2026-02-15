@@ -2,43 +2,593 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Staff Dashboard - Ski Shop</title>
+  <title>Staff Dashboard - Equipment Management</title>
   <link rel="stylesheet" href="shared.css">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
   <style>
-.ski-item-row {
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  padding: 15px;
-  margin-bottom: 15px;
-  background: #f9f9f9;
-  position: relative;
+/* Modern SaaS Dashboard Styles */
+* {
+  box-sizing: border-box;
 }
 
-.ski-item-row h5 {
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  background: #f8fafc;
+  margin: 0;
+  padding: 0;
+  line-height: 1.6;
+  color: #334155;
+}
+
+.dashboard-container {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  min-height: 100vh;
+}
+
+.sidebar {
+  background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+  color: white;
+  padding: 24px 0;
+  position: fixed;
+  width: 280px;
+  height: 100vh;
+  overflow-y: auto;
+}
+
+.sidebar-header {
+  padding: 0 24px 24px;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.2);
+  margin-bottom: 24px;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 20px;
+  font-weight: 700;
+  color: white;
+  text-decoration: none;
+}
+
+.logo i {
+  font-size: 24px;
+  color: #3b82f6;
+}
+
+.nav-menu {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.nav-item {
+  margin-bottom: 4px;
+}
+
+.nav-link {
+  display: flex;
+  align-items: center;
+  padding: 12px 24px;
+  color: #cbd5e1;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  border-right: 3px solid transparent;
+}
+
+.nav-link:hover {
+  background: rgba(148, 163, 184, 0.1);
+  color: white;
+  border-right-color: #3b82f6;
+}
+
+.nav-link.active {
+  background: rgba(59, 130, 246, 0.1);
+  color: white;
+  border-right-color: #3b82f6;
+}
+
+.nav-link i {
+  width: 20px;
+  margin-right: 12px;
+  text-align: center;
+}
+
+.main-content {
+  margin-left: 280px;
+  padding: 32px;
+}
+
+.top-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 32px;
+  background: white;
+  padding: 20px 24px;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.page-title {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.user-section {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.user-info-text {
+  text-align: right;
+}
+
+.user-name {
+  font-weight: 600;
+  color: #334155;
+}
+
+.user-role {
+  font-size: 14px;
+  color: #64748b;
+}
+
+.modern-card {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e2e8f0;
+  overflow: hidden;
+  margin-bottom: 24px;
+}
+
+.card-header {
+  padding: 24px;
+  border-bottom: 1px solid #e2e8f0;
+  background: #f8fafc;
+}
+
+.card-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.card-content {
+  padding: 24px;
+}
+
+.status-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 24px;
+  background: #f1f5f9;
+  padding: 8px;
+  border-radius: 12px;
+  flex-wrap: wrap;
+}
+
+.tab-button {
+  flex: 1 1 auto;
+  min-width: 100px;
+  padding: 10px 12px;
+  border: none;
+  background: transparent;
+  border-radius: 8px;
+  font-weight: 500;
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.tab-button:hover {
+  background: rgba(59, 130, 246, 0.1);
+  color: #3b82f6;
+}
+
+.tab-button.active {
+  background: #3b82f6;
+  color: white;
+  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);
+}
+
+.primary-button {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.2);
+}
+
+.primary-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.secondary-button {
+  background: white;
+  color: #64748b;
+  border: 2px solid #e2e8f0;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.secondary-button:hover {
+  border-color: #cbd5e1;
+  color: #475569;
+  background: #f8fafc;
+}
+
+.modern-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.modern-table th {
+  background: #f8fafc;
+  color: #475569;
+  font-weight: 600;
+  padding: 16px;
+  text-align: left;
+  border-bottom: 2px solid #e2e8f0;
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.modern-table td {
+  padding: 16px;
+  border-bottom: 1px solid #e2e8f0;
+  vertical-align: middle;
+}
+
+.modern-table tr:hover {
+  background: #f8fafc;
+}
+
+.modern-table tr:last-child td {
+  border-bottom: none;
+}
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  gap: 6px;
+}
+
+.badge-received { background: #fef3c7; color: #92400e; }
+.badge-in-progress { background: #dbeafe; color: #1d4ed8; }
+.badge-ready { background: #d1fae5; color: #065f46; }
+.badge-awaiting { background: #e0e7ff; color: #3730a3; }
+.badge-completed { background: #dcfce7; color: #166534; }
+
+.action-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.action-btn {
+  padding: 8px 12px;
+  border: none;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-edit {
+  background: #3b82f6;
+  color: white;
+}
+
+.btn-edit:hover {
+  background: #2563eb;
+  transform: translateY(-1px);
+}
+
+.login-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  margin: 0;
+}
+
+.login-card {
+  background: white;
+  padding: 48px;
+  border-radius: 16px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  width: 100%;
+  max-width: 400px;
+}
+
+.login-header {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.login-title {
+  font-size: 24px;
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: 8px;
+}
+
+.login-subtitle {
+  color: #64748b;
+  font-size: 16px;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-label {
+  display: block;
+  margin-bottom: 6px;
+  font-weight: 600;
+  color: #374151;
+}
+
+.form-input {
+  width: 100%;
+  padding: 12px 16px;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 16px;
+  transition: all 0.2s ease;
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.login-button {
+  width: 100%;
+  padding: 12px;
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.login-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 25px rgba(59, 130, 246, 0.3);
+}
+
+.empty-state {
+  text-align: center;
+  padding: 48px 24px;
+  color: #64748b;
+}
+
+.empty-state i {
+  font-size: 48px;
+  color: #cbd5e1;
+  margin-bottom: 16px;
+}
+
+.empty-state h3 {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: #475569;
+}
+
+/* Original equipment styles with modern touches */
+.equipment-item-row {
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 20px;
+  background: white;
+  position: relative;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease;
+}
+
+.equipment-item-row:hover {
+  border-color: #cbd5e1;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.equipment-item-row h5 {
+  margin-top: 0;
+  margin-bottom: 15px;
+  color: #1e293b;
+  font-weight: 600;
+}
+
+.remove-equipment-btn {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: #ef4444;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  width: 32px;
+  height: 32px;
+  cursor: pointer;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.remove-equipment-btn:hover {
+  background: #dc2626;
+  transform: scale(1.1);
+}
+
+/* Modern Form Styling */
+.modal-body input,
+.modal-body select {
+  width: 100%;
+  padding: 12px 16px;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 14px;
+  transition: all 0.2s ease;
+}
+
+.modal-body input:focus,
+.modal-body select:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.modal-body label {
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 6px;
+  display: block;
+}
+
+.search-result-item {
+  padding: 16px;
+  border-bottom: 1px solid #e2e8f0;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border-radius: 8px;
+  margin-bottom: 4px;
+}
+
+.search-result-item:hover {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+}
+
+/* Enhanced Status Styling */
+.ski-status-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px;
+  border-bottom: 1px solid #e2e8f0;
+  background: white;
+  border-radius: 8px;
+  margin-bottom: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.ski-status-row:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+}
+
+.ski-info {
+  flex: 1;
+}
+
+.ski-status-select {
+  padding: 8px 16px;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.ski-status-select:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+.equipment-item-row {
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 20px;
+  background: white;
+  position: relative;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease;
+}
+
+.equipment-item-row:hover {
+  border-color: #cbd5e1;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.equipment-item-row h5 {
   margin-top: 0;
   margin-bottom: 15px;
   color: #333;
 }
 
-.remove-ski-btn {
+.remove-equipment-btn {
   position: absolute;
-  top: 10px;
-  right: 10px;
-  background: #dc3545;
+  top: 16px;
+  right: 16px;
+  background: #ef4444;
   color: white;
   border: none;
-  border-radius: 4px;
-  width: 25px;
-  height: 25px;
+  border-radius: 8px;
+  width: 32px;
+  height: 32px;
   cursor: pointer;
-  font-size: 14px;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
 }
 
-.remove-ski-btn:hover {
-  background: #c82333;
+.remove-equipment-btn:hover {
+  background: #dc2626;
+  transform: scale(1.1);
 }
 
-.basic-ski-fields {
+.basic-equipment-fields {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr 1fr;
   gap: 10px;
@@ -86,21 +636,21 @@
   display: block;
 }
 
-.ski-item-row input, 
-.ski-item-row select {
+.equipment-item-row input, 
+.equipment-item-row select {
   padding: 6px;
   border: 1px solid #ddd;
   border-radius: 4px;
   font-size: 13px;
 }
 
-.ski-item-row input:focus, 
-.ski-item-row select:focus {
+.equipment-item-row input:focus, 
+.equipment-item-row select:focus {
   outline: none;
   border-color: #007bff;
 }
 
-.ski-item-row label {
+.equipment-item-row label {
   font-size: 12px;
   color: #555;
   margin-bottom: 3px;
@@ -114,11 +664,11 @@
   overflow-y: auto;
 }
 
-#bootItemsContainer .ski-item-row {
+#bootItemsContainer .equipment-item-row {
   margin-bottom: 30px;
 }
 
-#bootItemsContainer .ski-item-row h5 {
+#bootItemsContainer .equipment-item-row h5 {
   background: #007bff;
   color: white;
   padding: 10px 15px;
@@ -147,78 +697,205 @@
   padding-bottom: 20px;
   border-bottom: 1px solid #eee;
 }
+
+/* Customer Search Tab Styles */
+.tab-button {
+  padding: 10px 20px;
+  border: none;
+  background: #f5f5f5;
+  color: #333;
+  cursor: pointer;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.tab-button:hover {
+  background: #e0e0e0;
+}
+
+.tab-button.active {
+  background: #007bff;
+  color: white;
+}
+
+.search-result-item {
+  padding: 15px;
+  border-bottom: 1px solid #eee;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.search-result-item:hover {
+  background: #f8f9fa;
+}
+
+.search-result-item:last-child {
+  border-bottom: none;
+}
+
+.wizard-step {
+  min-height: 300px;
+}
   </style>
 </head>
 <body>
 
-<div class="container">
-  <!-- ===============================
-       Authentication Section
-       =============================== -->
-  <div id="loginSection" class="login-section">
-    <h2>Staff Login</h2>
-    <div class="login-form">
-      <input type="email" id="loginEmail" placeholder="Email" required />
-      <input type="password" id="loginPassword" placeholder="Password" required />
-      <button type="button" class="btn-primary" onclick="handleLogin()">Login</button>
+<div id="loginSection" class="login-container">
+  <div class="login-card">
+    <div class="login-header">
+      <h1 class="login-title">Staff Dashboard</h1>
+      <p class="login-subtitle">Sign in to access the equipment management system</p>
     </div>
+    <form id="loginForm">
+      <div class="form-group">
+        <label class="form-label" for="loginEmail">Email Address</label>
+        <input type="email" id="loginEmail" class="form-input" placeholder="Enter your email" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="loginPassword">Password</label>
+        <input type="password" id="loginPassword" class="form-input" placeholder="Enter your password" required>
+      </div>
+      <button type="button" class="login-button" onclick="handleLogin()">
+        <i class="fas fa-sign-in-alt"></i> Sign In
+      </button>
+    </form>
     <div id="loginMessage" class="message"></div>
   </div>
+</div>
 
-  <div id="authenticatedSection" style="display: none;">
-    <div class="user-info">
-      <h1>Staff Dashboard</h1>
-      <div>
-        <span>Welcome, <span id="userEmail"></span></span>
-        <button type="button" class="logout-btn" onclick="handleLogout()">Logout</button>
+<div id="authenticatedSection" class="dashboard-container" style="display: none;">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <a href="#" class="logo">
+        <i class="fas fa-tools"></i>
+        FineTune
+      </a>
+    </div>
+    <nav>
+      <ul class="nav-menu">
+        <li class="nav-item">
+          <a href="#" class="nav-link active">
+            <i class="fas fa-tachometer-alt"></i>
+            Dashboard
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="#" class="nav-link">
+            <i class="fas fa-clipboard-list"></i>
+            Work Orders
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="customers.html" class="nav-link">
+            <i class="fas fa-users"></i>
+            Customers
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="#" class="nav-link">
+            <i class="fas fa-skiing"></i>
+            Equipment
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="#" class="nav-link">
+            <i class="fas fa-chart-bar"></i>
+            Analytics
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="#" class="nav-link">
+            <i class="fas fa-cog"></i>
+            Settings
+          </a>
+        </li>
+      </ul>
+    </nav>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    <div class="top-bar">
+      <h1 class="page-title">Work Orders Dashboard</h1>
+      <div class="user-section">
+        <div class="user-info-text">
+          <div class="user-name">Welcome, <span id="userEmail"></span></div>
+          <div class="user-role">Staff Member</div>
+        </div>
+        <button type="button" class="secondary-button" onclick="handleLogout()">
+          <i class="fas fa-sign-out-alt"></i> Logout
+        </button>
       </div>
     </div>
-
-    <!-- ===============================
-         Work Orders Management
-         =============================== -->
-    <div style="margin: 20px 0;">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-        <h2 style="margin: 0;">Work Orders</h2>
-        <button type="button" class="btn-primary" onclick="openCreateModal()" style="font-size: 16px; padding: 12px 24px;">
-          + Create New Work Order
-        </button>
+    <!-- Work Orders Management Card -->
+    <div id="workOrdersSection" class="modern-card">
+      <div class="card-header">
+        <div class="card-title">
+          <span><i class="fas fa-clipboard-list"></i> Work Orders Management</span>
+          <button type="button" class="primary-button" onclick="openCreateModal()">
+            <i class="fas fa-plus"></i> Create New Work Order
+          </button>
+        </div>
       </div>
       
-      <!-- Tab Navigation -->
-      <div class="tab-container" style="margin-bottom: 20px;">
-        <div class="tab-nav">
-          <button class="tab-button active" data-status="RECEIVED" onclick="switchTab('RECEIVED', this)">New Work Orders</button>
-          <button class="tab-button" data-status="IN_PROGRESS" onclick="switchTab('IN_PROGRESS', this)">Work Orders in Progress</button>
-          <button class="tab-button" data-status="READY_FOR_PICKUP" onclick="switchTab('READY_FOR_PICKUP', this)">Ready for Pickup</button>
-          <button class="tab-button" data-status="AWAITING_PICKUP" onclick="switchTab('AWAITING_PICKUP', this)">Awaiting Pickup</button>
-          <button class="tab-button" data-status="COMPLETED" onclick="switchTab('COMPLETED', this)">Completed Work Orders</button>
+      <div class="card-content">
+        <!-- Status Tabs -->
+        <div class="status-tabs">
+          <button class="tab-button active" data-status="RECEIVED" onclick="switchTab('RECEIVED', this)">
+            <i class="fas fa-inbox"></i> Awaiting
+          </button>
+          <button class="tab-button" data-service-type="TUNE" onclick="switchTab('TUNE', this)">
+            <i class="fas fa-adjust"></i> Tune
+          </button>
+          <button class="tab-button" data-service-type="MOUNT" onclick="switchTab('MOUNT', this)">
+            <i class="fas fa-wrench"></i> Mount
+          </button>
+          <button class="tab-button" data-service-type="REPAIR" onclick="switchTab('REPAIR', this)">
+            <i class="fas fa-tools"></i> Repair
+          </button>
+          <button class="tab-button" data-status="READY_FOR_PICKUP" onclick="switchTab('READY_FOR_PICKUP', this)">
+            <i class="fas fa-check-circle"></i> Ready
+          </button>
+          <button class="tab-button" data-status="AWAITING_PICKUP" onclick="switchTab('AWAITING_PICKUP', this)">
+            <i class="fas fa-clock"></i> Awaiting Pickup
+          </button>
+          <button class="tab-button" data-status="COMPLETED" onclick="switchTab('COMPLETED', this)">
+            <i class="fas fa-check-double"></i> Completed
+          </button>
         </div>
-        <button type="button" class="btn-secondary" onclick="refreshCurrentTab()" style="margin-left: 20px;">
-          Refresh
-        </button>
+
+        <div style="display: flex; justify-content: flex-end; margin-bottom: 20px;">
+          <button type="button" class="secondary-button" onclick="refreshCurrentTab()">
+            <i class="fas fa-sync"></i> Refresh
+          </button>
+        </div>
+
+        <!-- Work Orders Table -->
+        <table class="modern-table">
+          <thead>
+            <tr>
+              <th><i class="fas fa-hashtag"></i> ID</th>
+              <th><i class="fas fa-user"></i> Customer</th>
+              <th><i class="fas fa-phone"></i> Phone</th>
+              <th><i class="fas fa-envelope"></i> Email</th>
+              <th><i class="fas fa-skiing"></i> Equipment</th>
+              <th><i class="fas fa-info-circle"></i> Status</th>
+              <th><i class="fas fa-clock"></i> Due By</th>
+              <th><i class="fas fa-calendar"></i> Created</th>
+              <th><i class="fas fa-tools"></i> Actions</th>
+            </tr>
+          </thead>
+          <tbody id="workOrdersTable"></tbody>
+        </table>
+
+        <div id="listMessage" class="message"></div>
       </div>
-
-      <!-- Work Orders Table -->
-      <table>
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Customer</th>
-            <th>Phone</th>
-            <th>Email</th>
-            <th>Skis</th>
-            <th>Work Order Status</th>
-            <th>Created At</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody id="workOrdersTable"></tbody>
-      </table>
-
-      <div id="listMessage" class="message"></div>
     </div>
-  </div>
+
+  </main>
 </div>
 
 <!-- ===============================
@@ -227,16 +904,18 @@
 <div id="editModal" class="modal">
   <div class="modal-content">
     <div class="modal-header">
-      <h3 id="modalTitle">Manage Ski Item Status</h3>
+      <h3 id="modalTitle">Manage Equipment Item Status</h3>
     </div>
     <div id="modalBody" class="modal-body"></div>
     <div class="modal-footer">
-      <button type="button" class="btn-secondary" onclick="closeEditModal()">Cancel</button>
-      <button type="button" id="notifyBtn" class="btn-primary" onclick="notifyCustomer()" style="display: none;">
-        Send Notification
+      <button type="button" class="secondary-button" onclick="closeEditModal()">
+        <i class="fas fa-times"></i> Cancel
       </button>
-      <button type="button" id="pickupBtn" class="btn-success" onclick="markAsPickup()" style="display: none;">
-        Mark Order as Picked Up
+      <button type="button" id="notifyBtn" class="primary-button" onclick="notifyCustomer()" style="display: none;">
+        <i class="fas fa-bell"></i> Send Notification
+      </button>
+      <button type="button" id="pickupBtn" class="primary-button" onclick="markAsPickup()" style="display: none; background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
+        <i class="fas fa-check-circle"></i> Mark Order as Picked Up
       </button>
     </div>
   </div>
@@ -248,34 +927,163 @@
 <div id="createModal" class="modal">
   <div class="modal-content">
     <div class="modal-header">
-      <h3>Create New Work Order</h3>
+      <h3 id="createModalTitle">Create New Work Order - Step 1: Select Customer</h3>
       <button type="button" class="modal-close" onclick="closeCreateModal()">&times;</button>
     </div>
     <div class="modal-body">
-      <form id="createWorkOrderForm">
-        <input type="text" id="createFirstName" placeholder="First Name" required />
-        <input type="text" id="createLastName" placeholder="Last Name" required />
-        <input type="tel" id="createPhone" placeholder="1234567890 (10 digits only)" required 
-               maxlength="10" 
-               pattern="[0-9]{10}" 
-               oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10)" />
-        <input type="email" id="createEmail" placeholder="Email" required />
-        <div></div>
-
-        <div class="full-width">
-          <h4>Skis</h4>
-          <div id="createSkiItemsContainer">
-            <!-- Ski items will be added here dynamically -->
+      <!-- Step 1: Customer Search/Create -->
+      <div id="customerStep" class="wizard-step">
+        <div style="margin-bottom: 20px;">
+          <div style="display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 2px solid #ddd; padding-bottom: 10px;">
+            <button type="button" id="searchCustomerTab" class="tab-button active" onclick="switchCustomerMode('search')">
+              Search Existing Customer
+            </button>
+            <button type="button" id="createCustomerTab" class="tab-button" onclick="switchCustomerMode('create')">
+              Create New Customer
+            </button>
           </div>
-          <button type="button" onclick="addCreateSkiRow()">+ Add Ski</button>
-        </div>
 
-        <div id="createFormMessage" class="message"></div>
-      </form>
+          <!-- Search Mode -->
+          <div id="customerSearchMode" style="display: block;">
+            <div style="margin-bottom: 15px;">
+              <label style="display: block; margin-bottom: 5px; font-weight: 600;">Search by Name, Email, or Phone</label>
+              <input 
+                type="text" 
+                id="customerSearchInput" 
+                placeholder="Enter name, email, or phone number..." 
+                oninput="performCustomerSearch(this.value)"
+                style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;"
+              />
+              <p style="margin-top: 5px; font-size: 12px; color: #666;">Type at least 2 characters to search</p>
+            </div>
+
+            <div id="searchResultsContainer" style="display: none; margin-top: 15px;">
+              <h4 style="margin-bottom: 10px;">Search Results:</h4>
+              <div id="searchResults" style="border: 1px solid #ddd; border-radius: 4px; max-height: 300px; overflow-y: auto;">
+                <!-- Results will be populated here -->
+              </div>
+            </div>
+
+            <div id="noResultsMessage" style="display: none; text-align: center; padding: 20px; color: #666;">
+              No customers found. Try creating a new customer.
+            </div>
+          </div>
+
+          <!-- Create Mode -->
+          <div id="customerCreateMode" style="display: none;">
+            <form id="newCustomerForm" onsubmit="createNewCustomer(event)">
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                <div>
+                  <label style="display: block; margin-bottom: 5px; font-weight: 600;">First Name *</label>
+                  <input type="text" id="newCustomerFirstName" required style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;" />
+                </div>
+                <div>
+                  <label style="display: block; margin-bottom: 5px; font-weight: 600;">Last Name *</label>
+                  <input type="text" id="newCustomerLastName" required style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;" />
+                </div>
+              </div>
+              <div style="margin-bottom: 15px;">
+                <label style="display: block; margin-bottom: 5px; font-weight: 600;">Email *</label>
+                <input type="email" id="newCustomerEmail" required style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;" />
+              </div>
+              <div style="margin-bottom: 15px;">
+                <label style="display: block; margin-bottom: 5px; font-weight: 600;">Phone *</label>
+                <input 
+                  type="tel" 
+                  id="newCustomerPhone" 
+                  placeholder="1234567890 (10 digits)" 
+                  required 
+                  maxlength="10" 
+                  pattern="[0-9]{10}"
+                  oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10)"
+                  style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;"
+                />
+              </div>
+              <button type="submit" class="primary-button" style="width: 100%;">
+                <i class="fas fa-user-plus"></i> Create Customer & Continue
+              </button>
+            </form>
+          </div>
+
+          <div id="selectedCustomerDisplay" style="display: none; background: #e8f5e9; border: 1px solid #4caf50; padding: 15px; border-radius: 4px; margin-top: 15px;">
+            <h4 style="margin-top: 0; color: #2e7d32;">✓ Customer Selected</h4>
+            <p><strong>Name:</strong> <span id="selectedCustomerName"></span></p>
+            <p><strong>Email:</strong> <span id="selectedCustomerEmail"></span></p>
+            <p><strong>Phone:</strong> <span id="selectedCustomerPhone"></span></p>
+            <button type="button" class="secondary-button" onclick="clearSelectedCustomer()" style="margin-top: 10px;">
+              <i class="fas fa-edit"></i> Change Customer
+            </button>
+          </div>
+        </div>
+        <div id="customerStepMessage" class="message"></div>
+      </div>
+
+      <!-- Step 2: Equipment Details -->
+      <div id="equipmentStep" class="wizard-step" style="display: none;">
+        <form id="createWorkOrderForm">
+          <div class="full-width" style="margin-bottom: 20px; padding: 15px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px;">
+            <h4 style="margin-top: 0; color: #374151;">Work Order Details</h4>
+            <div style="margin-bottom: 15px;">
+              <label for="createPromisedBy" style="display: block; margin-bottom: 5px; font-weight: 600; color: #374151;">Due By (Promised Date) *</label>
+              <input 
+                type="date" 
+                id="createPromisedBy" 
+                name="promisedBy"
+                required
+                style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 4px; font-size: 14px;"
+                title="When this work order should be completed"
+              />
+              <small style="color: #6b7280; font-size: 12px;">Required: Set when this order should be completed</small>
+            </div>
+          </div>
+          
+          <!-- Existing Equipment Section -->
+          <div id="existingEquipmentSection" class="full-width" style="display: none; margin-bottom: 20px;">
+            <h4>Customer's Existing Equipment</h4>
+            <p style="color: #666; font-size: 14px; margin-bottom: 10px;">Select equipment to add to this work order:</p>
+            <div id="existingEquipmentList" style="border: 1px solid #e2e8f0; border-radius: 6px; padding: 15px; background: #fafbfc;">
+              <!-- Existing equipment checkboxes will be populated here -->
+            </div>
+          </div>
+          
+          <div class="full-width">
+            <h4>Add New Equipment</h4>
+            <div id="createEquipmentItemsContainer">
+              <!-- Equipment items will be added here dynamically -->
+            </div>
+            <button type="button" class="primary-button" onclick="addEquipmentItem()">
+              <i class="fas fa-plus"></i> Add Equipment
+            </button>
+          </div>
+
+          <!-- Work Order Notes Section -->
+          <div class="full-width" style="margin-top: 20px; padding: 20px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px;">
+            <h4 style="margin-top: 0; color: #374151;">Initial Work Order Note (Optional)</h4>
+            <p style="color: #6b7280; font-size: 13px; margin-bottom: 10px;">Add an initial note about this work order. You can add more notes later.</p>
+            <textarea 
+              id="createWorkOrderNoteText" 
+              placeholder="e.g., Customer mentioned skis have edge damage, needs special attention..."
+              style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 4px; font-size: 14px; font-family: inherit; min-height: 80px; resize: vertical;"
+            ></textarea>
+          </div>
+
+          <div id="createFormMessage" class="message"></div>
+        </form>
+      </div>
     </div>
     <div class="modal-footer">
-      <button type="button" class="btn-secondary" onclick="closeCreateModal()">Cancel</button>
-      <button type="submit" form="createWorkOrderForm" class="btn-primary" id="createSubmitBtn">Create Work Order</button>
+      <button type="button" class="secondary-button" onclick="closeCreateModal()">
+        <i class="fas fa-times"></i> Cancel
+      </button>
+      <button type="button" id="customerNextBtn" class="primary-button" onclick="proceedToEquipmentStep()" style="display: none;">
+        <i class="fas fa-arrow-right"></i> Next: Equipment Selection
+      </button>
+      <button type="button" id="equipmentBackBtn" class="secondary-button" onclick="backToCustomerStep()" style="display: none;">
+        <i class="fas fa-arrow-left"></i> Back
+      </button>
+      <button type="submit" form="createWorkOrderForm" class="primary-button" id="createSubmitBtn" style="display: none;">
+        <i class="fas fa-arrow-right"></i> Continue
+      </button>
     </div>
   </div>
 </div>
@@ -316,8 +1124,12 @@
       </form>
     </div>
     <div class="modal-footer">
-      <button type="button" class="btn-secondary" onclick="goBackToCreateModal()">Back</button>
-      <button type="submit" form="bootRequirementsForm" class="btn-primary" id="bootSubmitBtn" disabled>Create Work Order</button>
+      <button type="button" class="secondary-button" onclick="goBackToCreateModal()">
+        <i class="fas fa-arrow-left"></i> Back
+      </button>
+      <button type="submit" form="bootRequirementsForm" class="primary-button" id="bootSubmitBtn" disabled>
+        <i class="fas fa-plus"></i> Create Work Order
+      </button>
     </div>
   </div>
 </div>
@@ -334,16 +1146,20 @@
   const notifyBtn = document.getElementById("notifyBtn");
   const createModal = document.getElementById("createModal");
   const bootModal = document.getElementById("bootModal");
-  const createSkiItemsContainer = document.getElementById("createSkiItemsContainer");
+  const createEquipmentItemsContainer = document.getElementById("createEquipmentItemsContainer");
   const bootItemsContainer = document.getElementById("bootItemsContainer");
   const createSubmitBtn = document.getElementById("createSubmitBtn");
 
   let currentEditingOrderId = null;
   let currentActiveTab = 'RECEIVED'; // Track the currently active tab
-  let skiItemCounter = 0;
+  let equipmentItemCounter = 0;
   let capturedFormData = null; // Store data from first modal
   let customerBoots = []; // Store customer's existing boots
   let selectedBootChoice = null; // Track boot selection
+  let customerEquipment = []; // Store customer's existing equipment
+  let customerIdForEquipment = null; // Store customer ID when found
+  let selectedCustomer = null; // Store selected/created customer
+  let searchTimeout = null; // Debounce timer for search
 
   // Event delegation for service type changes and boot choices
   document.addEventListener('DOMContentLoaded', function() {
@@ -357,6 +1173,35 @@
       }
     });
   });
+
+  /* ===============================
+     UI Helper Functions
+     =============================== */
+  function getModernStatusBadge(status) {
+    const badges = {
+      'RECEIVED': '<span class="status-badge badge-received"><i class="fas fa-inbox"></i> New</span>',
+      'IN_PROGRESS': '<span class="status-badge badge-in-progress"><i class="fas fa-cog"></i> In Progress</span>',
+      'READY_FOR_PICKUP': '<span class="status-badge badge-ready"><i class="fas fa-check-circle"></i> Ready</span>',
+      'AWAITING_PICKUP': '<span class="status-badge badge-awaiting"><i class="fas fa-clock"></i> Awaiting</span>',
+      'COMPLETED': '<span class="status-badge badge-completed"><i class="fas fa-check-double"></i> Completed</span>',
+      'PENDING': '<span class="status-badge badge-received"><i class="fas fa-hourglass-half"></i> Pending</span>',
+      'DONE': '<span class="status-badge badge-ready"><i class="fas fa-check"></i> Done</span>',
+      'PICKED_UP': '<span class="status-badge badge-completed"><i class="fas fa-check-double"></i> Picked Up</span>'
+    };
+    return badges[status] || `<span class="status-badge">${status}</span>`;
+  }
+  
+  function formatDate(dateString) {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { 
+      year: 'numeric', 
+      month: 'short', 
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  }
 
   /* ===============================
      Authentication Management
@@ -419,6 +1264,7 @@
     modalBody.innerHTML = "";
   }
 
+  // Click outside modal to close
   window.onclick = function(event) {
     if (event.target === editModal) {
       closeEditModal();
@@ -444,40 +1290,76 @@
           ${order.status === "COMPLETED" ? '<div style="color: #28a745; margin-top: 10px; font-weight: bold;">✓ Order is ready for customer pickup</div>' : ''}
         </div>
 
-        <h4>Ski Items</h4>
+        <div style="margin-bottom: 20px; padding: 15px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px;">
+          <label for="editPromisedBy" style="display: block; margin-bottom: 5px; font-weight: 600; color: #374151;">Due By (Promised Date)</label>
+          <input 
+            type="datetime-local" 
+            id="editPromisedBy" 
+            name="promisedBy"
+            value="${order.promisedBy ? new Date(order.promisedBy).toISOString().slice(0, -1) : ''}"
+            style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 4px; font-size: 14px;"
+            title="When this work order should be completed"
+            onchange="updateWorkOrderPromisedBy(${orderId}, this.value)"
+          />
+          <small style="color: #6b7280; font-size: 12px;">Optional: Set when this order should be completed</small>
+        </div>
+
+        <h4>Equipment Items</h4>
         <p style="margin: 10px 0; font-size: 14px; color: #666;">
           Update individual item statuses below. Work order status updates automatically:
           <br><strong>RECEIVED:</strong> all items PENDING • <strong>IN_PROGRESS:</strong> any item IN_PROGRESS • <strong>READY_FOR_PICKUP:</strong> all items DONE • <strong>AWAITING_PICKUP:</strong> customer notified • <strong>COMPLETED:</strong> all items picked up
         </p>
-        <div id="skiStatusItems"></div>
+        <div id="equipmentStatusItems"></div>
+
+        <div style="margin-top: 30px; padding: 20px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px;">
+          <h4 style="margin-top: 0; color: #374151;">Work Order Notes</h4>
+          
+          <div style="margin-bottom: 20px;">
+            <textarea 
+              id="newWorkOrderNoteText" 
+              placeholder="Add a note about this work order..."
+              style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 4px; font-size: 14px; font-family: inherit; min-height: 80px; resize: vertical;"
+            ></textarea>
+            <button 
+              type="button" 
+              class="primary-button" 
+              onclick="submitWorkOrderNote(${orderId})"
+              style="margin-top: 10px;"
+            >
+              <i class="fas fa-save"></i> Save Note
+            </button>
+          </div>
+
+          <div id="workOrderNotesFeed"></div>
+        </div>
       `;
 
-      const skiStatusItems = document.getElementById("skiStatusItems");
+      const equipmentStatusItems = document.getElementById("equipmentStatusItems");
 
-      // Check order status variables (needed for rendering ski items)
+      // Check order status variables (needed for rendering equipment items)
       // Fail safely if items array is empty - empty array should not be "all done"
-      const allDone = order.skiItems && order.skiItems.length > 0 && order.skiItems.every(ski => ski.status === "DONE");
+      const allDone = order.equipment && order.equipment.length > 0 && order.equipment.every(equip => equip.status === "DONE");
       const isReadyForPickup = order.status === "READY_FOR_PICKUP";
       const isCompleted = order.status === "COMPLETED";
 
-      if (!order.skiItems || order.skiItems.length === 0) {
-        skiStatusItems.innerHTML = '<div class="empty-message">No skis in this work order</div>';
+      if (!order.equipment || order.equipment.length === 0) {
+        equipmentStatusItems.innerHTML = '<div class="empty-message">No equipment in this work order</div>';
         notifyBtn.style.display = "none";
         pickupBtn.style.display = "none";
       } else {
-        skiStatusItems.innerHTML = order.skiItems.map(ski => `
-          <div class="ski-status-row">
-            <div class="ski-info">
-              <strong>${ski.skiMake} ${ski.skiModel}</strong> (${ski.serviceType})<br>
+        equipmentStatusItems.innerHTML = order.equipment.map(item => `
+          <div class="equipment-status-row">
+            <div class="equipment-info">
+              <strong>${item.brand} ${item.model}</strong> (${item.serviceType})<br>
               <span style="font-size: 12px; color: #666;">Current status: 
-                <span class="status-badge status-${ski.status}">${ski.status}</span>
+                <span class="status-badge status-${item.status}">${item.status}</span>
               </span>
             </div>
-            <select class="ski-status-select" data-ski-id="${ski.id}" onchange="updateSkiStatus(${orderId}, ${ski.id}, this.value)" ${(ski.status === "PICKED_UP" || isCompleted) ? "disabled" : ""}>
-              <option value="PENDING" ${ski.status === "PENDING" ? "selected" : ""}>PENDING</option>
-              <option value="IN_PROGRESS" ${ski.status === "IN_PROGRESS" ? "selected" : ""}>IN_PROGRESS</option>
-              <option value="DONE" ${ski.status === "DONE" ? "selected" : ""}>DONE</option>
-              <option value="PICKED_UP" ${ski.status === "PICKED_UP" ? "selected" : ""}>PICKED_UP</option>
+            <select class="equipment-status-select" data-equipment-id="${item.id}" onchange="updateEquipmentStatus(${orderId}, ${item.id}, this.value)" ${(item.status === "PICKED_UP" || isCompleted) ? "disabled" : ""}>
+              <option value="PENDING" ${item.status === "PENDING" ? "selected" : ""}>PENDING</option>
+              <option value="IN_PROGRESS" ${item.status === "IN_PROGRESS" ? "selected" : ""}>IN_PROGRESS</option>
+              <option value="DONE" ${item.status === "DONE" ? "selected" : ""}>DONE</option>
+              <option value="PICKED_UP" ${item.status === "PICKED_UP" ? "selected" : ""}>PICKED_UP</option>
             </select>
           </div>
         `).join("");
@@ -494,6 +1376,9 @@
         // - order.status === 'AWAITING_PICKUP'
         pickupBtn.style.display = isAwaitingPickup ? "block" : "none";
       }
+
+      // Load work order notes
+      loadWorkOrderNotes(orderId);
     } catch (error) {
       console.error(error);
       if (error.message === "Authentication required") {
@@ -507,11 +1392,11 @@
   }
 
   /* ===============================
-     Update Ski Status
+     Update Equipment Status
      =============================== */
-  async function updateSkiStatus(orderId, skiId, newStatus) {
+  async function updateEquipmentStatus(orderId, equipmentId, newStatus) {
     try {
-      const response = await APIUtils.authenticatedFetch(`${API_CONFIG.WORKORDERS}/${orderId}/skis/${skiId}/status`, {
+      const response = await APIUtils.authenticatedFetch(`${API_CONFIG.WORKORDERS}/${orderId}/equipment/${equipmentId}/status`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status: newStatus })
@@ -528,7 +1413,47 @@
       if (error.message === "Authentication required") {
         showLoginView();
       } else {
-        alert("Error updating ski status: " + error.message);
+        alert("Error updating equipment status: " + error.message);
+      }
+    }
+  }
+
+  /* ===============================
+     Update Work Order Promised By Date
+     =============================== */
+  async function updateWorkOrderPromisedBy(orderId, promisedByValue) {
+    try {
+      // Convert empty string to null for backend
+      const promisedBy = promisedByValue ? promisedByValue : null;
+      
+      const response = await APIUtils.authenticatedFetch(`${API_CONFIG.WORKORDERS}/${orderId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ promisedBy: promisedBy })
+      });
+
+      if (!response.ok) throw new Error("Failed to update promised by date");
+
+      // Show success feedback
+      const input = document.getElementById('editPromisedBy');
+      if (input) {
+        const originalBorder = input.style.border;
+        input.style.border = '2px solid #059669';
+        setTimeout(() => {
+          input.style.border = originalBorder;
+        }, 1000);
+      }
+      
+      // Reload the main list to reflect the new due date
+      refreshCurrentTab();
+    } catch (error) {
+      console.error(error);
+      if (error.message === "Authentication required") {
+        showLoginView();
+      } else {
+        alert("Error updating promise date: " + error.message);
+        // Reload the modal to restore original value
+        loadOrderForEditing(orderId);
       }
     }
   }
@@ -590,24 +1515,122 @@
   }
 
   /* ===============================
+     Work Order Notes Functions
+     =============================== */
+  async function loadWorkOrderNotes(orderId) {
+    try {
+      const response = await APIUtils.authenticatedFetch(`/api/workorders/${orderId}/notes`);
+      if (!response.ok) throw new Error("Failed to load notes");
+
+      const notes = await response.json();
+      const notesFeed = document.getElementById('workOrderNotesFeed');
+      
+      if (!notesFeed) return; // Feed not rendered yet
+
+      if (notes.length === 0) {
+        notesFeed.innerHTML = '<div style="padding: 15px; text-align: center; color: #94a3b8; font-style: italic;">No notes yet</div>';
+      } else {
+        notesFeed.innerHTML = notes.map(note => {
+          const noteDate = new Date(note.createdAt);
+          const formattedDate = noteDate.toLocaleString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+          });
+
+          return `
+            <div style="padding: 12px; margin-bottom: 10px; background: white; border: 1px solid #e2e8f0; border-radius: 4px;">
+              <div style="font-size: 13px; color: #64748b; margin-bottom: 5px;">
+                <strong>${note.createdBy}</strong> • ${formattedDate}
+              </div>
+              <div style="color: #334155; white-space: pre-wrap;">${note.noteText}</div>
+            </div>
+          `;
+        }).join('');
+      }
+    } catch (error) {
+      console.error('Error loading notes:', error);
+      const notesFeed = document.getElementById('workOrderNotesFeed');
+      if (notesFeed) {
+        notesFeed.innerHTML = '<div style="color: #ef4444; padding: 10px;">Failed to load notes</div>';
+      }
+    }
+  }
+
+  async function submitWorkOrderNote(orderId) {
+    const noteTextarea = document.getElementById('newWorkOrderNoteText');
+    const noteText = noteTextarea.value.trim();
+
+    if (!noteText) {
+      alert('Please enter a note');
+      return;
+    }
+
+    try {
+      // Get current user from localStorage
+      const user = JSON.parse(localStorage.getItem('user') || '{}');
+      const createdBy = user.username || 'Staff';
+
+      const response = await APIUtils.authenticatedFetch(`/api/workorders/${orderId}/notes`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          noteText: noteText,
+          createdBy: createdBy
+        })
+      });
+
+      if (!response.ok) throw new Error('Failed to save note');
+
+      // Clear textarea
+      noteTextarea.value = '';
+      
+      // Reload notes
+      await loadWorkOrderNotes(orderId);
+    } catch (error) {
+      console.error('Error saving note:', error);
+      if (error.message === "Authentication required") {
+        showLoginView();
+      } else {
+        alert('Error saving note: ' + error.message);
+      }
+    }
+  }
+
+  /* ===============================
      Tab Management Functions
      =============================== */
-  function switchTab(status, buttonElement) {
+  function switchTab(statusOrServiceType, buttonElement) {
     // Update active tab
-    currentActiveTab = status;
+    currentActiveTab = statusOrServiceType;
     
     // Update button states
     document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
     buttonElement.classList.add('active');
     
-    // With item-driven status logic, each tab shows work orders with exact status match
-    // COMPLETED tab shows work orders with COMPLETED status (all items PICKED_UP)
-    fetchWorkOrdersByStatus(status);
+    // Check if this is a service type tab or status tab
+    const serviceTypes = ['TUNE', 'MOUNT', 'REPAIR'];
+    
+    if (serviceTypes.includes(statusOrServiceType)) {
+      // This is a service type filter
+      fetchWorkOrdersByServiceType(statusOrServiceType);
+    } else {
+      // This is a status filter
+      fetchWorkOrdersByStatus(statusOrServiceType);
+    }
   }
 
   function refreshCurrentTab() {
-    // Simple refresh - each tab maps to exact status
-    fetchWorkOrdersByStatus(currentActiveTab);
+    // Check if current tab is a service type or status
+    const serviceTypes = ['TUNE', 'MOUNT', 'REPAIR'];
+    
+    if (serviceTypes.includes(currentActiveTab)) {
+      fetchWorkOrdersByServiceType(currentActiveTab);
+    } else {
+      fetchWorkOrdersByStatus(currentActiveTab);
+    }
   }
 
   /* ===============================
@@ -637,35 +1660,58 @@
       ValidationUtils.clearMessage('listMessage');
 
       if (allWorkOrders.length === 0) {
-        tableBody.innerHTML = '<tr><td colspan="8" class="empty-message">No work orders found</td></tr>';
+        tableBody.innerHTML = `<tr><td colspan="9">
+          <div class="empty-state">
+            <i class="fas fa-clipboard-list"></i>
+            <h3>No work orders found</h3>
+            <p>No work orders match the current filter. Try switching to a different tab or create a new work order.</p>
+          </div>
+        </td></tr>`;
         return;
       }
 
-      // Sort by creation date (oldest first)
-      allWorkOrders.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+      // Sort by due date (promisedBy) first, then creation date (oldest first)
+      allWorkOrders.sort((a, b) => {
+        // Handle null promisedBy values - put them at the end
+        if (!a.promisedBy && !b.promisedBy) {
+          return new Date(a.createdAt) - new Date(b.createdAt);
+        }
+        if (!a.promisedBy) return 1; // a goes after b
+        if (!b.promisedBy) return -1; // a goes before b
+        
+        // Both have promisedBy dates, sort by them
+        const promisedDiff = new Date(a.promisedBy) - new Date(b.promisedBy);
+        if (promisedDiff !== 0) return promisedDiff;
+        
+        // Same promisedBy date, sort by createdAt
+        return new Date(a.createdAt) - new Date(b.createdAt);
+      });
 
       allWorkOrders.forEach(order => {
         const row = document.createElement("tr");
 
-        // Count skis by status
-        const skiItems = order.skiItems || [];
-        const doneCount = skiItems.filter(ski => ski.status === "DONE").length;
-        const totalCount = skiItems.length;
+        // Count equipment items by status
+        const equipmentItems = order.equipment || [];
+        const doneCount = equipmentItems.filter(item => item.status === "DONE").length;
+        const totalCount = equipmentItems.length;
 
-        const skiSummary = skiItems.length > 0 
-          ? `${skiItems.map(ski => `${ski.skiMake} ${ski.skiModel} (${ski.serviceType}) ${getStatusBadge(ski.status)}`).join("<br>")}`
-          : "No skis";
+        const equipmentSummary = equipmentItems.length > 0 
+          ? `${equipmentItems.map(item => `${item.brand} ${item.model} <span style="font-weight: 700; color: #3b82f6;">(${item.serviceType})</span> ${getModernStatusBadge(item.status)}`).join("<br>")}`
+          : "No equipment";
 
         row.innerHTML = `
           <td>${order.id}</td>
-          <td>${order.customerName || ""}</td>
+          <td><strong>${order.customerName || ""}</strong></td>
           <td>${order.customerPhone || ""}</td>
           <td>${order.customerEmail || ""}</td>
-          <td>${skiSummary}</td>
-          <td>${getStatusBadge(order.status)}<br><small>${doneCount}/${totalCount} items done</small></td>
-          <td>${order.createdAt || ""}</td>
+          <td>${equipmentSummary}</td>
+          <td>${getModernStatusBadge(order.status)}<br><small style="color: #64748b;">${doneCount}/${totalCount} items done</small></td>
+          <td style="color: ${order.promisedBy ? '#059669' : '#6b7280'}; font-weight: ${order.promisedBy ? '600' : 'normal'};">${order.promisedBy ? formatDate(order.promisedBy) : "Not Set"}</td>
+          <td>${formatDate(order.createdAt) || ""}</td>
           <td class="action-buttons">
-            <button type="button" class="btn-primary" onclick="openEditModal(${order.id})">Manage Status</button>
+            <button type="button" class="action-btn btn-edit" onclick="openEditModal(${order.id})">
+              <i class="fas fa-edit"></i> Manage
+            </button>
           </td>
         `;
 
@@ -682,12 +1728,380 @@
   }
 
   /* ===============================
+     Customer Search & Selection Functions
+     =============================== */
+  function switchCustomerMode(mode) {
+    const searchMode = document.getElementById('customerSearchMode');
+    const createMode = document.getElementById('customerCreateMode');
+    const searchTab = document.getElementById('searchCustomerTab');
+    const createTab = document.getElementById('createCustomerTab');
+
+    if (mode === 'search') {
+      searchMode.style.display = 'block';
+      createMode.style.display = 'none';
+      searchTab.classList.add('active');
+      createTab.classList.remove('active');
+    } else {
+      searchMode.style.display = 'none';
+      createMode.style.display = 'block';
+      searchTab.classList.remove('active');
+      createTab.classList.add('active');
+    }
+
+    ValidationUtils.clearMessage('customerStepMessage');
+  }
+
+  function performCustomerSearch(query) {
+    // Clear previous timeout
+    if (searchTimeout) {
+      clearTimeout(searchTimeout);
+    }
+
+    const resultsContainer = document.getElementById('searchResultsContainer');
+    const searchResults = document.getElementById('searchResults');
+    const noResults = document.getElementById('noResultsMessage');
+
+    // Hide results if query is too short
+    if (query.length < 2) {
+      resultsContainer.style.display = 'none';
+      noResults.style.display = 'none';
+      return;
+    }
+
+    // Debounce search (wait 300ms after user stops typing)
+    searchTimeout = setTimeout(async () => {
+      try {
+        ValidationUtils.clearMessage('customerStepMessage');
+
+        // Determine search type
+        const params = new URLSearchParams();
+        if (query.includes('@')) {
+          params.append('email', query);
+        } else if (/^\d+$/.test(query)) {
+          params.append('phone', query);
+        } else {
+          params.append('name', query);
+        }
+
+        const response = await APIUtils.authenticatedFetch(`${API_CONFIG.CUSTOMERS}/search?${params.toString()}`);
+        const customers = await response.json();
+
+        if (customers && customers.length > 0) {
+          // Display results
+          searchResults.innerHTML = customers.map(customer => `
+            <div class="search-result-item" onclick='handleSelectCustomer(${JSON.stringify(customer)})'>
+              <div style="font-weight: 600; font-size: 14px;">${customer.firstName} ${customer.lastName}</div>
+              <div style="font-size: 12px; color: #666;">${customer.email} | ${customer.phone}</div>
+            </div>
+          `).join('');
+          resultsContainer.style.display = 'block';
+          noResults.style.display = 'none';
+        } else {
+          // No results found
+          resultsContainer.style.display = 'none';
+          noResults.style.display = 'block';
+        }
+      } catch (error) {
+        console.error('Search error:', error);
+        ValidationUtils.showMessage('customerStepMessage', 'Search failed. Please try again.', true);
+        resultsContainer.style.display = 'none';
+        noResults.style.display = 'none';
+      }
+    }, 300);
+  }
+
+  // Wrapper function to handle async selectCustomer from onclick
+  function handleSelectCustomer(customer) {
+    selectCustomer(customer).catch(error => {
+      console.error('Error selecting customer:', error);
+      ValidationUtils.showMessage('customerStepMessage', 'Failed to load customer equipment', true);
+    });
+  }
+
+  async function selectCustomer(customer) {
+    selectedCustomer = customer;
+
+    // Hide search/create UI
+    document.getElementById('customerSearchMode').style.display = 'none';
+    document.getElementById('customerCreateMode').style.display = 'none';
+    document.getElementById('searchCustomerTab').style.display = 'none';
+    document.getElementById('createCustomerTab').style.display = 'none';
+
+    // Show selected customer display
+    const selectedDisplay = document.getElementById('selectedCustomerDisplay');
+    document.getElementById('selectedCustomerName').textContent = `${customer.firstName} ${customer.lastName}`;
+    document.getElementById('selectedCustomerEmail').textContent = customer.email;
+    document.getElementById('selectedCustomerPhone').textContent = customer.phone;
+    selectedDisplay.style.display = 'block';
+
+    // Fetch customer equipment immediately
+    await fetchCustomerEquipment(customer.id);
+
+    // Show next button
+    document.getElementById('customerNextBtn').style.display = 'inline-block';
+
+    ValidationUtils.clearMessage('customerStepMessage');
+  }
+
+  async function fetchCustomerEquipment(customerId) {
+    try {
+      const response = await APIUtils.authenticatedFetch(`${API_CONFIG.CUSTOMERS}/${customerId}/equipment`);
+      if (response.ok) {
+        customerEquipment = await response.json();
+        customerIdForEquipment = customerId;
+      } else {
+        customerEquipment = [];
+        customerIdForEquipment = null;
+      }
+    } catch (error) {
+      console.error('Error fetching customer equipment:', error);
+      customerEquipment = [];
+      customerIdForEquipment = null;
+    }
+  }
+
+  function clearSelectedCustomer() {
+    selectedCustomer = null;
+
+    // Show search/create UI
+    document.getElementById('customerSearchMode').style.display = 'block';
+    document.getElementById('searchCustomerTab').style.display = 'inline-block';
+    document.getElementById('createCustomerTab').style.display = 'inline-block';
+
+    // Hide selected customer display
+    document.getElementById('selectedCustomerDisplay').style.display = 'none';
+    document.getElementById('customerNextBtn').style.display = 'none';
+
+    // Reset search
+    document.getElementById('customerSearchInput').value = '';
+    document.getElementById('searchResultsContainer').style.display = 'none';
+    document.getElementById('noResultsMessage').style.display = 'none';
+
+    // Clear equipment data
+    customerEquipment = [];
+    customerIdForEquipment = null;
+
+    // Switch back to search mode
+    switchCustomerMode('search');
+  }
+
+  async function createNewCustomer(event) {
+    event.preventDefault();
+    ValidationUtils.clearMessage('customerStepMessage');
+
+    const firstName = document.getElementById('newCustomerFirstName').value.trim();
+    const lastName = document.getElementById('newCustomerLastName').value.trim();
+    const email = document.getElementById('newCustomerEmail').value.trim();
+    const phone = document.getElementById('newCustomerPhone').value.trim();
+
+    // Validation
+    if (!firstName || !lastName || !email || !phone) {
+      ValidationUtils.showMessage('customerStepMessage', 'All fields are required', true);
+      return;
+    }
+
+    if (phone.length !== 10) {
+      ValidationUtils.showMessage('customerStepMessage', 'Phone number must be 10 digits', true);
+      return;
+    }
+
+    try {
+      // Check for duplicate customer first
+      const lookupResponse = await APIUtils.authenticatedFetch(`/customers/lookup?email=${encodeURIComponent(email)}&phone=${encodeURIComponent(phone)}`);
+      
+      if (lookupResponse.ok) {
+        const existing = await lookupResponse.json();
+        if (existing) {
+          if (confirm('A customer with this email/phone already exists. Use existing customer?')) {
+            await selectCustomer(existing);
+            return;
+          } else {
+            return;
+          }
+        }
+      }
+
+      // Create new customer
+      const createResponse = await APIUtils.authenticatedFetch('/customers', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ firstName, lastName, email, phone })
+      });
+
+      if (!createResponse.ok) {
+        throw new Error('Failed to create customer');
+      }
+
+      const newCustomer = await createResponse.json();
+      await selectCustomer(newCustomer);
+
+    } catch (error) {
+      console.error('Error creating customer:', error);
+      ValidationUtils.showMessage('customerStepMessage', 'Failed to create customer: ' + error.message, true);
+    }
+  }
+
+  function proceedToEquipmentStep() {
+    if (!selectedCustomer) {
+      ValidationUtils.showMessage('customerStepMessage', 'Please select or create a customer first', true);
+      return;
+    }
+
+    // Hide customer step
+    document.getElementById('customerStep').style.display = 'none';
+    document.getElementById('customerNextBtn').style.display = 'none';
+
+    // Show equipment step
+    document.getElementById('equipmentStep').style.display = 'block';
+    document.getElementById('equipmentBackBtn').style.display = 'inline-block';
+    document.getElementById('createSubmitBtn').style.display = 'inline-block';
+
+    // Update modal title
+    document.getElementById('createModalTitle').textContent = 'Create New Work Order - Step 2: Equipment Selection';
+
+    // Display existing equipment section
+    displayExistingEquipment();
+
+    // Update button text based on service selections
+    updateSubmitButtonText();
+  }
+
+  function displayExistingEquipment() {
+    const existingSection = document.getElementById('existingEquipmentSection');
+    const existingList = document.getElementById('existingEquipmentList');
+    
+    if (!customerEquipment || customerEquipment.length === 0) {
+      existingSection.style.display = 'none';
+      return;
+    }
+    
+    existingSection.style.display = 'block';
+    existingList.innerHTML = '';
+    
+    customerEquipment.forEach((equipment, index) => {
+      const equipmentRow = document.createElement('div');
+      equipmentRow.style.cssText = 'display: grid; grid-template-columns: auto 1fr 200px; gap: 10px; align-items: center; padding: 10px; border-bottom: 1px solid #e2e8f0;';
+      equipmentRow.setAttribute('data-equipment-id', equipment.id);
+      
+      // Checkbox
+      const checkboxCell = document.createElement('div');
+      checkboxCell.innerHTML = `
+        <input 
+          type="checkbox" 
+          id="existingEquip-${equipment.id}" 
+          class="existing-equipment-checkbox"
+          onchange="toggleExistingEquipmentService(${equipment.id})"
+          style="width: 18px; height: 18px; cursor: pointer;"
+        />
+      `;
+      
+      // Equipment summary
+      const summaryCell = document.createElement('div');
+      summaryCell.innerHTML = `
+        <label for="existingEquip-${equipment.id}" style="cursor: pointer; font-weight: 500;">
+          ${equipment.brand} ${equipment.model}
+          ${equipment.length ? ` - ${equipment.length}cm` : ''}
+        </label>
+        <div style="font-size: 12px; color: #666; margin-top: 2px;">
+          ${equipment.condition} | Type: ${equipment.type} | Level: ${equipment.abilityLevel}
+        </div>
+      `;
+      
+      // Service type dropdown (disabled initially)
+      const serviceCell = document.createElement('div');
+      serviceCell.innerHTML = `
+        <select 
+          id="service-${equipment.id}" 
+          class="existing-equipment-service"
+          disabled
+          style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 4px; background: #f3f4f6; cursor: not-allowed;"
+        >
+          <option value="">Select Service</option>
+          <option value="TUNE">Tune</option>
+          <option value="MOUNT">Mount</option>
+          <option value="REPAIR">Repair</option>
+        </select>
+      `;
+      
+      equipmentRow.appendChild(checkboxCell);
+      equipmentRow.appendChild(summaryCell);
+      equipmentRow.appendChild(serviceCell);
+      existingList.appendChild(equipmentRow);
+    });
+  }
+
+  function toggleExistingEquipmentService(equipmentId) {
+    const checkbox = document.getElementById(`existingEquip-${equipmentId}`);
+    const serviceSelect = document.getElementById(`service-${equipmentId}`);
+    
+    if (checkbox.checked) {
+      // Enable service dropdown
+      serviceSelect.disabled = false;
+      serviceSelect.style.background = '#ffffff';
+      serviceSelect.style.cursor = 'pointer';
+      serviceSelect.style.border = '1px solid #d1d5db';
+      
+      // Add event listener to clear error styling when service is selected
+      serviceSelect.addEventListener('change', function() {
+        if (this.value) {
+          this.style.border = '1px solid #d1d5db';
+        }
+        // Update button text when service type changes
+        updateSubmitButtonText();
+      });
+    } else {
+      // Disable and clear service dropdown
+      serviceSelect.disabled = true;
+      serviceSelect.value = '';
+      serviceSelect.style.background = '#f3f4f6';
+      serviceSelect.style.cursor = 'not-allowed';
+      serviceSelect.style.border = '1px solid #d1d5db';
+      
+      // Update button text when checkbox is unchecked
+      updateSubmitButtonText();
+    }
+  }
+
+  function backToCustomerStep() {
+    // Show customer step
+    document.getElementById('customerStep').style.display = 'block';
+    document.getElementById('customerNextBtn').style.display = 'inline-block';
+
+    // Hide equipment step
+    document.getElementById('equipmentStep').style.display = 'none';
+    document.getElementById('equipmentBackBtn').style.display = 'none';
+    document.getElementById('createSubmitBtn').style.display = 'none';
+
+    // Update modal title
+    document.getElementById('createModalTitle').textContent = 'Create New Work Order - Step 1: Select Customer';
+  }
+
+  async function loadCustomerEquipmentForWizard() {
+    if (!selectedCustomer || !selectedCustomer.id) return;
+
+    try {
+      const response = await APIUtils.authenticatedFetch(`${API_CONFIG.CUSTOMERS}/${selectedCustomer.id}/equipment`);
+      if (response.ok) {
+        customerEquipment = await response.json();
+        customerIdForEquipment = selectedCustomer.id;
+
+        // Update any existing equipment rows with equipment options
+        const equipmentRows = createEquipmentItemsContainer.querySelectorAll('.equipment-item-row');
+        equipmentRows.forEach(row => {
+          loadAndDisplayEquipment(row, selectedCustomer.email, selectedCustomer.phone);
+        });
+      }
+    } catch (error) {
+      console.error('Error loading customer equipment:', error);
+    }
+  }
+
+  /* ===============================
      Create Work Order Modal Functions
      =============================== */
   function openCreateModal() {
     createModal.style.display = "block";
     resetCreateForm();
-    addCreateSkiRow(); // Ensure at least one ski row
   }
 
   function closeCreateModal() {
@@ -722,11 +2136,38 @@
   }
 
   function resetCreateForm() {
+    // Reset wizard to step 1
+    document.getElementById('customerStep').style.display = 'block';
+    document.getElementById('equipmentStep').style.display = 'none';
+    document.getElementById('customerNextBtn').style.display = 'none';
+    document.getElementById('equipmentBackBtn').style.display = 'none';
+    document.getElementById('createSubmitBtn').style.display = 'none';
+    document.getElementById('createModalTitle').textContent = 'Create New Work Order - Step 1: Select Customer';
+
+    // Reset customer selection
+    selectedCustomer = null;
+    clearSelectedCustomer();
+
+    // Reset forms
     document.getElementById("createWorkOrderForm").reset();
-    createSkiItemsContainer.innerHTML = "";
+    document.getElementById("newCustomerForm").reset();
+    createEquipmentItemsContainer.innerHTML = "";
+    
+    // Clear work order note textarea
+    const noteTextarea = document.getElementById('createWorkOrderNoteText');
+    if (noteTextarea) {
+      noteTextarea.value = '';
+    }
+    
+    // Clear existing equipment section
+    document.getElementById('existingEquipmentSection').style.display = 'none';
+    document.getElementById('existingEquipmentList').innerHTML = '';
+    
     ValidationUtils.clearMessage('createFormMessage');
     capturedFormData = null;
-    skiItemCounter = 0; // Reset the ski counter
+    equipmentItemCounter = 0; // Reset the equipment counter
+    customerEquipment = []; // Reset customer equipment
+    customerIdForEquipment = null; // Reset customer ID
     updateSubmitButtonText();
   }
 
@@ -762,15 +2203,27 @@
      Mount Service Detection and UI Updates
      =============================== */
   function hasMountService() {
-    const serviceSelects = createSkiItemsContainer.querySelectorAll('.service-type-select');
-    return Array.from(serviceSelects).some(select => select.value === 'MOUNT');
+    // Check new equipment items
+    const newEquipmentServiceSelects = createEquipmentItemsContainer.querySelectorAll('.service-type-select');
+    const hasNewEquipmentMount = Array.from(newEquipmentServiceSelects).some(select => select.value === 'MOUNT');
+    
+    // Check existing equipment items
+    const existingEquipmentServiceSelects = document.querySelectorAll('.existing-equipment-service');
+    const hasExistingEquipmentMount = Array.from(existingEquipmentServiceSelects).some(select => {
+      // Only count checked equipment items
+      const equipmentId = select.id.replace('service-', '');
+      const checkbox = document.getElementById(`existingEquip-${equipmentId}`);
+      return checkbox && checkbox.checked && select.value === 'MOUNT';
+    });
+    
+    return hasNewEquipmentMount || hasExistingEquipmentMount;
   }
 
   function updateSubmitButtonText() {
     if (hasMountService()) {
-      createSubmitBtn.textContent = "Proceed to Fill Out Boot Requirements";
+      createSubmitBtn.innerHTML = '<i class="fas fa-arrow-right"></i> Enter Boot and Binding Information';
     } else {
-      createSubmitBtn.textContent = "Create Work Order";
+      createSubmitBtn.innerHTML = '<i class="fas fa-check"></i> Create Work Order';
     }
   }
 
@@ -861,6 +2314,48 @@
     });
   }
 
+  /* ===============================
+     Customer Equipment Lookup
+     =============================== */
+  async function lookupCustomerEquipment(email, phone) {
+    try {
+      // Look up customer by email and phone to get customer ID
+      const response = await APIUtils.authenticatedFetch(`${API_CONFIG.WORKORDERS}/customer/boots?email=${encodeURIComponent(email)}&phone=${encodeURIComponent(phone)}`);
+      
+      if (response.ok) {
+        const boots = await response.json();
+        // Extract customer ID from the boots response (if boots exist)
+        // Or we need to look up customer separately
+        // For now, let's try to get customer by lookup endpoint
+        const customerResponse = await APIUtils.authenticatedFetch(`/customers/lookup?email=${encodeURIComponent(email)}&phone=${encodeURIComponent(phone)}`);
+        
+        if (customerResponse.ok) {
+          const customer = await customerResponse.json();
+          customerIdForEquipment = customer.id;
+          
+          // Now fetch equipment for this customer
+          const equipmentResponse = await APIUtils.authenticatedFetch(`${API_CONFIG.CUSTOMERS}/${customerIdForEquipment}/equipment`);
+          
+          if (equipmentResponse.ok) {
+            customerEquipment = await equipmentResponse.json();
+          } else {
+            customerEquipment = [];
+          }
+        } else {
+          customerEquipment = [];
+          customerIdForEquipment = null;
+        }
+      } else {
+        customerEquipment = [];
+        customerIdForEquipment = null;
+      }
+    } catch (error) {
+      console.error('Error looking up customer equipment:', error);
+      customerEquipment = [];
+      customerIdForEquipment = null;
+    }
+  }
+
   function handleBootChoiceChange(event) {
     selectedBootChoice = event.target.value;
     document.getElementById('bootSubmitBtn').disabled = false;
@@ -877,33 +2372,33 @@
     bootItemsContainer.innerHTML = '';
     
     // Filter only MOUNT service items
-    const mountItems = capturedFormData.skis.filter(ski => ski.serviceType === 'MOUNT');
+    const mountItems = capturedFormData.equipment.filter(item => item.serviceType === 'MOUNT');
     
-    mountItems.forEach((ski, index) => {
+    mountItems.forEach((item, index) => {
       const bootDiv = document.createElement("div");
-      bootDiv.className = "ski-item-row";
+      bootDiv.className = "equipment-item-row";
       bootDiv.innerHTML = `
-        <h5>${ski.skiMake} ${ski.skiModel} - New Boot Information</h5>
+        <h5>${item.skiMake || item.brand} ${item.skiModel || item.model} - New Boot Information</h5>
         
         <div class="mount-field-row">
           <div>
             <label>Binding Brand *</label>
-            <input type="text" class="binding-brand" placeholder="e.g., Marker" required data-ski-index="${index}">
+            <input type="text" class="binding-brand" placeholder="e.g., Marker" required data-equipment-index="${index}">
           </div>
           <div>
             <label>Binding Model</label>
-            <input type="text" class="binding-model" placeholder="e.g., Griffon 13" data-ski-index="${index}">
+            <input type="text" class="binding-model" placeholder="e.g., Griffon 13" data-equipment-index="${index}">
           </div>
         </div>
 
         <div class="mount-field-row">
           <div>
             <label>Boot Brand *</label>
-            <input type="text" class="boot-brand" placeholder="e.g., Salomon" required data-ski-index="${index}">
+            <input type="text" class="boot-brand" placeholder="e.g., Salomon" required data-equipment-index="${index}">
           </div>
           <div>
             <label>Boot Model *</label>
-            <input type="text" class="boot-model" placeholder="e.g., X-Pro 100" required data-ski-index="${index}">
+            <input type="text" class="boot-model" placeholder="e.g., X-Pro 100" required data-equipment-index="${index}">
           </div>
         </div>
 
@@ -951,18 +2446,18 @@
           </div>
           <div>
             <label>Weight (lbs) *</label>
-            <input type="number" class="weight" placeholder="e.g., 180" min="50" max="400" required data-ski-index="${index}">
+            <input type="number" class="weight" placeholder="e.g., 180" min="50" max="400" required data-equipment-index="${index}">
           </div>
         </div>
 
         <div class="mount-field-row">
           <div>
             <label>Age *</label>
-            <input type="number" class="age" placeholder="e.g., 25" min="5" max="120" required data-ski-index="${index}">
+            <input type="number" class="age" placeholder="e.g., 25" min="5" max="120" required data-equipment-index="${index}">
           </div>
           <div>
             <label>Ski Ability Level *</label>
-            <select class="ability-level" required data-ski-index="${index}">
+            <select class="ability-level" required data-equipment-index="${index}">
               <option value="">Select Level</option>
               <option value="BEGINNER">Beginner</option>
               <option value="INTERMEDIATE">Intermediate</option>
@@ -979,44 +2474,44 @@
     bootItemsContainer.innerHTML = '';
     
     // Filter only MOUNT service items
-    const mountItems = capturedFormData.skis.filter(ski => ski.serviceType === 'MOUNT');
+    const mountItems = capturedFormData.equipment.filter(item => item.serviceType === 'MOUNT');
     
     // Convert height back to feet and inches for display
     const heightFeet = Math.floor(selectedBoot.heightInches / 12);
     const heightInches = selectedBoot.heightInches % 12;
     
-    mountItems.forEach((ski, index) => {
+    mountItems.forEach((item, index) => {
       const bootDiv = document.createElement("div");
-      bootDiv.className = "ski-item-row";
+      bootDiv.className = "equipment-item-row";
       bootDiv.innerHTML = `
-        <h5>${ski.skiMake} ${ski.skiModel} - Using Existing Boot</h5>
+        <h5>${item.skiMake || item.brand} ${item.skiModel || item.model} - Using Existing Boot</h5>
         
         <div class="mount-field-row">
           <div>
             <label>Binding Brand *</label>
-            <input type="text" class="binding-brand" placeholder="e.g., Marker" required data-ski-index="${index}">
+            <input type="text" class="binding-brand" placeholder="e.g., Marker" required data-equipment-index="${index}">
           </div>
           <div>
             <label>Binding Model</label>
-            <input type="text" class="binding-model" placeholder="e.g., Griffon 13" data-ski-index="${index}">
+            <input type="text" class="binding-model" placeholder="e.g., Griffon 13" data-equipment-index="${index}">
           </div>
         </div>
 
         <div class="mount-field-row">
           <div>
             <label>Boot Brand</label>
-            <input type="text" class="boot-brand" value="${selectedBoot.brand}" readonly data-ski-index="${index}" style="background: #f5f5f5;">
+            <input type="text" class="boot-brand" value="${selectedBoot.brand}" readonly data-equipment-index="${index}" style="background: #f5f5f5;">
           </div>
           <div>
             <label>Boot Model</label>
-            <input type="text" class="boot-model" value="${selectedBoot.model}" readonly data-ski-index="${index}" style="background: #f5f5f5;">
+            <input type="text" class="boot-model" value="${selectedBoot.model}" readonly data-equipment-index="${index}" style="background: #f5f5f5;">
           </div>
         </div>
 
         <div class="mount-field-row single">
           <div>
             <label>BSL (Boot Sole Length in mm)</label>
-            <input type="number" class="bsl" value="${selectedBoot.bsl}" readonly data-ski-index="${index}" style="background: #f5f5f5;">
+            <input type="number" class="bsl" value="${selectedBoot.bsl}" readonly data-equipment-index="${index}" style="background: #f5f5f5;">
           </div>
         </div>
 
@@ -1026,13 +2521,13 @@
             <div class="height-fields">
               <div>
                 <label>Feet</label>
-                <select class="height-feet" disabled data-ski-index="${index}" style="background: #f5f5f5;">
+                <select class="height-feet" disabled data-equipment-index="${index}" style="background: #f5f5f5;">
                   <option value="${heightFeet}" selected>${heightFeet}</option>
                 </select>
               </div>
               <div>
                 <label>Inches</label>
-                <select class="height-inches" disabled data-ski-index="${index}" style="background: #f5f5f5;">
+                <select class="height-inches" disabled data-equipment-index="${index}" style="background: #f5f5f5;">
                   <option value="${heightInches}" selected>${heightInches}</option>
                 </select>
               </div>
@@ -1040,166 +2535,168 @@
           </div>
           <div>
             <label>Weight (lbs)</label>
-            <input type="number" class="weight" value="${selectedBoot.weight}" readonly data-ski-index="${index}" style="background: #f5f5f5;">
+            <input type="number" class="weight" value="${selectedBoot.weight}" readonly data-equipment-index="${index}" style="background: #f5f5f5;">
           </div>
         </div>
 
         <div class="mount-field-row">
           <div>
             <label>Age</label>
-            <input type="number" class="age" value="${selectedBoot.age}" readonly data-ski-index="${index}" style="background: #f5f5f5;">
+            <input type="number" class="age" value="${selectedBoot.age}" readonly data-equipment-index="${index}" style="background: #f5f5f5;">
           </div>
           <div>
             <label>Ski Ability Level</label>
-            <select class="ability-level" disabled data-ski-index="${index}" style="background: #f5f5f5;">
+            <select class="ability-level" disabled data-equipment-index="${index}" style="background: #f5f5f5;">
               <option value="${selectedBoot.abilityLevel}" selected>${selectedBoot.abilityLevel}</option>
             </select>
           </div>
         </div>
         
-        <input type="hidden" class="boot-id" value="${selectedBoot.id}" data-ski-index="${index}">
+        <input type="hidden" class="boot-id" value="${selectedBoot.id}" data-equipment-index="${index}">
       `;
       bootItemsContainer.appendChild(bootDiv);
     });
   }
-  function addCreateSkiRow() {
-    skiItemCounter++;
-    const skiDiv = document.createElement("div");
-    skiDiv.className = "ski-item-row";
-    skiDiv.setAttribute("data-ski-id", skiItemCounter);
+  function addEquipmentItem() {
+    equipmentItemCounter++;
+    const equipmentDiv = document.createElement("div");
+    equipmentDiv.className = "equipment-item-row";
+    equipmentDiv.setAttribute("data-equipment-id", equipmentItemCounter);
 
-    skiDiv.innerHTML = `
-      <button type="button" class="remove-ski-btn" onclick="removeCreateSkiItem(this)" title="Remove Ski">✕</button>
-      <h5>Ski Item ${skiItemCounter}</h5>
+    equipmentDiv.innerHTML = `
+      <button type="button" class="remove-equipment-btn" onclick="removeEquipmentItem(this)" title="Remove Equipment">✕</button>
+      <h5>New Equipment Item ${equipmentItemCounter}</h5>
       
-      <div class="basic-ski-fields">
-        <div>
-          <label>Make *</label>
-          <select class="ski-make" required>
-            <option value="">Select Make</option>
-          </select>
-        </div>
-        <div>
-          <label>Model *</label>
-          <select class="ski-model" required>
-            <option value="">Select Model</option>
-          </select>
-        </div>
-        <div>
-          <label>Service *</label>
-          <select class="service-type-select" required>
-            <option value="">Select Service</option>
-            <option value="TUNE">Tune</option>
-            <option value="MOUNT">Mount</option>
-            <option value="REPAIR">Repair</option>
-          </select>
-        </div>
-        <div>
-          <label>Condition *</label>
-          <select class="condition" required>
-            <option value="">Select Condition</option>
-            <option value="NEW">New</option>
-            <option value="USED">Used</option>
-          </select>
-        </div>
-      </div>
-
-      <div class="mount-fields">
-        <h6>Mount-Specific Information</h6>
-        
-        <div class="mount-field-row">
+      <div class="new-equipment-fields">
+        <div class="basic-equipment-fields">
           <div>
-            <label>Binding Brand *</label>
-            <input type="text" class="binding-brand" placeholder="e.g., Marker">
+            <label>Make *</label>
+            <select class="equipment-make" required>
+              <option value="">Select Make</option>
+            </select>
           </div>
           <div>
-            <label>Binding Model</label>
-            <input type="text" class="binding-model" placeholder="e.g., Griffon 13">
+            <label>Model *</label>
+            <select class="equipment-model" required>
+              <option value="">Select Model</option>
+            </select>
+          </div>
+          <div>
+            <label>Service *</label>
+            <select class="service-type-select" required>
+              <option value="">Select Service</option>
+              <option value="TUNE">Tune</option>
+              <option value="MOUNT">Mount</option>
+              <option value="REPAIR">Repair</option>
+            </select>
+          </div>
+          <div>
+            <label>Condition *</label>
+            <select class="condition" required>
+              <option value="">Select Condition</option>
+              <option value="NEW">New</option>
+              <option value="USED">Used</option>
+            </select>
           </div>
         </div>
 
-        <div class="mount-field-row">
-          <div>
-            <label>Boot Brand *</label>
-            <input type="text" class="boot-brand" placeholder="e.g., Salomon">
-          </div>
-          <div>
-            <label>Boot Model *</label>
-            <input type="text" class="boot-model" placeholder="e.g., X-Pro 100">
-          </div>
-        </div>
-
-        <div class="mount-field-row single">
-          <div>
-            <label>BSL (Boot Sole Length in mm) *</label>
-            <input type="number" class="bsl" placeholder="e.g., 295" min="250" max="400">
-          </div>
-        </div>
-
-        <div class="mount-field-row">
-          <div>
-            <label>Height *</label>
-            <div class="height-fields">
-              <div>
-                <label>Feet</label>
-                <select class="height-feet">
-                  <option value="">-</option>
-                  <option value="4">4</option>
-                  <option value="5">5</option>
-                  <option value="6">6</option>
-                  <option value="7">7</option>
-                  <option value="8">8</option>
-                </select>
-              </div>
-              <div>
-                <label>Inches</label>
-                <select class="height-inches">
-                  <option value="">-</option>
-                  <option value="0">0</option>
-                  <option value="1">1</option>
-                  <option value="2">2</option>
-                  <option value="3">3</option>
-                  <option value="4">4</option>
-                  <option value="5">5</option>
-                  <option value="6">6</option>
-                  <option value="7">7</option>
-                  <option value="8">8</option>
-                  <option value="9">9</option>
-                  <option value="10">10</option>
-                  <option value="11">11</option>
-                </select>
-              </div>
+        <div class="mount-fields">
+          <h6>Mount-Specific Information</h6>
+          
+          <div class="mount-field-row">
+            <div>
+              <label>Binding Brand *</label>
+              <input type="text" class="binding-brand" placeholder="e.g., Marker">
+            </div>
+            <div>
+              <label>Binding Model</label>
+              <input type="text" class="binding-model" placeholder="e.g., Griffon 13">
             </div>
           </div>
-          <div>
-            <label>Weight (lbs) *</label>
-            <input type="number" class="weight" placeholder="e.g., 180" min="50" max="400" required>
-          </div>
-        </div>
 
-        <div class="mount-field-row">
-          <div>
-            <label>Age *</label>
-            <input type="number" class="age" placeholder="e.g., 25" min="5" max="120" required>
+          <div class="mount-field-row">
+            <div>
+              <label>Boot Brand *</label>
+              <input type="text" class="boot-brand" placeholder="e.g., Salomon">
+            </div>
+            <div>
+              <label>Boot Model *</label>
+              <input type="text" class="boot-model" placeholder="e.g., X-Pro 100">
+            </div>
           </div>
-          <div>
-            <label>Ski Ability Level *</label>
-            <select class="ability-level" required>
-              <option value="">Select Level</option>
-              <option value="BEGINNER">Beginner</option>
-              <option value="INTERMEDIATE">Intermediate</option>
-              <option value="ADVANCED">Advanced</option>
-            </select>
+
+          <div class="mount-field-row single">
+            <div>
+              <label>BSL (Boot Sole Length in mm) *</label>
+              <input type="number" class="bsl" placeholder="e.g., 295" min="250" max="400">
+            </div>
+          </div>
+
+          <div class="mount-field-row">
+            <div>
+              <label>Height *</label>
+              <div class="height-fields">
+                <div>
+                  <label>Feet</label>
+                  <select class="height-feet">
+                    <option value="">-</option>
+                    <option value="4">4</option>
+                    <option value="5">5</option>
+                    <option value="6">6</option>
+                    <option value="7">7</option>
+                    <option value="8">8</option>
+                  </select>
+                </div>
+                <div>
+                  <label>Inches</label>
+                  <select class="height-inches">
+                    <option value="">-</option>
+                    <option value="0">0</option>
+                    <option value="1">1</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5</option>
+                    <option value="6">6</option>
+                    <option value="7">7</option>
+                    <option value="8">8</option>
+                    <option value="9">9</option>
+                    <option value="10">10</option>
+                    <option value="11">11</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+            <div>
+              <label>Weight (lbs) *</label>
+              <input type="number" class="weight" placeholder="e.g., 180" min="50" max="400" required>
+            </div>
+          </div>
+
+          <div class="mount-field-row">
+            <div>
+              <label>Age *</label>
+              <input type="number" class="age" placeholder="e.g., 25" min="5" max="120" required>
+            </div>
+            <div>
+              <label>Ski Ability Level *</label>
+              <select class="ability-level" required>
+                <option value="">Select Level</option>
+                <option value="BEGINNER">Beginner</option>
+                <option value="INTERMEDIATE">Intermediate</option>
+                <option value="ADVANCED">Advanced</option>
+              </select>
+            </div>
           </div>
         </div>
       </div>
     `;
 
-    createSkiItemsContainer.appendChild(skiDiv);
+    createEquipmentItemsContainer.appendChild(equipmentDiv);
 
     // Populate brand dropdown, then wire dependent models dropdown
-    const makeSelect = skiDiv.querySelector(".ski-make");
-    const modelSelect = skiDiv.querySelector(".ski-model");
+    const makeSelect = equipmentDiv.querySelector(".equipment-make");
+    const modelSelect = equipmentDiv.querySelector(".equipment-model");
 
     populateBrandSelect(makeSelect).then(() => {
       makeSelect.addEventListener("change", async () => {
@@ -1207,33 +2704,89 @@
         await populateModelSelect(modelSelect, brandId);
       });
     });
+    
+    // Update button text when new equipment is added
+    updateSubmitButtonText();
   }
 
-  function removeCreateSkiItem(button) {
-    const skiItem = button.closest('.ski-item-row');
-    skiItem.remove();
-    checkCreateSkiCount();
-    updateSubmitButtonText(); // Update button text when ski items change
+  async function loadAndDisplayEquipment(equipmentDiv, email, phone) {
+    // Lookup equipment if we haven't already
+    if (customerEquipment.length === 0 && !customerIdForEquipment) {
+      await lookupCustomerEquipment(email, phone);
+    }
+    
+    const equipmentSection = equipmentDiv.querySelector('.equipment-selection-section');
+    const existingEquipmentOptions = equipmentDiv.querySelector('.existing-equipment-options');
+    
+    if (customerEquipment && customerEquipment.length > 0) {
+      // Display equipment selection
+      existingEquipmentOptions.innerHTML = '';
+      
+      customerEquipment.forEach((equipment, index) => {
+        const equipmentLabel = document.createElement('div');
+        equipmentLabel.style.marginBottom = '10px';
+        equipmentLabel.innerHTML = `
+          <label style="display: block; padding: 10px; border: 1px solid #ddd; border-radius: 4px; cursor: pointer;">
+            <input type="radio" name="equipmentChoice-${equipmentDiv.getAttribute('data-equipment-id')}" value="existing-${equipment.id}" class="equipment-choice-radio" style="margin-right: 10px;">
+            <strong>${equipment.brand} ${equipment.model}</strong>
+            ${equipment.length ? ` - ${equipment.length}cm` : ''} - ${equipment.condition}<br>
+            <small style="color: #666;">Type: ${equipment.type} | Level: ${equipment.abilityLevel}</small>
+          </label>
+        `;
+        existingEquipmentOptions.appendChild(equipmentLabel);
+      });
+      
+      equipmentSection.style.display = 'block';
+      
+      // Add event listeners for new equipment radio choices
+      equipmentDiv.querySelectorAll('.equipment-choice-radio').forEach(radio => {
+        radio.addEventListener('change', (e) => handleEquipmentChoiceChange(e, equipmentDiv));
+      });
+    } else {
+      // No equipment found - show new equipment fields directly
+      equipmentSelection.style.display = 'none';
+      equipmentDiv.querySelector('.new-equipment-fields').style.display = 'block';
+    }
+  }
+
+  function handleEquipmentChoiceChange(event, equipmentDiv) {
+    const selectedValue = event.target.value;
+    const newEquipmentFields = equipmentDiv.querySelector('.new-equipment-fields');
+    
+    if (selectedValue === 'new') {
+      // Show new equipment fields
+      newEquipmentFields.style.display = 'block';
+    } else {
+      // Hide new equipment fields (existing equipment selected)
+      newEquipmentFields.style.display = 'none';
+    }
+  }
+
+  function removeEquipmentItem(button) {
+    const equipmentItem = button.closest('.equipment-item-row');
+    equipmentItem.remove();
+    checkEquipmentItemCount();
+    updateSubmitButtonText(); // Update button text when equipment items change
   }
 
   function toggleMountFields(serviceSelect) {
-    const skiItem = serviceSelect.closest('.ski-item-row');
-    const mountFields = skiItem.querySelector('.mount-fields');
+    const equipmentItem = serviceSelect.closest('.equipment-item-row');
+    const mountFields = equipmentItem.querySelector('.mount-fields');
     
     // For MOUNT service type in the first modal, hide the mount fields
     // Boot requirements will be captured in the second modal
     if (serviceSelect.value === 'MOUNT') {
       mountFields.classList.remove('show');
-      setMountFieldsRequired(skiItem, false);
-      clearMountFields(skiItem);
+      setMountFieldsRequired(equipmentItem, false);
+      clearMountFields(equipmentItem);
     } else {
       mountFields.classList.remove('show');
-      setMountFieldsRequired(skiItem, false);
-      clearMountFields(skiItem);
+      setMountFieldsRequired(equipmentItem, false);
+      clearMountFields(equipmentItem);
     }
   }
 
-  function setMountFieldsRequired(skiItem, required) {
+  function setMountFieldsRequired(equipmentItem, required) {
     const requiredFields = [
       '.binding-brand',
       '.boot-brand',
@@ -1247,7 +2800,7 @@
     ];
 
     requiredFields.forEach(selector => {
-      const field = skiItem.querySelector(selector);
+      const field = equipmentItem.querySelector(selector);
       if (field) {
         if (required) {
           field.setAttribute('required', '');
@@ -1258,7 +2811,7 @@
     });
   }
 
-  function clearMountFields(skiItem) {
+  function clearMountFields(equipmentItem) {
     const fields = [
       '.binding-brand',
       '.binding-model',
@@ -1273,17 +2826,16 @@
     ];
 
     fields.forEach(selector => {
-      const field = skiItem.querySelector(selector);
+      const field = equipmentItem.querySelector(selector);
       if (field) {
         field.value = '';
       }
     });
   }
 
-  function checkCreateSkiCount() {
-    if (createSkiItemsContainer.children.length === 0) {
-      addCreateSkiRow(); // Always maintain at least one row
-    }
+  function checkEquipmentItemCount() {
+    // Allow empty equipment container - user can add items with "+ Add Equipment" button
+    updateSubmitButtonText();
   }
 
   /* ===============================
@@ -1342,7 +2894,7 @@
     if (!bootData) return; // Validation failed - error already shown
 
     // Validate boot data has items for all MOUNT services
-    const mountSkiCount = capturedFormData.skis.filter(ski => ski.serviceType === 'MOUNT').length;
+    const mountSkiCount = capturedFormData.equipment.filter(equip => equip.serviceType === 'MOUNT').length;
     if (bootData.length !== mountSkiCount) {
       ValidationUtils.showMessage('bootFormMessage', 'Boot information count does not match mount service count. Please refresh and try again.', true);
       return;
@@ -1372,70 +2924,90 @@
      Form Data Capture and Processing Functions
      =============================== */
   function captureCreateFormData() {
-    // Get customer data
-    const firstName = document.getElementById("createFirstName").value.trim();
-    const lastName = document.getElementById("createLastName").value.trim();
-    const phone = document.getElementById("createPhone").value.trim();
-    const email = document.getElementById("createEmail").value.trim();
-
-    // Validate required fields
-    if (!firstName || !lastName || !phone || !email) {
-      ValidationUtils.showMessage('createFormMessage', 'Please fill in all required fields.', true);
+    // Validate customer is selected
+    if (!selectedCustomer) {
+      ValidationUtils.showMessage('createFormMessage', 'Please select or create a customer first.', true);
       return null;
     }
 
-    // Validate email format
-    if (!ValidationUtils.isValidEmail(email)) {
-      ValidationUtils.showMessage('createFormMessage', 'Please enter a valid email address.', true);
+    // Use selected customer data
+    const firstName = selectedCustomer.firstName;
+    const lastName = selectedCustomer.lastName;
+    const phone = selectedCustomer.phone;
+    const email = selectedCustomer.email;
+
+    // Collect selected existing equipment items
+    const existingEquipmentItems = collectSelectedExistingEquipment();
+    if (existingEquipmentItems === null) {
+      // Validation error already shown
       return null;
     }
 
-    // Validate phone format
-    if (!ValidationUtils.isValidPhone(phone)) {
-      ValidationUtils.showMessage('createFormMessage', 'Please enter a valid 10-digit phone number.', true);
+    // Get new equipment data
+    const equipmentItems = [...createEquipmentItemsContainer.children];
+
+    // Validate at least one equipment item (existing or new)
+    if (existingEquipmentItems.length === 0 && equipmentItems.length === 0) {
+      ValidationUtils.showMessage('createFormMessage', 'At least one equipment item is required.', true);
       return null;
     }
 
-    // Get ski data
-    const skiItems = [...createSkiItemsContainer.children];
-
-    if (skiItems.length === 0) {
-      ValidationUtils.showMessage('createFormMessage', 'At least one ski is required.', true);
-      return null;
-    }
-
-    // Validate ski data and build payload
-    const skis = [];
+    // Validate equipment data and build payload
+    const skis = [...existingEquipmentItems]; // Start with existing equipment
     let hasValidationError = false;
 
-    for (let skiItem of skiItems) {
-      const makeSelect = skiItem.querySelector(".ski-make");
-      const modelSelect = skiItem.querySelector(".ski-model");
-      const serviceSelect = skiItem.querySelector(".service-type-select");
-      const conditionSelect = skiItem.querySelector(".condition");
-
-      const skiMake = makeSelect.options[makeSelect.selectedIndex]?.text || "";
-      const skiModel = (modelSelect.value || "").trim();
+    for (let equipmentItem of equipmentItems) {
+      const serviceSelect = equipmentItem.querySelector(".service-type-select");
       const serviceType = serviceSelect.value;
-      const condition = conditionSelect.value;
-
-      if (!skiMake || !skiModel || !serviceType || !condition) {
-        ValidationUtils.showMessage('createFormMessage', 'Please complete all basic ski information.', true);
+      
+      if (!serviceType) {
+        ValidationUtils.showMessage('createFormMessage', 'Please select a service type.', true);
         hasValidationError = true;
         break;
       }
 
-      const skiData = {
-        skiMake: skiMake,
-        skiModel: skiModel,
-        serviceType: serviceType,
-        condition: condition
-      };
+      // All items in this section are new equipment
+      const makeSelect = equipmentItem.querySelector(".equipment-make");
+      const modelSelect = equipmentItem.querySelector(".equipment-model");
+      const conditionSelect = equipmentItem.querySelector(".condition");
 
-      skis.push(skiData);
+      const make = makeSelect.options[makeSelect.selectedIndex]?.text || "";
+      const model = (modelSelect.value || "").trim();
+      const condition = conditionSelect.value;
+
+      if (!make || !model || !condition) {
+        ValidationUtils.showMessage('createFormMessage', 'Please complete all equipment information for new equipment.', true);
+        hasValidationError = true;
+        break;
+      }
+
+      // Build equipment data with newEquipment object
+      skis.push({
+        serviceType: serviceType,
+        newEquipment: {
+          brand: make,
+          model: model,
+          condition: condition
+        }
+      });
     }
 
     if (hasValidationError) {
+      return null;
+    }
+
+    // Validate at least one equipment item is included
+    if (skis.length === 0) {
+      ValidationUtils.showMessage('createFormMessage', 'At least one equipment item is required.', true);
+      return null;
+    }
+
+    // Get promisedBy date value
+    const promisedBy = document.getElementById("createPromisedBy").value;
+    
+    // Validate promisedBy is provided
+    if (!promisedBy) {
+      ValidationUtils.showMessage('createFormMessage', 'Promised by date is required.', true);
       return null;
     }
 
@@ -1444,8 +3016,48 @@
       customerLastName: lastName,
       phone: phone,
       email: email,
-      skis: skis
+      equipment: skis,
+      promisedBy: promisedBy
     };
+  }
+
+  /**
+   * Collects selected existing equipment items with their service types
+   * Returns array of equipment objects or null if validation fails
+   */
+  function collectSelectedExistingEquipment() {
+    const existingEquipmentList = document.getElementById('existingEquipmentList');
+    if (!existingEquipmentList) {
+      return [];
+    }
+
+    const selectedEquipment = [];
+    const checkboxes = existingEquipmentList.querySelectorAll('.existing-equipment-checkbox');
+    
+    for (let checkbox of checkboxes) {
+      if (checkbox.checked) {
+        const equipmentId = checkbox.id.replace('existingEquip-', '');
+        const serviceSelect = document.getElementById(`service-${equipmentId}`);
+        const serviceType = serviceSelect.value;
+        
+        // Validate service type is selected
+        if (!serviceType) {
+          ValidationUtils.showMessage('createFormMessage', `Please select a service type for the selected equipment.`, true);
+          // Highlight the service dropdown
+          serviceSelect.style.border = '2px solid #dc2626';
+          serviceSelect.focus();
+          return null;
+        }
+        
+        // Add to selected equipment array
+        selectedEquipment.push({
+          equipmentId: parseInt(equipmentId),
+          serviceType: serviceType
+        });
+      }
+    }
+    
+    return selectedEquipment;
   }
 
   function captureBootRequirements() {
@@ -1455,7 +3067,7 @@
     for (let bootItem of bootItems) {
       const bindingBrand = bootItem.querySelector('.binding-brand').value.trim();
       const bindingModel = bootItem.querySelector('.binding-model').value.trim();
-      const skiIndex = parseInt(bootItem.querySelector('.binding-brand').getAttribute('data-ski-index'));
+      const equipmentIndex = parseInt(bootItem.querySelector('.binding-brand').getAttribute('data-equipment-index'));
 
       // Check if using existing boot or creating new one
       const bootIdField = bootItem.querySelector('.boot-id');
@@ -1473,7 +3085,7 @@
         const existingBoot = customerBoots[existingBootIndex];
         
         bootData = {
-          skiIndex: skiIndex,
+          equipmentIndex: equipmentIndex,
           bindingBrand: bindingBrand,
           bindingModel: bindingModel || null,
           bootId: existingBoot.id, // Link to existing boot
@@ -1528,7 +3140,7 @@
         }
 
         bootData = {
-          skiIndex: skiIndex,
+          equipmentIndex: equipmentIndex,
           bindingBrand: bindingBrand,
           bindingModel: bindingModel || null,
           bootBrand: bootBrand,
@@ -1552,46 +3164,47 @@
     const mergedData = { ...formData };
     let mountItemIndex = 0;
 
-    // Add boot data to corresponding MOUNT service skis
-    mergedData.skis = formData.skis.map(ski => {
-      if (ski.serviceType === 'MOUNT') {
+    // Add boot data to corresponding MOUNT service equipment
+    mergedData.equipment = formData.equipment.map(equip => {
+      if (equip.serviceType === 'MOUNT') {
         const bootData = bootRequirements[mountItemIndex];
         mountItemIndex++;
         
-        // Create clean ski item with boot data
-        const skiWithBootData = {
-          skiMake: ski.skiMake,
-          skiModel: ski.skiModel,
-          serviceType: ski.serviceType,
-          condition: ski.condition,
+        // Create clean equipment item with boot data
+        const equipWithBootData = {
+          serviceType: equip.serviceType,
           bindingBrand: bootData.bindingBrand,
           bindingModel: bootData.bindingModel
         };
         
+        // Preserve equipment selection (existing vs. new)
+        if (equip.equipmentId) {
+          // Using existing equipment
+          equipWithBootData.equipmentId = equip.equipmentId;
+        } else if (equip.newEquipment) {
+          // Creating new equipment
+          equipWithBootData.newEquipment = equip.newEquipment;
+        }
+        
         // Add boot information based on whether it's existing or new
         if (bootData.bootId) {
           // Existing boot - include bootId for linking
-          skiWithBootData.bootId = bootData.bootId;
+          equipWithBootData.bootId = bootData.bootId;
         } else {
           // New boot - include all boot creation fields
-          skiWithBootData.bootBrand = bootData.bootBrand;
-          skiWithBootData.bootModel = bootData.bootModel;
-          skiWithBootData.bsl = bootData.bsl;
-          skiWithBootData.heightInches = bootData.heightInches;
-          skiWithBootData.weight = bootData.weight;
-          skiWithBootData.age = bootData.age;
-          skiWithBootData.skiAbilityLevel = bootData.abilityLevel;
+          equipWithBootData.bootBrand = bootData.bootBrand;
+          equipWithBootData.bootModel = bootData.bootModel;
+          equipWithBootData.bsl = bootData.bsl;
+          equipWithBootData.heightInches = bootData.heightInches;
+          equipWithBootData.weight = bootData.weight;
+          equipWithBootData.age = bootData.age;
+          equipWithBootData.skiAbilityLevel = bootData.abilityLevel;
         }
         
-        return skiWithBootData;
+        return equipWithBootData;
       }
-      // Non-MOUNT services - return as-is
-      return {
-        skiMake: ski.skiMake,
-        skiModel: ski.skiModel,
-        serviceType: ski.serviceType,
-        condition: ski.condition
-      };
+      // Non-MOUNT services - return as-is (preserving equipmentId or newEquipment)
+      return equip;
     });
 
     // Return clean payload structure for WorkOrderRequest
@@ -1600,7 +3213,8 @@
       customerLastName: mergedData.customerLastName,
       phone: mergedData.phone,
       email: mergedData.email,
-      skis: mergedData.skis
+      promisedBy: mergedData.promisedBy,
+      equipment: mergedData.equipment
     };
   }
 
@@ -1611,27 +3225,39 @@
         throw new Error('Missing required customer information');
       }
       
-      if (!payload.skis || payload.skis.length === 0) {
-        throw new Error('At least one ski item is required');
+      if (!payload.equipment || payload.equipment.length === 0) {
+        throw new Error('At least one equipment item is required');
       }
       
-      // Validate each ski item has required fields
-      for (const ski of payload.skis) {
-        if (!ski.skiMake || !ski.skiModel || !ski.serviceType || !ski.condition) {
-          throw new Error('Missing required ski information');
+      // Validate each equipment item has required fields
+      for (const equip of payload.equipment) {
+        if (!equip.serviceType) {
+          throw new Error('Missing service type');
+        }
+        
+        // Validate equipment data (either equipmentId or newEquipment must be present)
+        if (!equip.equipmentId && !equip.newEquipment) {
+          throw new Error('Missing equipment information (either equipmentId or newEquipment required)');
+        }
+        
+        // If newEquipment is provided, validate its required fields
+        if (equip.newEquipment) {
+          if (!equip.newEquipment.brand || !equip.newEquipment.model || !equip.newEquipment.condition) {
+            throw new Error('Missing required new equipment information (brand, model, condition)');
+          }
         }
         
         // For MOUNT services, ensure boot/binding information is present
-        if (ski.serviceType === 'MOUNT') {
-          if (!ski.bindingBrand) {
+        if (equip.serviceType === 'MOUNT') {
+          if (!equip.bindingBrand) {
             throw new Error('Binding brand is required for mount services');
           }
           
           // Either bootId (existing boot) OR all boot creation fields must be present
-          if (!ski.bootId) {
+          if (!equip.bootId) {
             const requiredBootFields = ['bootBrand', 'bootModel', 'bsl', 'heightInches', 'weight', 'age', 'skiAbilityLevel'];
             for (const field of requiredBootFields) {
-              if (ski[field] === undefined || ski[field] === null || ski[field] === '') {
+              if (equip[field] === undefined || equip[field] === null || equip[field] === '') {
                 throw new Error(`${field} is required for new boot creation`);
               }
             }
@@ -1656,6 +3282,27 @@
       
       const result = await response.json();
       console.log('Work order created successfully:', result);
+
+      // Save initial note if provided
+      const initialNoteText = document.getElementById('createWorkOrderNoteText')?.value.trim();
+      if (initialNoteText && result.id) {
+        try {
+          const user = JSON.parse(localStorage.getItem('user') || '{}');
+          const createdBy = user.username || 'Staff';
+          
+          await APIUtils.authenticatedFetch(`/api/workorders/${result.id}/notes`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              noteText: initialNoteText,
+              createdBy: createdBy
+            })
+          });
+        } catch (noteError) {
+          console.error('Failed to save initial note:', noteError);
+          // Don't fail the whole operation if note save fails
+        }
+      }
 
       // Success - close all modals and refresh
       closeCreateModal();
@@ -1707,38 +3354,56 @@
       console.log('Status parameter:', status);
 
       const response = await APIUtils.authenticatedFetch(url);
-      const data = await response.json();
+      let data = await response.json();
+
+      // Special handling for READY_FOR_PICKUP: only show orders where ALL items are DONE
+      if (status === 'READY_FOR_PICKUP') {
+        data = data.filter(order => {
+          const equipment = order.equipment || [];
+          if (equipment.length === 0) return false;
+          return equipment.every(item => item.status === 'DONE');
+        });
+      }
 
       tableBody.innerHTML = "";
       ValidationUtils.clearMessage('listMessage');
 
       if (data.length === 0) {
-        tableBody.innerHTML = '<tr><td colspan="8" class="empty-message">No work orders found</td></tr>';
+        tableBody.innerHTML = `<tr><td colspan="9">
+          <div class="empty-state">
+            <i class="fas fa-clipboard-list"></i>
+            <h3>No work orders found</h3>
+            <p>No work orders match the current filter. Try switching to a different tab or create a new work order.</p>
+          </div>
+        </td></tr>`;
         return;
       }
 
       data.forEach(order => {
         const row = document.createElement("tr");
 
-        // Count skis by status
-        const skiItems = order.skiItems || [];
-        const doneCount = skiItems.filter(ski => ski.status === "DONE").length;
-        const totalCount = skiItems.length;
+        // Count equipment by status
+        const equipment = order.equipment || [];
+        const doneCount = equipment.filter(equip => equip.status === "DONE").length;
+        const totalCount = equipment.length;
 
-        const skiSummary = skiItems.length > 0 
-          ? `${skiItems.map(ski => `${ski.skiMake} ${ski.skiModel} (${ski.serviceType}) ${getStatusBadge(ski.status)}`).join("<br>")}`
-          : "No skis";
+        const equipmentSummary = equipment.length > 0 
+          ? `${equipment.map(equip => `${equip.brand} ${equip.model} <span style="font-weight: 700; color: #3b82f6;">(${equip.serviceType})</span> ${getModernStatusBadge(equip.status)}`).join("<br>")}`
+          : "No equipment";
 
         row.innerHTML = `
           <td>${order.id}</td>
-          <td>${order.customerName || ""}</td>
+          <td><strong>${order.customerName || ""}</strong></td>
           <td>${order.customerPhone || ""}</td>
           <td>${order.customerEmail || ""}</td>
-          <td>${skiSummary}</td>
-          <td>${getStatusBadge(order.status)}<br><small>${doneCount}/${totalCount} items done</small></td>
-          <td>${order.createdAt || ""}</td>
+          <td>${equipmentSummary}</td>
+          <td>${getModernStatusBadge(order.status)}<br><small style="color: #64748b;">${doneCount}/${totalCount} items done</small></td>
+          <td style="color: ${order.promisedBy ? '#059669' : '#6b7280'}; font-weight: ${order.promisedBy ? '600' : 'normal'};">${order.promisedBy ? formatDate(order.promisedBy) : "Not Set"}</td>
+          <td>${formatDate(order.createdAt) || ""}</td>
           <td class="action-buttons">
-            <button type="button" class="btn-primary" onclick="openEditModal(${order.id})">Manage Status</button>
+            <button type="button" class="action-btn btn-edit" onclick="openEditModal(${order.id})">
+              <i class="fas fa-edit"></i> Manage
+            </button>
           </td>
         `;
 
@@ -1757,6 +3422,106 @@
   // Legacy function name for compatibility - just calls the new function
   function fetchWorkOrders() {
     fetchWorkOrdersByStatus(currentActiveTab);
+  }
+
+  /* ===============================
+     Fetch Work Orders by Service Type
+     Shows work orders that contain at least one item of the specified service type
+     Only shows orders with RECEIVED, IN_PROGRESS, or READY_FOR_PICKUP status
+     =============================== */
+  async function fetchWorkOrdersByServiceType(serviceType) {
+    if (!AuthUtils.isAuthenticated()) {
+      showLoginView();
+      return;
+    }
+
+    try {
+      // Fetch all work orders (no status filter)
+      const response = await APIUtils.authenticatedFetch(API_CONFIG.WORKORDERS);
+      const allOrders = await response.json();
+
+      // Filter work orders that:
+      // 1. Have at least one equipment item with the specified service type
+      // 2. Have status RECEIVED, IN_PROGRESS, or READY_FOR_PICKUP
+      const filteredOrders = allOrders.filter(order => {
+        const equipment = order.equipment || [];
+        const hasServiceType = equipment.some(item => item.serviceType === serviceType);
+        const isRelevantStatus = order.status === 'RECEIVED' || order.status === 'IN_PROGRESS' || order.status === 'READY_FOR_PICKUP';
+        return hasServiceType && isRelevantStatus;
+      });
+
+      tableBody.innerHTML = "";
+      ValidationUtils.clearMessage('listMessage');
+
+      if (filteredOrders.length === 0) {
+        tableBody.innerHTML = `<tr><td colspan="9">
+          <div class="empty-state">
+            <i class="fas fa-clipboard-list"></i>
+            <h3>No ${serviceType} work orders found</h3>
+            <p>No work orders contain ${serviceType} service items. Try switching to a different tab or create a new work order.</p>
+          </div>
+        </td></tr>`;
+        return;
+      }
+
+      // Sort by due date (promisedBy) first, then creation date (oldest first)
+      filteredOrders.sort((a, b) => {
+        // Handle null promisedBy values - put them at the end
+        if (!a.promisedBy && !b.promisedBy) {
+          return new Date(a.createdAt) - new Date(b.createdAt);
+        }
+        if (!a.promisedBy) return 1; // a goes after b
+        if (!b.promisedBy) return -1; // a goes before b
+        
+        // Both have promisedBy dates, sort by them
+        const promisedDiff = new Date(a.promisedBy) - new Date(b.promisedBy);
+        if (promisedDiff !== 0) return promisedDiff;
+        
+        // Same promisedBy date, sort by createdAt
+        return new Date(a.createdAt) - new Date(b.createdAt);
+      });
+
+      filteredOrders.forEach(order => {
+        const row = document.createElement("tr");
+
+        // Filter equipment to only show items matching this service type
+        const allEquipment = order.equipment || [];
+        const equipment = allEquipment.filter(item => item.serviceType === serviceType);
+        
+        // Count done items for this service type only
+        const doneCount = equipment.filter(equip => equip.status === "DONE").length;
+        const totalCount = equipment.length;
+
+        const equipmentSummary = equipment.length > 0 
+          ? `${equipment.map(equip => `${equip.brand} ${equip.model} <span style="font-weight: 700; color: #3b82f6;">(${equip.serviceType})</span> ${getModernStatusBadge(equip.status)}`).join("<br>")}`
+          : "No equipment";
+
+        row.innerHTML = `
+          <td>${order.id}</td>
+          <td><strong>${order.customerName || ""}</strong></td>
+          <td>${order.customerPhone || ""}</td>
+          <td>${order.customerEmail || ""}</td>
+          <td>${equipmentSummary}</td>
+          <td>${getModernStatusBadge(order.status)}<br><small style="color: #64748b;">${doneCount}/${totalCount} items done</small></td>
+          <td style="color: ${order.promisedBy ? '#059669' : '#6b7280'}; font-weight: ${order.promisedBy ? '600' : 'normal'};">${order.promisedBy ? formatDate(order.promisedBy) : "Not Set"}</td>
+          <td>${formatDate(order.createdAt) || ""}</td>
+          <td class="action-buttons">
+            <button type="button" class="action-btn btn-edit" onclick="openEditModal(${order.id})">
+              <i class="fas fa-edit"></i> Manage
+            </button>
+          </td>
+        `;
+
+        tableBody.appendChild(row);
+      });
+    } catch (error) {
+      console.error("Error fetching work orders by service type:", error);
+      if (error.message === "Authentication required") {
+        showLoginView();
+      } else {
+        ValidationUtils.showMessage('listMessage', 'Failed to load work orders.', true);
+      }
+    }
   }
 
   /* ===============================

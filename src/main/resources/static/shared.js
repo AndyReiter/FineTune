@@ -4,7 +4,8 @@
 const API_CONFIG = {
   WORKORDERS: "http://localhost:8080/workorders",
   BRANDS: "http://localhost:8080/brands",
-  AUTH_LOGIN: "http://localhost:8080/auth/login"
+  AUTH_LOGIN: "http://localhost:8080/auth/login",
+  CUSTOMERS: "http://localhost:8080/api/customers"
 };
 
 // Authentication utilities

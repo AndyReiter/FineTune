@@ -19,7 +19,25 @@ export default function WorkOrdersPage() {
       setLoading(true);
       setError('');
       const data = await workOrderApi.getAll();
-      setWorkOrders(data);
+      
+      // Sort work orders by promisedBy (due date) first, then by createdAt
+      const sortedData = data.sort((a, b) => {
+        // Handle null promisedBy values - put them at the end
+        if (!a.promisedBy && !b.promisedBy) {
+          return new Date(a.createdAt) - new Date(b.createdAt);
+        }
+        if (!a.promisedBy) return 1; // a goes after b
+        if (!b.promisedBy) return -1; // a goes before b
+        
+        // Both have promisedBy dates, sort by them
+        const promisedDiff = new Date(a.promisedBy) - new Date(b.promisedBy);
+        if (promisedDiff !== 0) return promisedDiff;
+        
+        // Same promisedBy date, sort by createdAt
+        return new Date(a.createdAt) - new Date(b.createdAt);
+      });
+      
+      setWorkOrders(sortedData);
     } catch (err) {
       setError('Failed to load work orders: ' + err.message);
     } finally {
@@ -191,7 +209,7 @@ export default function WorkOrdersPage() {
         <div className="grid grid-cols-1 gap-4">
           {workOrders.map(workOrder => (
             <div key={workOrder.id} className="bg-white p-6 rounded shadow hover:shadow-lg transition">
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+              <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-4">
                 <div>
                   <p className="text-gray-600 text-sm font-semibold">Customer Name</p>
                   <p className="text-lg font-bold">{workOrder.customerName}</p>
@@ -209,6 +227,12 @@ export default function WorkOrdersPage() {
                   <span className={`inline-block px-3 py-1 rounded text-sm font-semibold ${getStatusColor(workOrder.status)}`}>
                     {workOrder.status.replace(/_/g, ' ')}
                   </span>
+                </div>
+                <div>
+                  <p className="text-gray-600 text-sm font-semibold">Due By</p>
+                  <p className="text-sm font-semibold" style={{color: workOrder.promisedBy ? '#059669' : '#6b7280'}}>
+                    {workOrder.promisedBy ? new Date(workOrder.promisedBy).toLocaleDateString() : 'Not Set'}
+                  </p>
                 </div>
               </div>
               {workOrder.createdAt && (

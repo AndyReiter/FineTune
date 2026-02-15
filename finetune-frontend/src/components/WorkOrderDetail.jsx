@@ -1,6 +1,6 @@
 // src/components/WorkOrderDetail.jsx
 import React, { useEffect, useState } from 'react';
-import { getWorkOrderById } from '../services/api';
+import { fetchWorkOrder } from '../services/api';
 import { useParams, Link } from 'react-router-dom';
 
 const WorkOrderDetail = () => {
@@ -10,9 +10,9 @@ const WorkOrderDetail = () => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    const fetchWorkOrder = async () => {
+    const loadWorkOrder = async () => {
       try {
-        const data = await getWorkOrderById(id);
+        const data = await fetchWorkOrder(id);
         setWorkOrder(data);
       } catch (err) {
         setError('Failed to load work order.');
@@ -20,7 +20,7 @@ const WorkOrderDetail = () => {
         setLoading(false);
       }
     };
-    fetchWorkOrder();
+    loadWorkOrder();
   }, [id]);
 
   if (loading) return <div className="text-center mt-10">Loading...</div>;

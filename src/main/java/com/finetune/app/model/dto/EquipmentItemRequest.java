@@ -5,7 +5,11 @@ import jakarta.validation.constraints.NotBlank;
 import com.finetune.app.model.entity.Equipment.Condition;
 import com.finetune.app.model.entity.Equipment.AbilityLevel;
 
-public class SkiItemRequest {
+/**
+ * Request DTO for adding equipment items to a work order.
+ * Supports both legacy fields and new equipment selection pattern.
+ */
+public class EquipmentItemRequest {
 
     // Equipment selection fields - legacy fields (to be deprecated)
     @NotBlank

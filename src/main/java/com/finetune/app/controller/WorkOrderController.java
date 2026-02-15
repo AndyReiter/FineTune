@@ -2,7 +2,7 @@ package com.finetune.app.controller;
 
 import com.finetune.app.model.dto.CreateWorkOrderRequest;
 import com.finetune.app.model.dto.WorkOrderResponse;
-import com.finetune.app.model.dto.UpdateSkiItemStatusRequest;
+import com.finetune.app.model.dto.UpdateEquipmentStatusRequest;
 import com.finetune.app.model.dto.BootResponse;
 import com.finetune.app.model.entity.WorkOrder;
 import com.finetune.app.repository.WorkOrderRepository;
@@ -36,10 +36,10 @@ import org.springframework.http.HttpStatus;
  * - Returns WorkOrderResponse DTOs for clean JSON (no circular references)
  * 
  * Merge Behavior:
- * - If customer exists with an active work order (RECEIVED or IN_PROGRESS), new ski items are MERGED
+ * - If customer exists with an active work order (RECEIVED or IN_PROGRESS), new equipment items are MERGED
  * - If no active work order exists, a NEW work order is created
  * - Completed or picked-up work orders are never reused; new orders are created instead
- * - Individual ski item status is tracked
+ * - Individual equipment item status is tracked
  * - Overall work order status is DONE only when ALL items are DONE
  * 
  * All GET endpoints return WorkOrderResponse DTOs to maintain clean JSON structure.
@@ -94,20 +94,20 @@ public class WorkOrderController {
      * Create or merge a work order.
      * 
      * Workflow (delegated to WorkOrderService):
-     * 1. Validates the incoming request (customer info + ski items)
+     * 1. Validates the incoming request (customer info + equipment items)
      * 2. Finds existing Customer by email/phone OR creates new one
      * 3. Searches for an open work order for that customer
-     * 4. If found: MERGE new ski items into the existing work order
+     * 4. If found: MERGE new equipment items into the existing work order
      *    - No notification sent (customer already notified)
      * 5. If not found: CREATE a new work order
      *    - Notification would be sent to customer
-     * 6. Updates work order status based on all ski items
+     * 6. Updates work order status based on all equipment items
      *    - Status = DONE only when ALL items are DONE
-     * 7. Persists changes (cascade handles Customer, WorkOrder, SkiItems)
+     * 7. Persists changes (cascade handles Customer, WorkOrder, Equipment)
      * 8. Returns the work order (new or merged) as WorkOrderResponse DTO
      * 
-     * @param request CreateWorkOrderRequest with customer and ski item details
-     * @return WorkOrderResponse with all ski items (new + merged)
+     * @param request CreateWorkOrderRequest with customer and equipment item details
+     * @return WorkOrderResponse with all equipment items (new + merged)
      */
     @PostMapping
     public ResponseEntity<WorkOrderResponse> createWorkOrder(
@@ -125,14 +125,14 @@ public class WorkOrderController {
     }
 
     /**
-     * Get a specific work order by ID with all its ski items.
+     * Get a specific work order by ID with all its equipment items.
      * 
      * @param id WorkOrder ID
-     * @return WorkOrderResponse with customer info and all ski items, or 404 if not found
+     * @return WorkOrderResponse with customer info and all equipment items, or 404 if not found
      */
     @GetMapping("/{id}")
     public ResponseEntity<WorkOrderResponse> getWorkOrderById(@PathVariable Long id) {
-        return workOrderRepository.findById(id)
+        return workOrderRepository.findByIdWithEquipment(id)
             .map(workOrder -> ResponseEntity.ok(WorkOrderResponse.fromEntity(workOrder)))
             .orElse(ResponseEntity.notFound().build());
     }
@@ -188,7 +188,7 @@ public class WorkOrderController {
     }
 
     /**
-     * Update a ski item's status within a work order.
+     * Update an equipment item's status within a work order.
      * ENFORCES ITEM-DRIVEN STATUS TRANSITIONS.
      * 
      * Allowed item statuses: PENDING, IN_PROGRESS, DONE
@@ -206,18 +206,18 @@ public class WorkOrderController {
      * - COMPLETED: all items are PICKED_UP
      * 
      * @param orderId WorkOrder ID
-     * @param skiId Ski Item ID
-     * @param request UpdateSkiItemStatusRequest with new status
+     * @param equipmentId Equipment Item ID
+     * @param request UpdateEquipmentStatusRequest with new status
      * @return Updated WorkOrderResponse with recalculated work order status
      * @throws IllegalArgumentException if status transition is invalid
      */
-    @PatchMapping("/{orderId}/skis/{skiId}/status")
-    public ResponseEntity<WorkOrderResponse> updateSkiItemStatus(
+    @PatchMapping("/{orderId}/equipment/{equipmentId}/status")
+    public ResponseEntity<WorkOrderResponse> updateEquipmentStatus(
             @PathVariable Long orderId,
-            @PathVariable Long skiId,
-            @Valid @RequestBody UpdateSkiItemStatusRequest request) {
+            @PathVariable Long equipmentId,
+            @Valid @RequestBody UpdateEquipmentStatusRequest request) {
         
-        WorkOrder workOrder = workOrderService.updateSkiItemStatus(orderId, skiId, request.getStatus());
+        WorkOrder workOrder = workOrderService.updateEquipmentStatus(orderId, equipmentId, request.getStatus());
         return ResponseEntity.ok(WorkOrderResponse.fromEntity(workOrder));
     }
 

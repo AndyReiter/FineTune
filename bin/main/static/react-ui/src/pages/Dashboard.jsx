@@ -34,7 +34,24 @@ export default function Dashboard() {
         completed: countByStatus.COMPLETED,
       });
       
-      setRecentWorkOrders(workOrders.slice(0, 10));
+      // Sort work orders by promisedBy (due date) first, then by createdAt
+      const sortedWorkOrders = workOrders.sort((a, b) => {
+        // Handle null promisedBy values - put them at the end
+        if (!a.promisedBy && !b.promisedBy) {
+          return new Date(a.createdAt) - new Date(b.createdAt);
+        }
+        if (!a.promisedBy) return 1; // a goes after b
+        if (!b.promisedBy) return -1; // a goes before b
+        
+        // Both have promisedBy dates, sort by them
+        const promisedDiff = new Date(a.promisedBy) - new Date(b.promisedBy);
+        if (promisedDiff !== 0) return promisedDiff;
+        
+        // Same promisedBy date, sort by createdAt
+        return new Date(a.createdAt) - new Date(b.createdAt);
+      });
+      
+      setRecentWorkOrders(sortedWorkOrders.slice(0, 10));
     } catch (err) {
       console.error('Failed to load dashboard data', err);
     } finally {
@@ -99,6 +116,7 @@ export default function Dashboard() {
                   <th className="text-left py-3 px-4 font-semibold">Phone</th>
                   <th className="text-left py-3 px-4 font-semibold">Email</th>
                   <th className="text-left py-3 px-4 font-semibold">Status</th>
+                  <th className="text-left py-3 px-4 font-semibold">Due By</th>
                   <th className="text-left py-3 px-4 font-semibold">Created</th>
                 </tr>
               </thead>
@@ -120,6 +138,9 @@ export default function Dashboard() {
                       <span className={`inline-block px-3 py-1 rounded text-sm font-semibold ${getStatusColor(workOrder.status)}`}>
                         {workOrder.status.replace(/_/g, ' ')}
                       </span>
+                    </td>
+                    <td className="py-3 px-4" style={{color: workOrder.promisedBy ? '#059669' : '#6b7280', fontWeight: workOrder.promisedBy ? '600' : 'normal'}}>
+                      {workOrder.promisedBy ? new Date(workOrder.promisedBy).toLocaleDateString() : 'Not Set'}
                     </td>
                     <td className="py-3 px-4 text-gray-600">
                       {workOrder.createdAt ? new Date(workOrder.createdAt).toLocaleDateString() : '-'}

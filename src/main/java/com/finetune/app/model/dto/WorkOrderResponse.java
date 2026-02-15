@@ -1,5 +1,6 @@
 package com.finetune.app.model.dto;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -15,11 +16,12 @@ public class WorkOrderResponse {
     private Long id;
     private String status;
     private LocalDateTime createdAt;
+    private LocalDate promisedBy;
     private Long customerId;
     private String customerName;
     private String customerEmail;
     private String customerPhone;
-    private List<SkiItemResponse> skiItems;
+    private List<EquipmentResponse> equipment;
 
     public WorkOrderResponse() {}
 
@@ -31,6 +33,7 @@ public class WorkOrderResponse {
         response.id = workOrder.getId();
         response.status = workOrder.getStatus();
         response.createdAt = workOrder.getCreatedAt();
+        response.promisedBy = workOrder.getPromisedBy();
         
         if (workOrder.getCustomer() != null) {
             response.customerId = workOrder.getCustomer().getId();
@@ -40,8 +43,8 @@ public class WorkOrderResponse {
             response.customerPhone = workOrder.getCustomer().getPhone();
         }
         
-        response.skiItems = workOrder.getSkiItems().stream()
-            .map(SkiItemResponse::fromEntity)
+        response.equipment = workOrder.getEquipment().stream()
+            .map(EquipmentResponse::fromEntity)
             .collect(Collectors.toList());
         
         return response;
@@ -70,6 +73,14 @@ public class WorkOrderResponse {
 
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public LocalDate getPromisedBy() {
+        return promisedBy;
+    }
+
+    public void setPromisedBy(LocalDate promisedBy) {
+        this.promisedBy = promisedBy;
     }
 
     public Long getCustomerId() {
@@ -104,11 +115,12 @@ public class WorkOrderResponse {
         this.customerPhone = customerPhone;
     }
 
-    public List<SkiItemResponse> getSkiItems() {
-        return skiItems;
+    public List<EquipmentResponse> getEquipment() {
+        return equipment;
     }
 
-    public void setSkiItems(List<SkiItemResponse> skiItems) {
-        this.skiItems = skiItems;
+    public void setEquipment(List<EquipmentResponse> equipment) {
+        this.equipment = equipment;
     }
 }
+

@@ -1,7 +1,7 @@
 package com.finetune.app.model.dto;
 
 import com.finetune.app.model.entity.Boot;
-import com.finetune.app.model.entity.SkiItem.SkiAbilityLevel;
+import com.finetune.app.model.entity.Equipment.AbilityLevel;
 
 /**
  * BootResponse DTO for clean JSON serialization of Boot entities.
@@ -16,7 +16,7 @@ public class BootResponse {
     private Integer heightInches;
     private Integer weight;
     private Integer age;
-    private SkiAbilityLevel abilityLevel;
+    private AbilityLevel abilityLevel;
     private Boolean active;
 
     // Default constructor
@@ -25,7 +25,7 @@ public class BootResponse {
     // Constructor with all fields
     public BootResponse(Long id, String brand, String model, Integer bsl, 
                        Integer heightInches, Integer weight, Integer age, 
-                       SkiAbilityLevel abilityLevel, Boolean active) {
+                       AbilityLevel abilityLevel, Boolean active) {
         this.id = id;
         this.brand = brand;
         this.model = model;
@@ -114,11 +114,11 @@ public class BootResponse {
         this.age = age;
     }
 
-    public SkiAbilityLevel getAbilityLevel() {
+    public AbilityLevel getAbilityLevel() {
         return abilityLevel;
     }
 
-    public void setAbilityLevel(SkiAbilityLevel abilityLevel) {
+    public void setAbilityLevel(AbilityLevel abilityLevel) {
         this.abilityLevel = abilityLevel;
     }
 

@@ -14,7 +14,7 @@ import java.util.ArrayList;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.CascadeType;
-import com.finetune.app.model.entity.SkiItem.SkiAbilityLevel;
+import com.finetune.app.model.entity.Equipment.AbilityLevel;
 
 @Entity
 @Table(
@@ -38,7 +38,7 @@ public class Customer {
     private Integer heightInches;
     private Integer weight;
     @Enumerated(EnumType.STRING)
-    private SkiAbilityLevel skiAbilityLevel;
+    private AbilityLevel skiAbilityLevel;
 
     @OneToMany(
         mappedBy = "customer",
@@ -55,6 +55,14 @@ public class Customer {
     )
     @JsonManagedReference
     private List<Boot> boots = new ArrayList<>();
+
+    @OneToMany(
+        mappedBy = "customer",
+        cascade = CascadeType.ALL,
+        orphanRemoval = true
+    )
+    @JsonManagedReference
+    private List<Equipment> equipment = new ArrayList<>();
 
     public void addWorkOrder(WorkOrder workOrder) {
         if (workOrder == null) {
@@ -131,11 +139,11 @@ public class Customer {
         this.weight = weight;
     }
 
-    public SkiAbilityLevel getSkiAbilityLevel() {
+    public AbilityLevel getSkiAbilityLevel() {
         return skiAbilityLevel;
     }
 
-    public void setSkiAbilityLevel(SkiAbilityLevel skiAbilityLevel) {
+    public void setSkiAbilityLevel(AbilityLevel skiAbilityLevel) {
         this.skiAbilityLevel = skiAbilityLevel;
     }
 
@@ -172,5 +180,30 @@ public class Customer {
                     (boot.getBsl() == null ? bsl == null : boot.getBsl().equals(bsl)))
                 .findFirst()
                 .orElse(null);
+    }
+
+    /**
+     * Get the customer's equipment list.
+     */
+    public List<Equipment> getEquipment() {
+        return equipment;
+    }
+
+    public void setEquipment(List<Equipment> equipment) {
+        this.equipment = equipment;
+    }
+
+    /**
+     * Adds equipment to this customer and sets the bidirectional relationship.
+     * Customer owns Equipment lifecycle.
+     */
+    public void addEquipment(Equipment equipment) {
+        if (equipment == null) {
+            throw new IllegalArgumentException("Equipment cannot be null");
+        }
+        equipment.setCustomer(this);
+        if (!this.equipment.contains(equipment)) {
+            this.equipment.add(equipment);
+        }
     }
 }

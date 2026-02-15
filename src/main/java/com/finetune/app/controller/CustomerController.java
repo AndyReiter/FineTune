@@ -1,13 +1,21 @@
 package com.finetune.app.controller;
 
 import com.finetune.app.model.dto.CustomerResponse;
+import com.finetune.app.model.dto.CustomerResponseDTO;
+import com.finetune.app.model.dto.CustomerRequest;
 import com.finetune.app.model.dto.WorkOrderResponse;
 import com.finetune.app.model.dto.BootResponse;
+import com.finetune.app.model.dto.EquipmentRequest;
+import com.finetune.app.model.dto.EquipmentResponse;
 import com.finetune.app.model.entity.Customer;
 import com.finetune.app.model.entity.WorkOrder;
+import com.finetune.app.model.entity.Equipment;
 import com.finetune.app.repository.CustomerRepository;
+import com.finetune.app.service.CustomerService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import jakarta.validation.Valid;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -21,58 +29,100 @@ import java.util.stream.Collectors;
  * - Each customer maintains a list of WorkOrders (bidirectional relationship)
  */
 @RestController
-@RequestMapping("/customers")
+@RequestMapping("/api/customers")
 @CrossOrigin(origins = "*")
 public class CustomerController {
 
     private final CustomerRepository customerRepository;
+    private final CustomerService customerService;
 
-    public CustomerController(CustomerRepository customerRepository) {
+    public CustomerController(CustomerRepository customerRepository, CustomerService customerService) {
         this.customerRepository = customerRepository;
+        this.customerService = customerService;
     }
 
     /**
      * Get all customers.
-     * Returns CustomerResponse DTOs with work order summaries (no detailed ski items).
+     * Returns CustomerResponseDTO with aggregate counts (work orders, equipment, boots).
      * 
-     * @return List of all customers
+     * @return List of all customers with counts
      */
     @GetMapping
-    public List<CustomerResponse> getAllCustomers() {
-        return customerRepository.findAll().stream()
-            .map(CustomerResponse::fromEntity)
-            .collect(Collectors.toList());
+    public ResponseEntity<List<CustomerResponseDTO>> getAllCustomers() {
+        List<CustomerResponseDTO> customers = customerService.getAllCustomers();
+        return ResponseEntity.ok(customers);
     }
 
     /**
      * Get a specific customer by ID.
-     * Returns CustomerResponse with work order summaries.
+     * Returns CustomerResponseDTO with aggregate counts.
      * To get detailed work order info (with ski items), use GET /workorders/{id}
      * 
      * @param id Customer ID
-     * @return CustomerResponse or 404 if not found
+     * @return CustomerResponseDTO or 404 if not found
      */
     @GetMapping("/{id}")
-    public ResponseEntity<CustomerResponse> getCustomerById(@PathVariable Long id) {
+    public ResponseEntity<CustomerResponseDTO> getCustomerById(@PathVariable Long id) {
         return customerRepository.findById(id)
-            .map(customer -> ResponseEntity.ok(CustomerResponse.fromEntity(customer)))
+            .map(customer -> ResponseEntity.ok(CustomerResponseDTO.fromEntity(customer)))
             .orElse(ResponseEntity.notFound().build());
     }
 
     /**
-     * Search for a customer by email address.
-     * Returns CustomerResponse or 404 if not found.
+     * Search for customers by email, phone, or name.
+     * Accepts one of three query parameters:
+     * - email: partial match (case-insensitive)
+     * - phone: exact match
+     * - name: partial match against first or last name (case-insensitive)
      * 
-     * @param email Customer email
-     * @return CustomerResponse or 404 if not found
+     * @param email Optional email search query
+     * @param phone Optional phone search query
+     * @param name Optional name search query
+     * @return List of matching CustomerResponse objects
      */
     @GetMapping("/search")
-    public ResponseEntity<CustomerResponse> getCustomerByEmail(
-        @RequestParam String email
+    public ResponseEntity<List<CustomerResponse>> searchCustomers(
+        @RequestParam(required = false) String email,
+        @RequestParam(required = false) String phone,
+        @RequestParam(required = false) String name
     ) {
-        return customerRepository.findByEmail(email)
-            .map(customer -> ResponseEntity.ok(CustomerResponse.fromEntity(customer)))
-            .orElse(ResponseEntity.notFound().build());
+        List<Customer> results;
+        
+        if (email != null && !email.trim().isEmpty()) {
+            results = customerRepository.findByEmailContainingIgnoreCase(email.trim());
+        } else if (phone != null && !phone.trim().isEmpty()) {
+            results = customerRepository.findByPhone(phone.trim());
+        } else if (name != null && !name.trim().isEmpty()) {
+            results = customerRepository.findByNameContaining(name.trim());
+        } else {
+            return ResponseEntity.badRequest().build();
+        }
+        
+        List<CustomerResponse> responses = results.stream()
+            .map(CustomerResponse::fromEntity)
+            .collect(Collectors.toList());
+        
+        return ResponseEntity.ok(responses);
+    }
+
+    /**
+     * Create a new customer.
+     * 
+     * @param request Customer details
+     * @return 201 CREATED with CustomerResponse
+     */
+    @PostMapping
+    public ResponseEntity<CustomerResponse> createCustomer(@RequestBody @Valid CustomerRequest request) {
+        Customer customer = new Customer();
+        customer.setFirstName(request.getFirstName());
+        customer.setLastName(request.getLastName());
+        customer.setEmail(request.getEmail());
+        customer.setPhone(request.getPhone());
+        
+        Customer savedCustomer = customerRepository.save(customer);
+        return ResponseEntity
+            .status(HttpStatus.CREATED)
+            .body(CustomerResponse.fromEntity(savedCustomer));
     }
 
     /**
@@ -131,5 +181,44 @@ public class CustomerController {
                 return ResponseEntity.ok(boots);
             })
             .orElse(ResponseEntity.notFound().build());
+    }
+
+    /**
+     * Get all equipment for a specific customer.
+     * Returns a list of EquipmentResponse DTOs.
+     * 
+     * @param customerId Customer ID
+     * @return List of EquipmentResponse objects, or 404 if customer not found
+     */
+    @GetMapping("/{customerId}/equipment")
+    public ResponseEntity<List<EquipmentResponse>> getCustomerEquipment(@PathVariable Long customerId) {
+        return customerRepository.findById(customerId)
+            .map(customer -> {
+                List<EquipmentResponse> equipment = customer.getEquipment()
+                    .stream()
+                    .map(EquipmentResponse::fromEntity)
+                    .collect(Collectors.toList());
+                return ResponseEntity.ok(equipment);
+            })
+            .orElse(ResponseEntity.notFound().build());
+    }
+
+    /**
+     * Create equipment and attach it to a customer profile.
+     * Equipment is persisted independently of work orders.
+     * 
+     * @param customerId Customer ID
+     * @param request Equipment details
+     * @return 201 CREATED with EquipmentResponse
+     */
+    @PostMapping("/{customerId}/equipment")
+    public ResponseEntity<EquipmentResponse> createEquipment(
+        @PathVariable Long customerId,
+        @RequestBody @Valid EquipmentRequest request
+    ) {
+        Equipment savedEquipment = customerService.createEquipment(customerId, request);
+        return ResponseEntity
+            .status(HttpStatus.CREATED)
+            .body(EquipmentResponse.fromEntity(savedEquipment));
     }
 }

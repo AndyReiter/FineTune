@@ -1,11 +1,15 @@
 package com.finetune.app.service;
 
 import com.finetune.app.model.entity.Customer;
+import com.finetune.app.model.entity.Equipment;
+import com.finetune.app.model.dto.EquipmentRequest;
+import com.finetune.app.model.dto.CustomerResponseDTO;
 import com.finetune.app.repository.CustomerRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class CustomerService {
@@ -14,6 +18,17 @@ public class CustomerService {
 
     public CustomerService(CustomerRepository customerRepository) {
         this.customerRepository = customerRepository;
+    }
+
+    /**
+     * Get all customers with aggregate counts.
+     * 
+     * @return List of CustomerResponseDTO objects
+     */
+    public List<CustomerResponseDTO> getAllCustomers() {
+        return customerRepository.findAll().stream()
+            .map(CustomerResponseDTO::fromEntity)
+            .collect(Collectors.toList());
     }
 
     public Customer findOrCreateCustomer(
@@ -43,5 +58,46 @@ public class CustomerService {
         customer.setLastName(lastName);
 
         return customerRepository.save(customer);
+    }
+
+    /**
+     * Creates equipment and attaches it to a customer profile.
+     * Equipment is persisted via Customer cascade.
+     * 
+     * @param customerId ID of the customer to attach equipment to
+     * @param request Equipment details
+     * @return The created Equipment entity
+     * @throws RuntimeException if customer not found
+     */
+    public Equipment createEquipment(Long customerId, EquipmentRequest request) {
+        // 1. Fetch customer
+        Customer customer = customerRepository.findById(customerId)
+            .orElseThrow(() -> new RuntimeException("Customer not found with ID: " + customerId));
+        
+        // 2. Create equipment entity
+        Equipment equipment = new Equipment();
+        
+        // 3. Populate fields from request
+        equipment.setBrand(request.getBrand());
+        equipment.setModel(request.getModel());
+        equipment.setLength(request.getLength());
+        equipment.setCondition(request.getCondition());
+        equipment.setAbilityLevel(request.getAbilityLevel());
+        
+        // 4. Default type to SKI if null
+        if (request.getType() == null) {
+            equipment.setType(Equipment.EquipmentType.SKI);
+        } else {
+            equipment.setType(request.getType());
+        }
+        
+        // 5. Attach to customer (sets bidirectional relationship)
+        customer.addEquipment(equipment);
+        
+        // 6. Save customer (cascades to equipment)
+        customerRepository.save(customer);
+        
+        // 7. Return saved equipment
+        return equipment;
     }
 }

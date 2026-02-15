@@ -5,7 +5,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.NotBlank;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
-import com.finetune.app.model.entity.SkiItem.SkiAbilityLevel;
+import com.finetune.app.model.entity.Equipment.AbilityLevel;
 import java.util.List;
 import java.util.ArrayList;
 
@@ -40,7 +40,7 @@ public class Boot {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = true)
-    private SkiAbilityLevel abilityLevel;
+    private AbilityLevel abilityLevel;
 
     @Column(nullable = true, columnDefinition = "boolean default true")
     private Boolean active = true;
@@ -52,7 +52,7 @@ public class Boot {
 
     @OneToMany(mappedBy = "boot", cascade = CascadeType.ALL, orphanRemoval = false)
     @JsonManagedReference
-    private List<SkiItem> skiItems = new ArrayList<>();
+    private List<Equipment> equipment = new ArrayList<>();
 
     // Constructors
     public Boot() {
@@ -67,7 +67,7 @@ public class Boot {
     }
 
     public Boot(String brand, String model, Integer bsl, Integer heightInches, 
-                Integer weight, Integer age, SkiAbilityLevel abilityLevel) {
+                Integer weight, Integer age, AbilityLevel abilityLevel) {
         this.brand = brand;
         this.model = model;
         this.bsl = bsl;
@@ -78,19 +78,19 @@ public class Boot {
         this.active = true;
     }
 
-    // Helper method to add ski item
-    public void addSkiItem(SkiItem skiItem) {
-        if (skiItem != null) {
-            skiItems.add(skiItem);
-            skiItem.setBoot(this);
+    // Helper method to add equipment
+    public void addEquipment(Equipment equipmentItem) {
+        if (equipmentItem != null) {
+            equipment.add(equipmentItem);
+            equipmentItem.setBoot(this);
         }
     }
 
-    // Helper method to remove ski item
-    public void removeSkiItem(SkiItem skiItem) {
-        if (skiItem != null) {
-            skiItems.remove(skiItem);
-            skiItem.setBoot(null);
+    // Helper method to remove equipment
+    public void removeEquipment(Equipment equipmentItem) {
+        if (equipmentItem != null) {
+            equipment.remove(equipmentItem);
+            equipmentItem.setBoot(null);
         }
     }
 
@@ -151,11 +151,11 @@ public class Boot {
         this.age = age;
     }
 
-    public SkiAbilityLevel getAbilityLevel() {
+    public AbilityLevel getAbilityLevel() {
         return abilityLevel;
     }
 
-    public void setAbilityLevel(SkiAbilityLevel abilityLevel) {
+    public void setAbilityLevel(AbilityLevel abilityLevel) {
         this.abilityLevel = abilityLevel;
     }
 
@@ -175,12 +175,12 @@ public class Boot {
         this.customer = customer;
     }
 
-    public List<SkiItem> getSkiItems() {
-        return skiItems;
+    public List<Equipment> getEquipment() {
+        return equipment;
     }
 
-    public void setSkiItems(List<SkiItem> skiItems) {
-        this.skiItems = skiItems;
+    public void setEquipment(List<Equipment> equipment) {
+        this.equipment = equipment;
     }
 
     // Equals and hashCode based on brand, model, BSL, and customer for finding duplicates
