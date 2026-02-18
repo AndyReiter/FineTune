@@ -29,12 +29,23 @@ public class WorkOrder {
     @Column(name = "promised_by", nullable = false)
     private LocalDate promisedBy;
 
+    @Column(name = "completed_date")
+    private LocalDateTime completedDate;
+
     @OneToMany(
         mappedBy = "workOrder",
         fetch = FetchType.EAGER
     )
     @JsonManagedReference
     private List<Equipment> equipment = new ArrayList<>();
+
+    @OneToMany(
+        mappedBy = "workOrder",
+        fetch = FetchType.EAGER,
+        cascade = CascadeType.ALL
+    )
+    @OrderBy("createdAt DESC")
+    private List<WorkOrderNote> notes = new ArrayList<>();
 
     public void addEquipment(Equipment equipmentItem) {
         if (equipmentItem == null) {
@@ -164,11 +175,27 @@ public class WorkOrder {
         this.promisedBy = promisedBy;
     }
 
+    public LocalDateTime getCompletedDate() {
+        return completedDate;
+    }
+
+    public void setCompletedDate(LocalDateTime completedDate) {
+        this.completedDate = completedDate;
+    }
+
     public List<Equipment> getEquipment() {
         return equipment;
     }
 
     public void setEquipment(List<Equipment> equipment) {
         this.equipment = equipment;
+    }
+
+    public List<WorkOrderNote> getNotes() {
+        return notes;
+    }
+
+    public void setNotes(List<WorkOrderNote> notes) {
+        this.notes = notes;
     }
 }

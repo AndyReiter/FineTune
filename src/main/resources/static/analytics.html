@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Analytics - FineTune</title>
+  <link rel="stylesheet" href="shared.css">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <style>
+/* Modern SaaS Dashboard Styles */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  background: #f8fafc;
+  margin: 0;
+  padding: 0;
+  line-height: 1.6;
+  color: #334155;
+}
+
+.dashboard-container {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  min-height: 100vh;
+}
+
+.sidebar {
+  background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+  color: white;
+  padding: 24px 0;
+  width: 280px;
+  height: 100vh;
+  overflow-y: auto;
+}
+
+.sidebar-header {
+  padding: 0 24px 24px;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.2);
+  margin-bottom: 24px;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 20px;
+  font-weight: 700;
+  color: white;
+  text-decoration: none;
+}
+
+.logo i {
+  font-size: 24px;
+  color: #3b82f6;
+}
+
+.nav-menu {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.nav-item {
+  margin-bottom: 4px;
+}
+
+.nav-link {
+  display: flex;
+  align-items: center;
+  padding: 12px 24px;
+  color: #cbd5e1;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  border-right: 3px solid transparent;
+}
+
+.nav-link:hover {
+  background: rgba(148, 163, 184, 0.1);
+  color: white;
+  border-right-color: #3b82f6;
+}
+
+.nav-link.active {
+  background: rgba(59, 130, 246, 0.1);
+  color: white;
+  border-right-color: #3b82f6;
+}
+
+.nav-link i {
+  width: 20px;
+  margin-right: 12px;
+  text-align: center;
+}
+
+.main-content {
+  margin-left: 0;
+  padding: 32px;
+  min-width: 0;
+}
+
+.top-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 32px;
+  background: white;
+  padding: 20px 24px;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.page-title {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.user-section {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.user-info-text {
+  text-align: right;
+}
+
+.user-name {
+  font-weight: 600;
+  color: #334155;
+}
+
+.user-role {
+  font-size: 14px;
+  color: #64748b;
+}
+
+.coming-soon-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  text-align: center;
+  background: white;
+  border-radius: 16px;
+  padding: 64px 32px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.coming-soon-icon {
+  font-size: 96px;
+  color: #3b82f6;
+  margin-bottom: 24px;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.05);
+  }
+}
+
+.coming-soon-title {
+  font-size: 36px;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0 0 16px;
+}
+
+.coming-soon-subtitle {
+  font-size: 18px;
+  color: #64748b;
+  margin: 0 0 32px;
+  max-width: 100%;
+  line-height: 1.6;
+}
+
+.coming-soon-features {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 24px;
+  margin-top: 48px;
+  width: 100%;
+}
+
+@media (max-width: 1200px) {
+  .coming-soon-features {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .coming-soon-features {
+    grid-template-columns: 1fr;
+  }
+}
+
+.feature-card {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 24px;
+  transition: all 0.2s ease;
+}
+
+.feature-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-color: #3b82f6;
+}
+
+.feature-icon {
+  font-size: 32px;
+  color: #3b82f6;
+  margin-bottom: 12px;
+}
+
+.feature-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0;
+}
+
+.back-button {
+  margin-top: 32px;
+  padding: 12px 24px;
+  background: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-decoration: none;
+  display: inline-block;
+}
+
+.back-button:hover {
+  background: #2563eb;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.secondary-button {
+  padding: 10px 18px;
+  background: white;
+  color: #334155;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.secondary-button:hover {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+}
+  </style>
+</head>
+<body>
+
+<div id="authenticatedSection" class="dashboard-container" style="display: none;">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <a href="index.html" class="logo">
+        <i class="fas fa-tools"></i>
+        FineTune
+      </a>
+    </div>
+    <nav>
+      <ul class="nav-menu">
+        <li class="nav-item">
+          <a href="dashboard.html" class="nav-link">
+            <i class="fas fa-tachometer-alt"></i>
+            Dashboard
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="WorkOrderHistory.html" class="nav-link">
+            <i class="fas fa-clipboard-list"></i>
+            Work Orders
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="customers.html" class="nav-link">
+            <i class="fas fa-users"></i>
+            Customers
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="#" class="nav-link">
+            <i class="fas fa-skiing"></i>
+            Equipment
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="analytics.html" class="nav-link active">
+            <i class="fas fa-chart-bar"></i>
+            Analytics
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="settings.html" class="nav-link">
+            <i class="fas fa-cog"></i>
+            Settings
+          </a>
+        </li>
+      </ul>
+    </nav>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    <div class="top-bar">
+      <h1 class="page-title">Analytics</h1>
+      <div class="user-section">
+        <div class="user-info-text">
+          <div class="user-name">Welcome, <span id="userEmail"></span></div>
+          <div class="user-role">Staff Member</div>
+        </div>
+        <button type="button" class="secondary-button" onclick="handleLogout()">
+          <i class="fas fa-sign-out-alt"></i> Logout
+        </button>
+      </div>
+    </div>
+
+    <!-- Coming Soon Content -->
+    <div class="coming-soon-container">
+      <div class="coming-soon-icon">
+        <i class="fas fa-chart-line"></i>
+      </div>
+      <h2 class="coming-soon-title">Analytics Dashboard Coming Soon!</h2>
+      <p class="coming-soon-subtitle">
+        We're building powerful analytics tools to help you gain insights into your business performance, 
+        track key metrics, and make data-driven decisions.
+      </p>
+
+      <div class="coming-soon-features">
+        <div class="feature-card">
+          <div class="feature-icon">
+            <i class="fas fa-chart-pie"></i>
+          </div>
+          <h3 class="feature-title">Revenue Reports</h3>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">
+            <i class="fas fa-clock"></i>
+          </div>
+          <h3 class="feature-title">Performance Metrics</h3>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">
+            <i class="fas fa-users"></i>
+          </div>
+          <h3 class="feature-title">Customer Insights</h3>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">
+            <i class="fas fa-calendar-alt"></i>
+          </div>
+          <h3 class="feature-title">Trend Analysis</h3>
+        </div>
+      </div>
+
+      <a href="dashboard.html" class="back-button">
+        <i class="fas fa-arrow-left"></i> Back to Dashboard
+      </a>
+    </div>
+
+  </main>
+</div>
+
+<!-- Login View -->
+<div id="loginSection" class="login-container">
+  <div class="login-card">
+    <div class="login-header">
+      <i class="fas fa-tools"></i>
+      <h2>FineTune Analytics</h2>
+      <p>Please log in to access analytics</p>
+    </div>
+    <div id="loginMessage" class="message"></div>
+    <form id="loginForm" onsubmit="handleLogin(event)">
+      <div class="form-group">
+        <label for="username">Username</label>
+        <input type="text" id="username" name="username" required />
+      </div>
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input type="password" id="password" name="password" required />
+      </div>
+      <button type="submit" class="primary-button">
+        <i class="fas fa-sign-in-alt"></i> Login
+      </button>
+    </form>
+  </div>
+</div>
+
+<script src="shared.js"></script>
+<script>
+  // Authentication check
+  window.addEventListener('DOMContentLoaded', () => {
+    if (AuthUtils.isAuthenticated()) {
+      showAuthenticatedView();
+    } else {
+      showLoginView();
+    }
+  });
+
+  function showAuthenticatedView() {
+    document.getElementById('authenticatedSection').style.display = 'grid';
+    document.getElementById('loginSection').style.display = 'none';
+    
+    const user = AuthUtils.getCurrentUser();
+    if (user && user.username) {
+      document.getElementById('userEmail').textContent = user.username;
+    }
+  }
+
+  function showLoginView() {
+    document.getElementById('authenticatedSection').style.display = 'none';
+    document.getElementById('loginSection').style.display = 'flex';
+  }
+
+  async function handleLogin(event) {
+    event.preventDefault();
+    ValidationUtils.clearMessage('loginMessage');
+
+    const username = document.getElementById('username').value.trim();
+    const password = document.getElementById('password').value;
+
+    if (!username || !password) {
+      ValidationUtils.showMessage('loginMessage', 'Please enter both username and password.', true);
+      return;
+    }
+
+    try {
+      const response = await fetch(API_CONFIG.LOGIN, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        AuthUtils.setToken(data.token);
+        AuthUtils.setCurrentUser({ username });
+        showAuthenticatedView();
+      } else {
+        ValidationUtils.showMessage('loginMessage', 'Invalid username or password.', true);
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+      ValidationUtils.showMessage('loginMessage', 'Login failed. Please try again.', true);
+    }
+  }
+
+  function handleLogout() {
+    AuthUtils.logout();
+    window.location.href = 'login.html';
+  }
+</script>
+
+</body>
+</html>

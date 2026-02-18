@@ -1,12 +1,15 @@
 // Shared JavaScript utilities for Work Order system
 
-// API endpoints
-const API_CONFIG = {
+// API endpoints - Make globally available
+window.API_CONFIG = {
   WORKORDERS: "http://localhost:8080/workorders",
   BRANDS: "http://localhost:8080/brands",
   AUTH_LOGIN: "http://localhost:8080/auth/login",
   CUSTOMERS: "http://localhost:8080/api/customers"
 };
+
+// Also keep const reference for backward compatibility
+const API_CONFIG = window.API_CONFIG;
 
 // Authentication utilities
 const AuthUtils = {
@@ -92,6 +95,9 @@ const APIUtils = {
     return response;
   }
 };
+
+// Make authenticatedFetch globally available
+window.authenticatedFetch = APIUtils.authenticatedFetch;
 
 // Form validation utilities
 const ValidationUtils = {

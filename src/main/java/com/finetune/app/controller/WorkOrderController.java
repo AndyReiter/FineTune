@@ -222,6 +222,33 @@ public class WorkOrderController {
     }
 
     /**
+     * Update the promisedBy (due date) for a work order.
+     * 
+     * @param id WorkOrder ID
+     * @param request Map containing "promisedBy" field (LocalDate string or null)
+     * @return Updated WorkOrderResponse
+     */
+    @PatchMapping("/{id}/promised-by")
+    public ResponseEntity<WorkOrderResponse> updatePromisedBy(
+            @PathVariable Long id,
+            @RequestBody java.util.Map<String, Object> request) {
+        
+        WorkOrder workOrder = workOrderRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("Work order not found"));
+        
+        // Handle promisedBy update (can be null to clear the date)
+        Object promisedByValue = request.get("promisedBy");
+        if (promisedByValue == null) {
+            workOrder.setPromisedBy(null);
+        } else {
+            workOrder.setPromisedBy(java.time.LocalDate.parse(promisedByValue.toString()));
+        }
+        
+        workOrderRepository.save(workOrder);
+        return ResponseEntity.ok(WorkOrderResponse.fromEntity(workOrder));
+    }
+
+    /**
      * Delete a work order by ID.
      * Note: WorkOrder is cascaded to delete from Customer.
      * 
@@ -235,5 +262,27 @@ public class WorkOrderController {
             return ResponseEntity.ok().build();
         }
         return ResponseEntity.notFound().build();
+    }
+
+    /**
+     * Get all completed work orders, optionally filtered by service type.
+     * Returns work orders with status COMPLETED, sorted by completion date (most recent first).
+     * 
+     * Endpoint: GET /workorders/completed
+     * Query Params:
+     * - serviceType (optional): Filter by equipment service type (e.g., "TUNE", "WAX", "EDGE", "BASE_REPAIR")
+     * 
+     * @param serviceType optional service type filter
+     * @return list of completed work orders as WorkOrderResponse DTOs
+     */
+    @GetMapping("/completed")
+    public List<WorkOrderResponse> getCompletedWorkOrders(
+            @RequestParam(value = "serviceType", required = false) String serviceType) {
+        
+        List<WorkOrder> completedWorkOrders = workOrderService.getCompletedWorkOrders(serviceType);
+        
+        return completedWorkOrders.stream()
+            .map(WorkOrderResponse::fromEntity)
+            .collect(Collectors.toList());
     }
 }

@@ -207,7 +207,7 @@ public class WorkOrderService {
         }
 
         // Step 5: Recalculate work order status based on all items (item-driven logic)
-        workOrder.updateStatusBasedOnItems();
+        updateWorkOrderStatusAndCompletedDate(workOrder);
 
         // Step 6: Save the work order with all its ski items
         workOrder = workOrderRepository.save(workOrder);
@@ -740,7 +740,7 @@ public class WorkOrderService {
         equipment.setStatus(newStatus);
 
         // Recalculate work order status based on all items (item-driven logic)
-        workOrder.updateStatusBasedOnItems();
+        updateWorkOrderStatusAndCompletedDate(workOrder);
 
         // Save via Customer (owns Equipment lifecycle)
         Customer customer = workOrder.getCustomer();
@@ -804,6 +804,35 @@ public class WorkOrderService {
     }
     
     /**
+     * Updates work order status based on equipment items and manages completedDate.
+     * 
+     * BUSINESS RULES:
+     * - When status transitions TO COMPLETED: set completedDate = now()
+     * - When status transitions FROM COMPLETED to any other: clear completedDate = null
+     * - Protects against partial completion (all items must be PICKED_UP for COMPLETED)
+     * 
+     * This is the centralized method for status updates to ensure completedDate
+     * is always synchronized with the COMPLETED status.
+     * 
+     * @param workOrder the work order to update
+     */
+    private void updateWorkOrderStatusAndCompletedDate(WorkOrder workOrder) {
+        String oldStatus = workOrder.getStatus();
+        workOrder.updateStatusBasedOnItems();
+        String newStatus = workOrder.getStatus();
+        
+        // Set completedDate when transitioning TO COMPLETED
+        if ("COMPLETED".equals(newStatus) && !"COMPLETED".equals(oldStatus)) {
+            workOrder.setCompletedDate(LocalDateTime.now());
+        }
+        
+        // Clear completedDate when transitioning FROM COMPLETED to any other status
+        if (!"COMPLETED".equals(newStatus) && "COMPLETED".equals(oldStatus)) {
+            workOrder.setCompletedDate(null);
+        }
+    }
+    
+    /**
      * Centralized method to calculate work order status from item statuses.
      * This enforces the item-driven status logic and should be used whenever
      * item statuses change or items are added/removed.
@@ -811,7 +840,7 @@ public class WorkOrderService {
      * @param workOrder the work order to recalculate status for
      */
     public void recalculateWorkOrderStatus(WorkOrder workOrder) {
-        workOrder.updateStatusBasedOnItems();
+        updateWorkOrderStatusAndCompletedDate(workOrder);
     }
     /**
      * ATOMIC PICKUP OPERATION: Marks all items as PICKED_UP and work order as COMPLETED.
@@ -866,8 +895,9 @@ public class WorkOrderService {
             item.setStatus("PICKED_UP");
         });
         
-        // Set work order status to COMPLETED
+        // Set work order status to COMPLETED and record completion timestamp
         workOrder.setStatus(WorkOrderStatus.COMPLETED.name());
+        workOrder.setCompletedDate(LocalDateTime.now());
         
         // Save via Customer (owns Equipment lifecycle)
         Customer customer = workOrder.getCustomer();
@@ -940,6 +970,29 @@ public class WorkOrderService {
      */
     public WorkOrder save(WorkOrder order) {
         return workOrderRepository.save(order);
+    }
+
+    /**
+     * Get all completed work orders, optionally filtered by equipment service type.
+     * Returns work orders with status COMPLETED, sorted by completion date (most recent first).
+     * 
+     * @param serviceType optional service type filter (e.g., "TUNE", "WAX", "EDGE", "BASE_REPAIR")
+     * @return list of completed work orders, filtered by service type if provided
+     */
+    public List<WorkOrder> getCompletedWorkOrders(String serviceType) {
+        List<WorkOrder> completedWorkOrders = workOrderRepository.findCompletedWorkOrdersOrderByCompletedDateDesc();
+        
+        // If no service type filter, return all completed work orders
+        if (serviceType == null || serviceType.trim().isEmpty()) {
+            return completedWorkOrders;
+        }
+        
+        // Filter by service type: only include work orders that have at least one equipment item with the specified service type
+        String filterServiceType = serviceType.trim().toUpperCase();
+        return completedWorkOrders.stream()
+            .filter(workOrder -> workOrder.getEquipment().stream()
+                .anyMatch(equipment -> filterServiceType.equalsIgnoreCase(equipment.getServiceType())))
+            .collect(Collectors.toList());
     }
 
     /**

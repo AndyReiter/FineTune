@@ -96,4 +96,13 @@ public interface WorkOrderRepository extends JpaRepository<WorkOrder, Long> {
      */
     @Query("SELECT DISTINCT w FROM WorkOrder w LEFT JOIN FETCH w.equipment WHERE w.customer.id = :customerId AND w.status IN :statuses")
     List<WorkOrder> findByCustomerIdAndStatusIn(@Param("customerId") Long customerId, @Param("statuses") List<String> statuses);
+
+    /**
+     * Find all completed work orders ordered by completion date (most recent first).
+     * Used for completed work orders report.
+     *
+     * @return list of completed work orders ordered by completedDate DESC
+     */
+    @Query("SELECT DISTINCT w FROM WorkOrder w LEFT JOIN FETCH w.equipment WHERE w.status = 'COMPLETED' ORDER BY w.completedDate DESC")
+    List<WorkOrder> findCompletedWorkOrdersOrderByCompletedDateDesc();
 }

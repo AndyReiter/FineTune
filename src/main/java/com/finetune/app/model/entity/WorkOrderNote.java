@@ -1,5 +1,6 @@
 package com.finetune.app.model.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
@@ -16,6 +17,7 @@ public class WorkOrderNote {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "work_order_id", nullable = false, foreignKey = @ForeignKey(name = "fk_work_order_notes_work_order"))
+    @JsonIgnore
     private WorkOrder workOrder;
 
     @Column(name = "note_text", nullable = false, columnDefinition = "TEXT")

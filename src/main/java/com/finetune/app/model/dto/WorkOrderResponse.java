@@ -17,11 +17,13 @@ public class WorkOrderResponse {
     private String status;
     private LocalDateTime createdAt;
     private LocalDate promisedBy;
+    private LocalDateTime completedDate;
     private Long customerId;
     private String customerName;
     private String customerEmail;
     private String customerPhone;
     private List<EquipmentResponse> equipment;
+    private List<WorkOrderNoteResponseDTO> notes;
 
     public WorkOrderResponse() {}
 
@@ -34,6 +36,7 @@ public class WorkOrderResponse {
         response.status = workOrder.getStatus();
         response.createdAt = workOrder.getCreatedAt();
         response.promisedBy = workOrder.getPromisedBy();
+        response.completedDate = workOrder.getCompletedDate();
         
         if (workOrder.getCustomer() != null) {
             response.customerId = workOrder.getCustomer().getId();
@@ -46,6 +49,13 @@ public class WorkOrderResponse {
         response.equipment = workOrder.getEquipment().stream()
             .map(EquipmentResponse::fromEntity)
             .collect(Collectors.toList());
+        
+        // Include notes if they are loaded
+        if (workOrder.getNotes() != null) {
+            response.notes = workOrder.getNotes().stream()
+                .map(WorkOrderNoteResponseDTO::fromEntity)
+                .collect(Collectors.toList());
+        }
         
         return response;
     }
@@ -81,6 +91,14 @@ public class WorkOrderResponse {
 
     public void setPromisedBy(LocalDate promisedBy) {
         this.promisedBy = promisedBy;
+    }
+
+    public LocalDateTime getCompletedDate() {
+        return completedDate;
+    }
+
+    public void setCompletedDate(LocalDateTime completedDate) {
+        this.completedDate = completedDate;
     }
 
     public Long getCustomerId() {
@@ -121,6 +139,14 @@ public class WorkOrderResponse {
 
     public void setEquipment(List<EquipmentResponse> equipment) {
         this.equipment = equipment;
+    }
+
+    public List<WorkOrderNoteResponseDTO> getNotes() {
+        return notes;
+    }
+
+    public void setNotes(List<WorkOrderNoteResponseDTO> notes) {
+        this.notes = notes;
     }
 }
 
