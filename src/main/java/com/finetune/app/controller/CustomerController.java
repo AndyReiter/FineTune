@@ -11,6 +11,8 @@ import com.finetune.app.model.Customer;
 import com.finetune.app.model.WorkOrder;
 import com.finetune.app.model.Equipment;
 import com.finetune.app.repository.sql.CustomerSqlRepository;
+import com.finetune.app.repository.sql.EquipmentSqlRepository;
+import com.finetune.app.repository.sql.BootSqlRepository;
 import com.finetune.app.service.CustomerService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.HttpStatus;
@@ -35,10 +37,14 @@ public class CustomerController {
 
     private final CustomerSqlRepository customerRepository;
     private final CustomerService customerService;
+    private final EquipmentSqlRepository equipmentRepository;
+    private final BootSqlRepository bootRepository;
 
-    public CustomerController(CustomerSqlRepository customerRepository, CustomerService customerService) {
+    public CustomerController(CustomerSqlRepository customerRepository, CustomerService customerService, EquipmentSqlRepository equipmentRepository, BootSqlRepository bootRepository) {
         this.customerRepository = customerRepository;
         this.customerService = customerService;
+        this.equipmentRepository = equipmentRepository;
+        this.bootRepository = bootRepository;
     }
 
     /**
@@ -192,10 +198,20 @@ public class CustomerController {
      */
     @GetMapping("/{customerId}/equipment")
     public ResponseEntity<List<EquipmentResponse>> getCustomerEquipment(@PathVariable Long customerId) {
+        // Use EquipmentSqlRepository directly to ensure equipment is loaded from DB
         return customerRepository.findById(customerId)
             .map(customer -> {
-                List<EquipmentResponse> equipment = customer.getEquipment()
-                    .stream()
+                List<com.finetune.app.model.Equipment> equipmentEntities = equipmentRepository.findByCustomerId(customerId);
+                // Populate boot details for mount service items
+                if (equipmentEntities != null) {
+                    for (com.finetune.app.model.Equipment eq : equipmentEntities) {
+                        Long bid = eq.getBootId();
+                        if (bid != null) {
+                            bootRepository.findById(bid).ifPresent(eq::setBoot);
+                        }
+                    }
+                }
+                List<EquipmentResponse> equipment = equipmentEntities.stream()
                     .map(EquipmentResponse::fromEntity)
                     .collect(Collectors.toList());
                 return ResponseEntity.ok(equipment);

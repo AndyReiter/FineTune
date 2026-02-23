@@ -1450,6 +1450,7 @@
   let bootModalCurrentCustomer = null;
   let bootModalSkiItems = [];
   let selectedBoot = null;
+  let bootCache = {};
 
   async function openBootModal(skiItems) {
     // Store ski items for processing
@@ -1530,12 +1531,14 @@
     const bootsList = document.getElementById('existingBootsList');
     bootsList.innerHTML = '';
     
+    bootCache = {};
     boots.forEach(boot => {
+      bootCache[boot.id] = boot;
       const bootOption = document.createElement('div');
       bootOption.className = 'boot-option';
       bootOption.innerHTML = `
         <label class="boot-radio-label">
-          <input type="radio" name="bootSelection" value="${boot.id}" data-boot='${JSON.stringify(boot)}'>
+          <input type="radio" name="bootSelection" value="${boot.id}" data-boot-id="${boot.id}">
           <strong>${boot.brand} ${boot.model}</strong> (BSL: ${boot.bsl}mm)
           ${boot.heightInches ? `- Height: ${Math.floor(boot.heightInches/12)}'${boot.heightInches%12}"` : ''}
           ${boot.weight ? `- Weight: ${boot.weight}lbs` : ''}
@@ -1569,7 +1572,8 @@
         selectedBoot = null;
         showBootCreationForm();
       } else {
-        selectedBoot = JSON.parse(event.target.getAttribute('data-boot'));
+        const bid = event.target.getAttribute('data-boot-id') || event.target.value;
+        selectedBoot = bootCache[bid] || null;
         showSelectedBootInfo(selectedBoot);
       }
     }

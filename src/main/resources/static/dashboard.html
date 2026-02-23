@@ -2517,7 +2517,7 @@ body {
         if (customers && customers.length > 0) {
           // Display results
           searchResults.innerHTML = customers.map(customer => `
-            <div class="search-result-item" onclick='handleSelectCustomer(${JSON.stringify(customer)})'>
+            <div class="search-result-item" onclick='handleSelectCustomerById(${customer.id})'>
               <div style="font-weight: 600; font-size: 14px;">${customer.firstName} ${customer.lastName}</div>
               <div style="font-size: 12px; color: #666;">${customer.email} | ${customer.phone}</div>
             </div>
@@ -2544,6 +2544,19 @@ body {
       console.error('Error selecting customer:', error);
       ValidationUtils.showMessage('customerStepMessage', 'Failed to load customer equipment', true);
     });
+  }
+
+  // Fetch customer by id and select (avoids inlining entire customer objects in HTML)
+  async function handleSelectCustomerById(customerId) {
+    try {
+      const response = await APIUtils.authenticatedFetch(`${API_CONFIG.CUSTOMERS}/${customerId}`);
+      if (!response.ok) throw new Error('Failed to fetch customer');
+      const customer = await response.json();
+      await selectCustomer(customer);
+    } catch (error) {
+      console.error('Error selecting customer by id:', error);
+      ValidationUtils.showMessage('customerStepMessage', 'Failed to load customer data', true);
+    }
   }
 
   async function selectCustomer(customer) {

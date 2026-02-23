@@ -37,7 +37,16 @@ public class EquipmentSqlRepository {
         e.setWeight(rs.getInt("weight"));
         e.setAge(rs.getInt("age"));
         e.setAbilityLevel(rs.getString("abilityLevel"));
-        e.setBootId(rs.getLong("boot_id"));
+        // boot_id may be NULL in the DB; use getObject to preserve nullability
+        Object bootIdObj = null;
+        try {
+            bootIdObj = rs.getObject("boot_id");
+        } catch (Exception ignore) {
+            bootIdObj = null;
+        }
+        if (bootIdObj != null) {
+            e.setBootId(rs.getLong("boot_id"));
+        }
         e.setStatus(rs.getString("status"));
         e.setLastServicedDate(rs.getDate("last_serviced_date"));
         e.setLastServiceType(rs.getString("last_service_type"));
@@ -54,15 +63,18 @@ public class EquipmentSqlRepository {
         return jdbcTemplate.query("SELECT * FROM equipment WHERE work_order_id = ? ORDER BY id ASC", equipmentRowMapper, workOrderId);
     }
     public int save(Equipment equipment) {
+        String conditionValue = equipment.getCondition() != null ? equipment.getCondition().toString() : null;
         if (equipment.getId() == null) {
             return jdbcTemplate.update(
-                "INSERT INTO equipment (type, brand, model, length, serviceType, condition, bindingBrand, bindingModel, heightInches, weight, age, abilityLevel, boot_id, status, last_serviced_date, last_service_type, work_order_id, customer_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                equipment.getType().toString(), equipment.getBrand(), equipment.getModel(), equipment.getLength(), equipment.getServiceType(), equipment.getCondition(), equipment.getBindingBrand(), equipment.getBindingModel(), equipment.getHeightInches(), equipment.getWeight(), equipment.getAge(), equipment.getAbilityLevel(), equipment.getBootId(), equipment.getStatus(), equipment.getLastServicedDate(), equipment.getLastServiceType(), equipment.getWorkOrderId(), equipment.getCustomerId()
+                "INSERT INTO equipment (shop_id, type, brand, model, length, serviceType, `condition`, bindingBrand, bindingModel, heightInches, weight, age, abilityLevel, boot_id, status, last_serviced_date, last_service_type, work_order_id, customer_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                1, equipment.getType().toString(), equipment.getBrand(), equipment.getModel(), equipment.getLength(), equipment.getServiceType(), conditionValue, equipment.getBindingBrand(), equipment.getBindingModel(), equipment.getHeightInches(), equipment.getWeight(), equipment.getAge(),
+                (equipment.getAbilityLevel() != null ? equipment.getAbilityLevel().name() : null), equipment.getBootId(), equipment.getStatus(), equipment.getLastServicedDate(), equipment.getLastServiceType(), equipment.getWorkOrderId(), equipment.getCustomerId()
             );
         } else {
             return jdbcTemplate.update(
-                "UPDATE equipment SET type = ?, brand = ?, model = ?, length = ?, serviceType = ?, condition = ?, bindingBrand = ?, bindingModel = ?, heightInches = ?, weight = ?, age = ?, abilityLevel = ?, boot_id = ?, status = ?, last_serviced_date = ?, last_service_type = ?, work_order_id = ?, customer_id = ? WHERE id = ?",
-                equipment.getType().toString(), equipment.getBrand(), equipment.getModel(), equipment.getLength(), equipment.getServiceType(), equipment.getCondition(), equipment.getBindingBrand(), equipment.getBindingModel(), equipment.getHeightInches(), equipment.getWeight(), equipment.getAge(), equipment.getAbilityLevel(), equipment.getBootId(), equipment.getStatus(), equipment.getLastServicedDate(), equipment.getLastServiceType(), equipment.getWorkOrderId(), equipment.getCustomerId(), equipment.getId()
+                "UPDATE equipment SET shop_id = ?, type = ?, brand = ?, model = ?, length = ?, serviceType = ?, `condition` = ?, bindingBrand = ?, bindingModel = ?, heightInches = ?, weight = ?, age = ?, abilityLevel = ?, boot_id = ?, status = ?, last_serviced_date = ?, last_service_type = ?, work_order_id = ?, customer_id = ? WHERE id = ?",
+                1, equipment.getType().toString(), equipment.getBrand(), equipment.getModel(), equipment.getLength(), equipment.getServiceType(), conditionValue, equipment.getBindingBrand(), equipment.getBindingModel(), equipment.getHeightInches(), equipment.getWeight(), equipment.getAge(),
+                (equipment.getAbilityLevel() != null ? equipment.getAbilityLevel().name() : null), equipment.getBootId(), equipment.getStatus(), equipment.getLastServicedDate(), equipment.getLastServiceType(), equipment.getWorkOrderId(), equipment.getCustomerId(), equipment.getId()
             );
         }
     }

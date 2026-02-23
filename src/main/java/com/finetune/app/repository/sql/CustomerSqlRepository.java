@@ -44,7 +44,7 @@ public class CustomerSqlRepository {
                 customer.getPhone(),
                 customer.getHeightInches(),
                 customer.getWeight(),
-                customer.getSkiAbilityLevel()
+                (customer.getSkiAbilityLevel() != null ? customer.getSkiAbilityLevel().name() : null)
             );
             // Retrieve inserted customer (assume unique email/phone)
             List<Customer> inserted = findByEmailOrPhone(customer.getEmail(), customer.getPhone());
@@ -59,7 +59,7 @@ public class CustomerSqlRepository {
                 customer.getPhone(),
                 customer.getHeightInches(),
                 customer.getWeight(),
-                customer.getSkiAbilityLevel(),
+                (customer.getSkiAbilityLevel() != null ? customer.getSkiAbilityLevel().name() : null),
                 customer.getId()
             );
             return customer;

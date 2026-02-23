@@ -10,9 +10,17 @@ import java.util.Optional;
 @Repository
 public class WorkOrderSqlRepository {
     private final JdbcTemplate jdbcTemplate;
+    private final CustomerSqlRepository customerRepository;
+    private final EquipmentSqlRepository equipmentRepository;
+    private final BootSqlRepository bootRepository;
+    private final WorkOrderNoteSqlRepository workOrderNoteRepository;
 
-    public WorkOrderSqlRepository(JdbcTemplate jdbcTemplate) {
+    public WorkOrderSqlRepository(JdbcTemplate jdbcTemplate, CustomerSqlRepository customerRepository, EquipmentSqlRepository equipmentRepository, BootSqlRepository bootRepository, WorkOrderNoteSqlRepository workOrderNoteRepository) {
         this.jdbcTemplate = jdbcTemplate;
+        this.customerRepository = customerRepository;
+        this.equipmentRepository = equipmentRepository;
+        this.bootRepository = bootRepository;
+        this.workOrderNoteRepository = workOrderNoteRepository;
     }
 
     private final RowMapper<WorkOrder> workOrderRowMapper = (rs, rowNum) -> {
@@ -33,15 +41,18 @@ public class WorkOrderSqlRepository {
 
     public Optional<WorkOrder> findById(Long id) {
         List<WorkOrder> workOrders = jdbcTemplate.query("SELECT * FROM work_orders WHERE id = ?", workOrderRowMapper, id);
-        return workOrders.stream().findFirst();
+        if (workOrders.isEmpty()) return workOrders.stream().findFirst();
+        WorkOrder wo = workOrders.get(0);
+        enrichWorkOrder(wo);
+        return java.util.Optional.of(wo);
     }
 
     public List<WorkOrder> findOpenWorkOrdersByCustomer(Long customerId) {
         return jdbcTemplate.query("SELECT * FROM work_orders WHERE customer_id = ? AND status != 'PICKED_UP' ORDER BY createdAt DESC", workOrderRowMapper, customerId);
     }
     public Optional<WorkOrder> findByIdWithEquipment(Long id) {
-        // This is a stub. You may want to join with equipment table if needed.
-        return findById(id);
+        Optional<WorkOrder> maybe = findById(id);
+        return maybe;
     }
         public List<WorkOrder> findByCustomerIdAndStatusIn(Long customerId, List<String> statuses) {
         if (statuses == null || statuses.isEmpty()) {
@@ -54,15 +65,35 @@ public class WorkOrderSqlRepository {
         for (int i = 0; i < statuses.size(); i++) {
             params[i + 1] = statuses.get(i);
         }
-        return jdbcTemplate.query(sql, params, workOrderRowMapper);
+        List<WorkOrder> list = jdbcTemplate.query(sql, params, workOrderRowMapper);
+        enrichWorkOrders(list);
+        return list;
     }
 
     public int save(WorkOrder workOrder) {
         if (workOrder.getId() == null) {
-            return jdbcTemplate.update(
-                "INSERT INTO work_orders (customer_id, status, createdAt, promised_by, completed_date, customer_created, notes) VALUES (?, ?, ?, ?, ?, ?, ?)",
-                workOrder.getCustomerId(), workOrder.getStatus(), workOrder.getCreatedAt(), workOrder.getPromisedBy(), workOrder.getCompletedDate(), workOrder.getCustomerCreated(), workOrder.getNotes()
-            );
+            // Insert and capture generated key
+            org.springframework.jdbc.support.KeyHolder keyHolder = new org.springframework.jdbc.support.GeneratedKeyHolder();
+            jdbcTemplate.update(connection -> {
+                java.sql.PreparedStatement ps = connection.prepareStatement(
+                    "INSERT INTO work_orders (customer_id, status, createdAt, promised_by, completed_date, customer_created, notes) VALUES (?, ?, ?, ?, ?, ?, ?)",
+                    java.sql.Statement.RETURN_GENERATED_KEYS
+                );
+                ps.setObject(1, workOrder.getCustomerId());
+                ps.setString(2, workOrder.getStatus());
+                if (workOrder.getCreatedAt() != null) ps.setTimestamp(3, java.sql.Timestamp.valueOf(workOrder.getCreatedAt())); else ps.setTimestamp(3, null);
+                if (workOrder.getPromisedBy() != null) ps.setDate(4, java.sql.Date.valueOf(workOrder.getPromisedBy())); else ps.setDate(4, null);
+                if (workOrder.getCompletedDate() != null) ps.setTimestamp(5, java.sql.Timestamp.valueOf(workOrder.getCompletedDate())); else ps.setTimestamp(5, null);
+                ps.setObject(6, workOrder.getCustomerCreated());
+                ps.setString(7, workOrder.getNotes());
+                return ps;
+            }, keyHolder);
+            Number key = keyHolder.getKey();
+            if (key != null) {
+                workOrder.setId(key.longValue());
+                return 1;
+            }
+            return 0;
         } else {
             return jdbcTemplate.update(
                 "UPDATE work_orders SET customer_id = ?, status = ?, createdAt = ?, promised_by = ?, completed_date = ?, customer_created = ?, notes = ? WHERE id = ?",
@@ -72,15 +103,21 @@ public class WorkOrderSqlRepository {
     }
 
     public List<WorkOrder> findCompletedWorkOrdersOrderByCompletedDateDesc() {
-        return jdbcTemplate.query("SELECT * FROM work_orders WHERE status = 'PICKED_UP' ORDER BY completed_date DESC", workOrderRowMapper);
+        List<WorkOrder> list = jdbcTemplate.query("SELECT * FROM work_orders WHERE status = 'PICKED_UP' ORDER BY completed_date DESC", workOrderRowMapper);
+        enrichWorkOrders(list);
+        return list;
     }
 
     public List<WorkOrder> findAllOrderByCreatedAtAsc() {
-        return jdbcTemplate.query("SELECT * FROM work_orders ORDER BY createdAt ASC", workOrderRowMapper);
+        List<WorkOrder> list = jdbcTemplate.query("SELECT * FROM work_orders ORDER BY createdAt ASC", workOrderRowMapper);
+        enrichWorkOrders(list);
+        return list;
     }
 
     public List<WorkOrder> findByStatusOrderByCreatedAtAsc(String status) {
-        return jdbcTemplate.query("SELECT * FROM work_orders WHERE status = ? ORDER BY createdAt ASC", workOrderRowMapper, status);
+        List<WorkOrder> list = jdbcTemplate.query("SELECT * FROM work_orders WHERE status = ? ORDER BY createdAt ASC", workOrderRowMapper, status);
+        enrichWorkOrders(list);
+        return list;
     }
     public List<WorkOrder> findByStatusInOrderByCreatedAtAsc(List<String> statuses) {
         if (statuses == null || statuses.isEmpty()) {
@@ -92,7 +129,51 @@ public class WorkOrderSqlRepository {
         for (int i = 0; i < statuses.size(); i++) {
             params[i] = statuses.get(i);
         }
-        return jdbcTemplate.query(sql, params, workOrderRowMapper);
+        List<WorkOrder> list = jdbcTemplate.query(sql, params, workOrderRowMapper);
+        enrichWorkOrders(list);
+        return list;
+    }
+
+    // Helper to enrich a single work order with customer, equipment, and notes
+    private void enrichWorkOrder(WorkOrder wo) {
+        if (wo == null) return;
+        Long cid = wo.getCustomerId();
+        if (cid != null) {
+            customerRepository.findById(cid).ifPresent(wo::setCustomer);
+        }
+        // Load equipment list
+        try {
+            java.util.List<com.finetune.app.model.Equipment> equipmentList = equipmentRepository.findByWorkOrderId(wo.getId());
+            // For mount service types, load the boot details for each equipment that has a boot_id
+            if (equipmentList != null) {
+                for (com.finetune.app.model.Equipment eq : equipmentList) {
+                    Long bid = eq.getBootId();
+                    if (bid != null) {
+                        try {
+                            bootRepository.findById(bid).ifPresent(eq::setBoot);
+                        } catch (Exception ex) {
+                            // ignore individual boot load failures
+                        }
+                    }
+                }
+            }
+            wo.setEquipment(equipmentList);
+        } catch (Exception e) {
+            // ignore if equipment repo not available
+        }
+        // Load notes list
+        try {
+            wo.setNotesList(workOrderNoteRepository.findByWorkOrderIdOrderByCreatedAtDesc(wo.getId()));
+        } catch (Exception e) {
+            // ignore if notes repo not available
+        }
+    }
+
+    private void enrichWorkOrders(List<WorkOrder> list) {
+        if (list == null || list.isEmpty()) return;
+        for (WorkOrder wo : list) {
+            enrichWorkOrder(wo);
+        }
     }
 
     public boolean existsById(Long id) {

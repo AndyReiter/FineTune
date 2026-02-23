@@ -34,9 +34,16 @@ public class EquipmentItemRequest {
     private AbilityLevel skiAbilityLevel;
     private Condition condition;
 
+
     // Equipment selection fields (mutually exclusive)
     private Long equipmentId;           // ID of existing equipment to use
     private EquipmentRequest newEquipment;  // New equipment to create
+
+    // Support for nested boot object (for mount services, not persisted)
+    private transient BootRequest newBoot;
+
+    public BootRequest getNewBoot() { return newBoot; }
+    public void setNewBoot(BootRequest newBoot) { this.newBoot = newBoot; }
 
     // getters + setters
     public String getSkiMake() {

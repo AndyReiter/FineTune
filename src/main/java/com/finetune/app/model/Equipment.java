@@ -19,7 +19,8 @@ public class Equipment {
     public enum AbilityLevel {
         ADVANCED,
         INTERMEDIATE,
-        BEGINNER
+        BEGINNER,
+        EXPERT
     }
 
     private Long id;

@@ -219,9 +219,8 @@ public class WorkOrderService {
                 workOrder.setPromisedBy(request.getPromisedBy());
                 workOrder.setCustomerCreated(customerCreated);
                 customer.addWorkOrder(workOrder);
-                // TODO: Implement save logic for customer and workOrder in SqlRepositories
-                // customer = customerRepository.save(customer);
-                // workOrder = ...
+                    // Persist the new work order in the database
+                    workOrderRepository.save(workOrder);
                 isNewWorkOrder = true;
             }
         }
@@ -261,8 +260,20 @@ public class WorkOrderService {
             });
         }
 
-        // Step 6: Save the work order with all its ski items
-        // TODO: Implement save logic for workOrder in SqlRepository if needed
+        // Persist service history updates for each equipment explicitly
+        if (workOrder.getEquipment() != null) {
+            for (Equipment equipment : workOrder.getEquipment()) {
+                try {
+                    equipmentRepository.save(equipment);
+                } catch (Exception e) {
+                    // Log and continue - avoid failing the entire flow due to a single item
+                    System.err.println("Failed to persist equipment service history for equipment id: " + equipment.getId() + " - " + e.getMessage());
+                }
+            }
+        }
+
+        // Step 6: Persistence for new equipment is handled explicitly via repositories
+        // (do not rely on saving the customer to cascade-persist equipment)
 
         return workOrder;
     }
@@ -300,8 +311,28 @@ public class WorkOrderService {
         
         // Step 2: Handle boot for mount service type (for new equipment)
         if ("MOUNT".equals(equipReq.getServiceType())) {
+            // Extract boot fields from request/newBoot
+            String bootBrand = equipReq.getBootBrand();
+            String bootModel = equipReq.getBootModel();
+            Integer bsl = equipReq.getBsl();
+            Integer heightInches = equipReq.getHeightInches();
+            Integer weight = equipReq.getWeight();
+            Integer age = equipReq.getAge();
+            com.finetune.app.model.Equipment.AbilityLevel skiAbilityLevel = equipReq.getSkiAbilityLevel();
+            if (equipReq.getNewBoot() != null) {
+                var newBoot = equipReq.getNewBoot();
+                if (newBoot.getBrand() != null) bootBrand = newBoot.getBrand();
+                if (newBoot.getModel() != null) bootModel = newBoot.getModel();
+                if (newBoot.getBsl() != null) bsl = newBoot.getBsl();
+                if (newBoot.getHeightInches() != null) heightInches = newBoot.getHeightInches();
+                if (newBoot.getWeight() != null) weight = newBoot.getWeight();
+                if (newBoot.getAge() != null) age = newBoot.getAge();
+                if (newBoot.getSkiAbilityLevel() != null) skiAbilityLevel = newBoot.getSkiAbilityLevel();
+            }
+            boot = findOrCreateBoot(customer.getId(), bootBrand, bootModel, bsl, heightInches, weight, age, skiAbilityLevel);
             validateMountRequest(customer, equipReq);
-            boot = handleBootForMount(customer, equipReq);
+            // Boot will be attached when creating the new Equipment instance
+            // Binding info is handled during equipment creation.
         }
         
         // Step 3: Check for existing matching Equipment in the work order
@@ -342,9 +373,8 @@ public class WorkOrderService {
         
         // Handle boot for MOUNT services
         if ("MOUNT".equals(equipReq.getServiceType())) {
+            Boot boot = findOrCreateBoot(customer.getId(), equipReq.getBootBrand(), equipReq.getBootModel(), equipReq.getBsl(), equipReq.getHeightInches(), equipReq.getWeight(), equipReq.getAge(), equipReq.getSkiAbilityLevel());
             validateMountRequest(customer, equipReq);
-            Boot boot = handleBootForMount(customer, equipReq);
-            
             // Attach boot to equipment and update binding info
             equipment.setBoot(boot);
             equipment.setBindingBrand(equipReq.getBindingBrand());
@@ -368,54 +398,6 @@ public class WorkOrderService {
      * @param equipReq the equipment item request
      * @return the boot (existing or new)
      */
-    private Boot handleBootForMount(Customer customer, EquipmentItemRequest equipReq) {
-        Boot boot;
-        
-        if (equipReq.getBootId() != null) {
-            // Use existing boot - no persistence needed
-            boot = bootRepository.findById(equipReq.getBootId())
-                .orElseThrow(() -> new IllegalArgumentException("Boot not found with ID: " + equipReq.getBootId()));
-            
-            // Ensure boot belongs to the same customer
-            if (!boot.getCustomer().getId().equals(customer.getId())) {
-                throw new IllegalArgumentException("Boot belongs to another customer and cannot be used");
-            }
-        } else {
-            // Check if customer already has matching boot
-            Boot existingBoot = customer.findMatchingBoot(
-                equipReq.getBootBrand(),
-                equipReq.getBootModel(),
-                equipReq.getBsl()
-            );
-            
-            if (existingBoot != null) {
-                // Use existing boot - no persistence needed
-                boot = existingBoot;
-            } else {
-                // Create new boot and add to customer
-                boot = new Boot(
-                    equipReq.getBootBrand(),
-                    equipReq.getBootModel(),
-                    equipReq.getBsl(),
-                    equipReq.getHeightInches(),
-                    equipReq.getWeight(),
-                    equipReq.getAge(),
-                    equipReq.getSkiAbilityLevel()
-                );
-                
-                // Add to customer to maintain ownership (bidirectional link)
-                customer.addBoot(boot);
-
-                // IMPORTANT: Persist the Boot BEFORE attaching it to any Equipment.
-                // Otherwise Hibernate can throw:
-                //   TransientPropertyValueException: Equipment.boot references an unsaved transient Boot
-                // We intentionally persist Boot via BootRepository and persist Equipment via WorkOrder cascade.
-                bootRepository.save(boot);
-            }
-        }
-        
-        return boot;
-    }
 
     /**
      * Finds an existing Equipment in the work order that matches the incoming request exactly.
@@ -555,7 +537,11 @@ public class WorkOrderService {
         
         // IMPORTANT: Customer owns Equipment lifecycle
         // 1. Add equipment to customer (sets bidirectional relationship)
-        customer.addEquipment(equipment);
+        // Remove bidirectional and cascade persistence logic
+        // Set explicit foreign keys
+        equipment.setCustomerId(customer.getId());
+        equipment.setWorkOrderId(workOrder.getId());
+        equipmentRepository.save(equipment);
         
         // 2. Attach to work order (reference only, no cascade)
         // Guard: Prevent duplicate equipment entries in work order
@@ -564,6 +550,29 @@ public class WorkOrderService {
         }
         
         // 3. Save via customer cascade (this automatically persists equipment with work_order_id)
+        // customerRepository.save(customer);
+        // 4. Explicitly save equipment to ensure persistence in MySQL
+        equipmentRepository.save(equipment);
+    }
+
+    /**
+     * Updates the customer's profile fields from equipment data when available.
+     * Only sets fields on the customer when the equipment provides non-null values.
+     */
+    private void updateCustomerProfileFromEquipment(Customer customer, Equipment equipment) {
+        if (customer == null || equipment == null) return;
+
+        if (equipment.getHeightInches() != null) {
+            customer.setHeightInches(equipment.getHeightInches());
+        }
+        if (equipment.getWeight() != null) {
+            customer.setWeight(equipment.getWeight());
+        }
+        if (equipment.getAbilityLevel() != null) {
+            customer.setSkiAbilityLevel(equipment.getAbilityLevel());
+        }
+
+        // Persist customer profile changes explicitly
         customerRepository.save(customer);
     }
 
@@ -794,10 +803,8 @@ public class WorkOrderService {
         // Recalculate work order status based on all items (item-driven logic)
         updateWorkOrderStatusAndCompletedDate(workOrder);
 
-        // Save via Customer (owns Equipment lifecycle)
-        Customer customer = workOrder.getCustomer();
-        customerRepository.save(customer);
-        
+        // Persist updated equipment explicitly (avoid customer cascade)
+        equipmentRepository.save(equipment);
         // Save work order status change
         workOrderRepository.save(workOrder);
 
@@ -951,10 +958,8 @@ public class WorkOrderService {
         workOrder.setStatus(WorkOrderStatus.COMPLETED.name());
         workOrder.setCompletedDate(LocalDateTime.now());
         
-        // Save via Customer (owns Equipment lifecycle)
-        Customer customer = workOrder.getCustomer();
-        customerRepository.save(customer);
-        
+        // Persist each equipment update explicitly (avoid customer cascade)
+        workOrder.getEquipment().forEach(item -> equipmentRepository.save(item));
         // Save work order status change (transactional - either all succeed or all fail)
         workOrderRepository.save(workOrder);
         return workOrder;
@@ -1204,30 +1209,48 @@ public class WorkOrderService {
         if (equipReq.getBindingModel() == null || equipReq.getBindingModel().trim().isEmpty()) {
             throw new IllegalArgumentException("Binding model is required for MOUNT service");
         }
-        
+
+        // Extract boot fields from newBoot if present
+        String bootBrand = equipReq.getBootBrand();
+        String bootModel = equipReq.getBootModel();
+        Integer bsl = equipReq.getBsl();
+        Integer heightInches = equipReq.getHeightInches();
+        Integer weight = equipReq.getWeight();
+        Integer age = equipReq.getAge();
+        com.finetune.app.model.Equipment.AbilityLevel skiAbilityLevel = equipReq.getSkiAbilityLevel();
+
+        if (equipReq.getNewBoot() != null) {
+            var newBoot = equipReq.getNewBoot();
+            if (newBoot.getBrand() != null) bootBrand = newBoot.getBrand();
+            if (newBoot.getModel() != null) bootModel = newBoot.getModel();
+            if (newBoot.getBsl() != null) bsl = newBoot.getBsl();
+            if (newBoot.getHeightInches() != null) heightInches = newBoot.getHeightInches();
+            if (newBoot.getWeight() != null) weight = newBoot.getWeight();
+            if (newBoot.getAge() != null) age = newBoot.getAge();
+            if (newBoot.getSkiAbilityLevel() != null) skiAbilityLevel = newBoot.getSkiAbilityLevel();
+        }
+
         // Boot validation: either bootId OR (bootBrand + bootModel + bsl) required
         boolean hasBootId = equipReq.getBootId() != null;
-        boolean hasBootInfo = equipReq.getBootBrand() != null && 
-                             equipReq.getBootModel() != null && 
-                             equipReq.getBsl() != null;
-        
+        boolean hasBootInfo = bootBrand != null && bootModel != null && bsl != null;
+
         if (!hasBootId && !hasBootInfo) {
             throw new IllegalArgumentException("Either bootId or (bootBrand + bootModel + bsl) is required for MOUNT service");
         }
-        
+
         // If creating new boot, additional fields are required
         if (!hasBootId) {
-            if (equipReq.getHeightInches() == null) {
+            if (heightInches == null) {
                 throw new IllegalArgumentException("heightInches is required when creating new boot for MOUNT service");
             }
-            if (equipReq.getWeight() == null) {
+            if (weight == null) {
                 throw new IllegalArgumentException("weight is required when creating new boot for MOUNT service");
             }
-            if (equipReq.getAge() == null) {
+            if (age == null) {
                 throw new IllegalArgumentException("age is required when creating new boot for MOUNT service");
             }
-            if (equipReq.getSkiAbilityLevel() == null) {
-                throw new IllegalArgumentException("abilityLevel is required when creating new boot for MOUNT service"); 
+            if (skiAbilityLevel == null) {
+                throw new IllegalArgumentException("abilityLevel is required when creating new boot for MOUNT service");
             }
         }
     }
@@ -1272,6 +1295,21 @@ public class WorkOrderService {
     }
     
     /**
+     * Finds an existing boot for the customer by brand/model/bsl, or creates and inserts a new one.
+     * Returns the Boot with its ID set.
+     */
+    private Boot findOrCreateBoot(Long customerId, String brand, String model, Integer bsl, Integer heightInches, Integer weight, Integer age, com.finetune.app.model.Equipment.AbilityLevel skiAbilityLevel) {
+        return bootRepository.findByCustomerAndExactMatch(customerId, brand, model, bsl)
+            .orElseGet(() -> {
+                Boot newBoot = new Boot(brand, model, bsl, heightInches, weight, age, skiAbilityLevel);
+                newBoot.setCustomerId(customerId);
+                bootRepository.save(newBoot);
+                // Optionally reload to get DB-generated fields
+                return bootRepository.findByCustomerAndExactMatch(customerId, brand, model, bsl).orElse(newBoot);
+            });
+    }
+
+    /**
      * Finds an existing boot with matching brand, model, and BSL, or creates a new one.
      * 
      * @param customer the customer to search boots for
@@ -1281,57 +1319,46 @@ public class WorkOrderService {
      * @return the found or created Boot entity
      */
     private Boot findOrCreateBoot(Customer customer, String brand, String model, Integer bsl) {
-        // Try to find existing matching boot
-        Boot existingBoot = customer.findMatchingBoot(brand, model, bsl);
-        if (existingBoot != null) {
-            return existingBoot;
-        }
+        // This overload was removed because boot creation should be handled
+        // through the repository-based helper `findOrCreateBoot(Long, ...)`.
+        // Keep this method stub to avoid accidental usages during refactor.
+        throw new UnsupportedOperationException("Use findOrCreateBoot(Long, ...) instead");
+    }
+
+    /**
+     * Gets all boots for a customer.
+     * Used for mount workflow modal to display available boots.
+     * 
+     * @param customer the customer
+     * @return list of boots (may be empty)
+     */
+    public List<Boot> getBootsForCustomer(Customer customer) {
+        return customer.getBoots();
+    }
+
+    /**
+     * Finds customer by firstName, lastName, and phone number.
+     * Used for mount workflow to look up existing customer and their boots.
+     * 
+     * @param firstName the customer's first name
+     * @param lastName the customer's last name  
+     * @param phone the customer's phone number
+     * @return the customer if found
+     * @throws IllegalArgumentException if customer not found
+     */
+    public Customer findCustomerForMountWorkflow(String firstName, String lastName, String phone) {
+        // Find customers by phone number
+        List<Customer> customersByPhone = customerRepository.findByEmailOrPhone("", phone);
         
-        // Create new boot if no match found
-        Boot newBoot = new Boot(brand, model, bsl);
-        customer.addBoot(newBoot);
-        return newBoot;
-    }
-
-    /**
-     * Saves skier profile data from equipment to customer for future auto-population.
-     * Only overwrites customer data if new values are provided.
-     * Boot information is automatically saved through the Boot entity relationship.
-     * 
-     * @param customer the customer to update
-     * @param equipment the equipment containing skier data
-     */
-    /**
-     * Updates customer profile with skier information from Equipment when creating new boots.
-     * Only updates customer profile if the Equipment has more recent or complete information.
-     * 
-     * @param customer the customer to update
-     * @param equipment the equipment containing skier data
-     */
-    private void updateCustomerProfileFromEquipment(Customer customer, Equipment equipment) {
-        // Update customer profile with skier information (for profile consistency)
-        if (equipment.getHeightInches() != null && customer.getHeightInches() == null) {
-            customer.setHeightInches(equipment.getHeightInches());
-        }
-        if (equipment.getWeight() != null && customer.getWeight() == null) {
-            customer.setWeight(equipment.getWeight());
-        }
-        if (equipment.getAbilityLevel() != null && customer.getSkiAbilityLevel() == null) {
-            customer.setSkiAbilityLevel(equipment.getAbilityLevel());
-        }
-        // Note: Age is typically not updated on customer profile as it's boot-specific
-        // Boot information is now managed through the Boot entity relationship
-    }
-
-    // === STAFF DASHBOARD METHODS ===
-
-    /**
-     * Get all work orders for staff dashboard, ordered by creation date (oldest first).
-     * 
-     * @return list of all work orders
-     */
-    public List<WorkOrder> getAllWorkOrdersForStaff() {
-        return workOrderRepository.findAllOrderByCreatedAtAsc();
+        // Filter by first name and last name
+        Optional<Customer> matchingCustomer = customersByPhone.stream()
+            .filter(customer -> 
+                firstName.equalsIgnoreCase(customer.getFirstName()) &&
+                lastName.equalsIgnoreCase(customer.getLastName()))
+            .findFirst();
+            
+        return matchingCustomer.orElseThrow(() -> 
+            new IllegalArgumentException("Customer not found with name: " + firstName + " " + lastName + " and phone: " + phone));
     }
 
     /**
@@ -1365,41 +1392,4 @@ public class WorkOrderService {
         );
     }
 
-    // === MOUNT WORKFLOW HELPER METHODS ===
-
-    /**
-     * Finds customer by firstName, lastName, and phone number.
-     * Used for mount workflow to look up existing customer and their boots.
-     * 
-     * @param firstName the customer's first name
-     * @param lastName the customer's last name  
-     * @param phone the customer's phone number
-     * @return the customer if found
-     * @throws IllegalArgumentException if customer not found
-     */
-    public Customer findCustomerForMountWorkflow(String firstName, String lastName, String phone) {
-        // Find customers by phone number
-        List<Customer> customersByPhone = customerRepository.findByEmailOrPhone("", phone);
-        
-        // Filter by first name and last name
-        Optional<Customer> matchingCustomer = customersByPhone.stream()
-            .filter(customer -> 
-                firstName.equalsIgnoreCase(customer.getFirstName()) &&
-                lastName.equalsIgnoreCase(customer.getLastName()))
-            .findFirst();
-            
-        return matchingCustomer.orElseThrow(() -> 
-            new IllegalArgumentException("Customer not found with name: " + firstName + " " + lastName + " and phone: " + phone));
-    }
-
-    /**
-     * Gets all boots for a customer.
-     * Used for mount workflow modal to display available boots.
-     * 
-     * @param customer the customer
-     * @return list of boots (may be empty)
-     */
-    public List<Boot> getBootsForCustomer(Customer customer) {
-        return customer.getBoots();
-    }
 }

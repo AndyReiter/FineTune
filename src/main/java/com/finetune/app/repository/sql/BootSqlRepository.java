@@ -51,12 +51,14 @@ public class BootSqlRepository {
             if (boot.getId() == null) {
                 return jdbcTemplate.update(
                     "INSERT INTO boots (brand, model, bsl, heightInches, weight, age, abilityLevel, active, customer_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                    boot.getBrand(), boot.getModel(), boot.getBsl(), boot.getHeightInches(), boot.getWeight(), boot.getAge(), boot.getAbilityLevel(), boot.isActive(), boot.getCustomerId()
+                    boot.getBrand(), boot.getModel(), boot.getBsl(), boot.getHeightInches(), boot.getWeight(), boot.getAge(),
+                    (boot.getAbilityLevel() != null ? boot.getAbilityLevel().name() : null), boot.isActive(), boot.getCustomerId()
                 );
             } else {
                 return jdbcTemplate.update(
                     "UPDATE boots SET brand = ?, model = ?, bsl = ?, heightInches = ?, weight = ?, age = ?, abilityLevel = ?, active = ?, customer_id = ? WHERE id = ?",
-                    boot.getBrand(), boot.getModel(), boot.getBsl(), boot.getHeightInches(), boot.getWeight(), boot.getAge(), boot.getAbilityLevel(), boot.isActive(), boot.getCustomerId(), boot.getId()
+                    boot.getBrand(), boot.getModel(), boot.getBsl(), boot.getHeightInches(), boot.getWeight(), boot.getAge(),
+                    (boot.getAbilityLevel() != null ? boot.getAbilityLevel().name() : null), boot.isActive(), boot.getCustomerId(), boot.getId()
                 );
             }
         }
