@@ -1069,23 +1069,11 @@ body {
         <!-- Work Order Notes Section -->
         <div style="margin-top: 24px;">
           <h4 style="margin: 0 0 16px; color: #1e293b; font-size: 16px; border-bottom: 2px solid #e2e8f0; padding-bottom: 8px;">
-            <i class="fas fa-sticky-note"></i> Work Order Notes ${workOrder.notes && workOrder.notes.length > 0 ? `(${workOrder.notes.length})` : ''}
+            <i class="fas fa-sticky-note"></i> Work Order Notes
           </h4>
-          ${workOrder.notes && workOrder.notes.length > 0 ? `
-            <div style="display: flex; flex-direction: column; gap: 12px;">
-              ${workOrder.notes.map(note => `
-                <div style="background: #f8fafc; padding: 16px; border-radius: 8px; border: 1px solid #e2e8f0;">
-                  <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px;">
-                    <div style="font-size: 12px; color: #64748b;">
-                      <i class="fas fa-user"></i> ${note.createdBy || 'Unknown'}
-                    </div>
-                    <div style="font-size: 12px; color: #94a3b8;">
-                      <i class="fas fa-clock"></i> ${formatDate(note.createdAt)}
-                    </div>
-                  </div>
-                  <p style="margin: 0; color: #334155; white-space: pre-wrap; line-height: 1.5;">${note.noteText}</p>
-                </div>
-              `).join('')}
+          ${workOrder.notes ? `
+            <div style="background: #f8fafc; padding: 16px; border-radius: 8px; border: 1px solid #e2e8f0;">
+              <p style="margin: 0; color: #334155; white-space: pre-wrap; line-height: 1.5;">${workOrder.notes}</p>
             </div>
           ` : '<p style="color: #64748b; font-style: italic; padding: 16px; text-align: center;">No notes added</p>'}
         </div>

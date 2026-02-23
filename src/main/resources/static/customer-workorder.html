@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Create Work Order - FineTune Ski Shop</title>
+  <link rel="stylesheet" href="customer-workorder.css">
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <header class="header">
+      <h1>Create Work Order</h1>
+      <p class="subtitle">Get your skis serviced in a few simple steps</p>
+    </header>
+
+    <!-- Progress Indicator -->
+    <div class="progress-bar">
+      <div class="progress-step active" data-step="1">
+        <div class="step-number">1</div>
+        <div class="step-label">Your Info</div>
+      </div>
+      <div class="progress-connector"></div>
+      <div class="progress-step" data-step="2">
+        <div class="step-number">2</div>
+        <div class="step-label">Equipment</div>
+      </div>
+      <div class="progress-connector"></div>
+      <div class="progress-step" data-step="3">
+        <div class="step-number">3</div>
+        <div class="step-label">Service</div>
+      </div>
+      <div class="progress-connector" id="agreementConnector" style="display: none;"></div>
+      <div class="progress-step" data-step="5" id="agreementStep" style="display: none;">
+        <div class="step-number">5</div>
+        <div class="step-label">Agreement</div>
+      </div>
+      <div class="progress-connector"></div>
+      <div class="progress-step" data-step="4">
+        <div class="step-number">4</div>
+        <div class="step-label">Confirm</div>
+      </div>
+    </div>
+
+    <!-- Main Content Area -->
+    <div class="content">
+
+      <!-- ==================== STEP 1: Customer Information ==================== -->
+      <div class="step-content" id="step1" style="display: block;">
+        <div class="section-header">
+          <h2>Your Information</h2>
+          <p>Please provide your contact details</p>
+        </div>
+
+        <form id="customerForm" class="form">
+          <div class="form-group">
+            <label for="customerName">Full Name *</label>
+            <input 
+              type="text" 
+              id="customerName" 
+              name="customerName" 
+              required 
+              placeholder="John Doe"
+              autocomplete="name"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="customerEmail">Email Address *</label>
+            <input 
+              type="email" 
+              id="customerEmail" 
+              name="customerEmail" 
+              required 
+              placeholder="john@example.com"
+              autocomplete="email"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="customerPhone">Phone Number *</label>
+            <input 
+              type="tel" 
+              id="customerPhone" 
+              name="customerPhone" 
+              required 
+              placeholder="555-123-4567"
+              autocomplete="tel"
+            />
+          </div>
+
+          <div class="error-message" id="customerError"></div>
+
+          <button type="submit" class="btn btn-primary btn-large">
+            Continue
+          </button>
+        </form>
+      </div>
+
+      <!-- ==================== STEP 2: Equipment Selection ==================== -->
+      <div class="step-content" id="step2" style="display: none;">
+        <div class="section-header">
+          <h2>Select Your Equipment</h2>
+          <p id="equipmentSubtitle">Choose your skis or add new equipment</p>
+        </div>
+
+        <!-- Loading State -->
+        <div id="equipmentLoading" class="loading" style="display: none;">
+          <div class="spinner"></div>
+          <p>Looking up your equipment...</p>
+        </div>
+
+        <!-- Existing Skis -->
+        <div id="existingSkisSection" style="display: none;">
+          <h3 class="subsection-title">Your Skis</h3>
+          <div id="existingSkisList" class="equipment-grid"></div>
+        </div>
+
+        <!-- Add New Ski Button -->
+        <div id="addNewSkiButtonContainer" style="display: none;">
+          <button type="button" class="btn btn-secondary" id="addNewSkiBtn">
+            + Add New Ski
+          </button>
+        </div>
+
+        <!-- New Ski Form -->
+        <div id="newSkiForm" style="display: none;">
+          <h3 class="subsection-title">Add New Ski</h3>
+          <div class="form">
+            <div class="form-row">
+              <div class="form-group">
+                <label for="newSkiBrand">Ski Brand *</label>
+                <input 
+                  type="text" 
+                  id="newSkiBrand" 
+                  placeholder="e.g., Rossignol, K2, Salomon"
+                />
+              </div>
+              <div class="form-group">
+                <label for="newSkiModel">Ski Model *</label>
+                <input 
+                  type="text" 
+                  id="newSkiModel" 
+                  placeholder="e.g., Experience 80"
+                />
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="newSkiLength">Length (cm) *</label>
+                <input 
+                  type="number" 
+                  id="newSkiLength" 
+                  placeholder="170"
+                  min="100"
+                  max="230"
+                />
+              </div>
+              <div class="form-group">
+                <label for="newSkiCondition">Condition</label>
+                <select id="newSkiCondition">
+                  <option value="USED">Used</option>
+                  <option value="NEW">New</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="button-group">
+              <button type="button" class="btn btn-secondary" id="cancelNewSkiBtn">
+                Cancel
+              </button>
+              <button type="button" class="btn btn-primary" id="saveNewSkiBtn">
+                Save Ski
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="error-message" id="equipmentError"></div>
+
+        <div class="navigation-buttons">
+          <button type="button" class="btn btn-secondary" id="backToStep1">
+            Back
+          </button>
+          <button type="button" class="btn btn-primary" id="continueToStep3" disabled>
+            Continue to Service
+          </button>
+        </div>
+      </div>
+
+      <!-- ==================== STEP 3: Service Selection ==================== -->
+      <div class="step-content" id="step3" style="display: none;">
+        <div class="section-header">
+          <h2>Service Details</h2>
+          <p>What service do you need?</p>
+        </div>
+
+        <form id="serviceForm" class="form">
+          <div class="form-group">
+            <label for="serviceType">Service Type *</label>
+            <select id="serviceType" name="serviceType" required>
+              <option value="">Select a service...</option>
+              <option value="TUNE">Tune</option>
+              <option value="MOUNT">Mount</option>
+              <option value="WAXING">Waxing</option>
+              <option value="REPAIR">Repair</option>
+              <option value="OTHER">Other</option>
+            </select>
+          </div>
+
+          <div class="error-message" id="serviceError"></div>
+
+          <div class="navigation-buttons" id="serviceFormButtons">
+            <button type="button" class="btn btn-secondary" id="backToStep2">
+              Back
+            </button>
+            <button type="submit" class="btn btn-primary">
+              Continue
+            </button>
+          </div>
+        </form>
+
+        <!-- Boot Selection for Mount Service (conditionally shown) -->
+        <div id="bootSelectionForMount" style="display: none;">
+          <h3 class="subsection-title">Select Your Boot</h3>
+          <p class="help-text">Boot selection is required for mount services</p>
+
+          <!-- Existing Boots -->
+          <div id="mountBootsList" class="equipment-grid"></div>
+
+          <!-- Add New Boot Button -->
+          <button type="button" class="btn btn-secondary" id="addNewMountBootBtn">
+            + Add New Boot
+          </button>
+
+          <!-- New Boot Form -->
+          <div id="newMountBootForm" style="display: none;">
+            <h4>Add New Boot</h4>
+            <div class="form">
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="newMountBootBrand">Boot Brand *</label>
+                  <input 
+                    type="text" 
+                    id="newMountBootBrand" 
+                    placeholder="e.g., Salomon, Lange"
+                  />
+                </div>
+                <div class="form-group">
+                  <label for="newMountBootModel">Boot Model *</label>
+                  <input 
+                    type="text" 
+                    id="newMountBootModel" 
+                    placeholder="e.g., X-Pro 100"
+                  />
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="newMountBootSize">Boot Size *</label>
+                  <input 
+                    type="number" 
+                    id="newMountBootSize" 
+                    placeholder="10.5"
+                    step="0.5"
+                    min="4"
+                    max="15"
+                  />
+                </div>
+                <div class="form-group">
+                  <label for="newMountBootBSL">BSL (mm)</label>
+                  <input 
+                    type="number" 
+                    id="newMountBootBSL" 
+                    placeholder="295"
+                    min="200"
+                    max="400"
+                  />
+                </div>
+              </div>
+
+              <div class="button-group">
+                <button type="button" class="btn btn-secondary" id="cancelNewMountBootBtn">
+                  Cancel
+                </button>
+                <button type="button" class="btn btn-primary" id="saveNewMountBootBtn">
+                  Save Boot
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Binding Information Section -->
+          <div id="bindingInfoSection" style="display: none; margin-top: 30px; padding-top: 30px; border-top: 2px solid #e9ecef;">
+            <h3 class="subsection-title">Binding Information</h3>
+            <p class="help-text">Please provide your binding details for proper mounting</p>
+
+            <div class="form">
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="bindingBrand">Binding Brand/Make *</label>
+                  <input 
+                    type="text" 
+                    id="bindingBrand" 
+                    placeholder="e.g., Marker, Tyrolia, Look"
+                    required
+                  />
+                </div>
+                <div class="form-group">
+                  <label for="bindingModel">Binding Model *</label>
+                  <input 
+                    type="text" 
+                    id="bindingModel" 
+                    placeholder="e.g., Griffon 13, Attack 11"
+                    required
+                  />
+                </div>
+              </div>
+
+              <!-- Profile fields - only shown when creating NEW boot -->
+              <div id="newBootProfileFields" style="display: none;">
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="skierHeight">Your Height (inches) *</label>
+                    <input 
+                      type="number" 
+                      id="skierHeight" 
+                      placeholder="e.g., 68"
+                      min="40"
+                      max="90"
+                    />
+                    <small style="color: #6c757d; font-size: 12px;">Total inches (5'8" = 68 inches)</small>
+                  </div>
+                  <div class="form-group">
+                    <label for="skierWeight">Your Weight (lbs) *</label>
+                    <input 
+                      type="number" 
+                      id="skierWeight" 
+                      placeholder="e.g., 165"
+                      min="50"
+                      max="400"
+                    />
+                  </div>
+                </div>
+
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="skierAge">Your Age *</label>
+                    <input 
+                      type="number" 
+                      id="skierAge" 
+                      placeholder="e.g., 35"
+                      min="5"
+                      max="100"
+                    />
+                  </div>
+                  <div class="form-group">
+                    <label for="skierAbility">Skier Ability Level *</label>
+                    <select id="skierAbility">
+                      <option value="">Select level...</option>
+                      <option value="BEGINNER">Beginner - New to skiing</option>
+                      <option value="INTERMEDIATE">Intermediate - Comfortable on blue runs</option>
+                      <option value="ADVANCED">Advanced - Comfortable on black runs</option>
+                      <option value="EXPERT">Expert - All terrain, aggressive skiing</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="navigation-buttons" style="margin-top: 25px;">
+            <button type="button" class="btn btn-secondary" id="backFromMountBoot">
+              Back
+            </button>
+            <button type="button" class="btn btn-primary" id="continueFromMountBoot" disabled>
+              Review Order
+            </button>
+          </div>
+        </div>
+
+        <!-- Equipment Choice Dialog (shown after completing equipment/service) -->
+        <div id="equipmentChoiceDialog" style="display: none;">
+          <div class="section-header" style="margin-top: 30px;">
+            <h3>Equipment Added Successfully!</h3>
+            <p>Would you like to add another ski or review your order?</p>
+          </div>
+
+          <div class="navigation-buttons" style="margin-top: 20px;">
+            <button type="button" class="btn btn-secondary" id="addAnotherEquipmentBtn">
+              + Add Another Ski
+            </button>
+            <button type="button" class="btn btn-primary" id="proceedToReviewBtn">
+              Review Order
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==================== STEP 5: Agreement Signature (Conditional - MOUNT services only) ==================== -->
+      <div class="step-content" id="step5" style="display: none;">
+        <div class="section-header">
+          <h2>📋 Binding Mounting Agreement</h2>
+          <p>Quick review and signature - takes less than 2 minutes</p>
+        </div>
+        
+        <!-- Trust Badge -->
+        <div class="trust-badge">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          </svg>
+          Industry Standard Agreement
+        </div>
+
+        <!-- Agreement Text Box (Scrollable) -->
+        <div class="agreement-container">
+          <div class="agreement-scroll-box" id="agreementScrollBox">
+            <div class="agreement-text">
+              <h3>Binding Mounting Agreement & Liability Waiver</h3>
+              
+              <p>This agreement is entered into between FineTune Ski Shop ("Shop") and the customer ("Customer") for the purpose of mounting ski bindings.</p>
+              
+              <h4>1. Service Description</h4>
+              <p>The Shop agrees to mount ski bindings according to industry standards and manufacturer specifications. The Customer acknowledges that binding mounting is a technical service that requires precision and expertise.</p>
+              
+              <h4>2. Customer Responsibilities</h4>
+              <p>The Customer warrants that:</p>
+              <ul>
+                <li>All information provided (weight, height, age, ability level) is accurate and complete</li>
+                <li>The equipment (skis, boots, bindings) is in good condition and suitable for mounting</li>
+                <li>Any changes in physical condition or ability level will be communicated to the Shop</li>
+              </ul>
+              
+              <h4>3. Binding Adjustment & Testing</h4>
+              <p>The Shop will adjust bindings according to DIN standards based on the provided customer information. The Customer agrees to have bindings tested and adjusted at least annually or after any significant impact.</p>
+              
+              <h4>4. Limitation of Liability</h4>
+              <p>The Customer acknowledges that skiing is an inherently dangerous activity. The Shop shall not be liable for any injury, death, or property damage resulting from:</p>
+              <ul>
+                <li>Normal wear and tear of equipment</li>
+                <li>Improper use or maintenance by the Customer</li>
+                <li>Failure to disclose accurate information</li>
+                <li>Acts of nature or conditions beyond the Shop's control</li>
+              </ul>
+              
+              <h4>5. Warranty</h4>
+              <p>The Shop warrants that all work will be performed in a workmanlike manner according to industry standards. Any defects in workmanship must be reported within 30 days of service completion.</p>
+              
+              <h4>6. Release of Liability</h4>
+              <p>The Customer hereby releases, waives, and discharges the Shop, its owners, employees, and agents from any and all liability for injuries or damages arising from or related to the binding mounting service, except for gross negligence or willful misconduct by the Shop.</p>
+              
+              <h4>7. Acknowledgment</h4>
+              <p>By signing below, the Customer acknowledges that they have read, understood, and agree to all terms and conditions of this agreement.</p>
+              
+              <p style="margin-top: 30px; padding: 15px; background: #fef3c7; border-left: 4px solid #f59e0b;">
+                <strong>Important:</strong> Please scroll to the bottom to continue.
+              </p>
+            </div>
+          </div>
+          
+          <div class="scroll-warning" id="scrollWarning" style="display: block;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            Please scroll to the bottom of the agreement to continue
+          </div>
+        </div>
+
+        <!-- Signature Pad -->
+        <div class="signature-section" id="signatureSection" style="opacity: 0.5; pointer-events: none;">
+          <h3>Sign Agreement</h3>
+          
+          <div class="form-group">
+            <label for="signatureName">Full Legal Name *</label>
+            <p class="field-hint" id="expectedNameHint"></p>
+            <input 
+              type="text" 
+              id="signatureName" 
+              placeholder="Enter your full legal name"
+              disabled
+            />
+            <div class="error-message" id="nameValidationError" style="display: none;"></div>
+          </div>
+
+          <div class="form-group">
+            <label>Signature *</label>
+            <p class="field-hint">Draw your signature using your mouse or finger</p>
+            <div class="signature-pad-container">
+              <canvas id="signatureCanvas" width="600" height="200"></canvas>
+              <div class="signature-placeholder" id="signaturePlaceholder">
+                Sign here
+              </div>
+            </div>
+            <button type="button" class="btn btn-secondary btn-sm" id="clearSignatureBtn" disabled>
+              Clear Signature
+            </button>
+          </div>
+
+          <div class="form-group">
+            <label class="checkbox-label" id="agreementCheckboxLabel">
+              <input type="checkbox" id="agreementCheckbox" disabled />
+              <span>I have read and agree to the Binding Mounting Agreement and understand this is a legally binding contract. *</span>
+            </label>
+          </div>
+          
+          <!-- Success Indicator (hidden by default) -->
+          <div id="agreementSuccessIndicator" style="display: none; margin-top: 16px; padding: 14px; background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%); border-radius: 12px; border: 2px solid #10b981;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <div class="success-check">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <polyline points="20 6 9 17 4 12"/>
+                </svg>
+              </div>
+              <span style="color: #065f46; font-weight: 600; font-size: 14px;">Agreement completed successfully! You may continue.</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="error-message" id="agreementError"></div>
+
+        <div class="navigation-buttons">
+          <button type="button" class="btn btn-secondary" id="backFromAgreement">
+            Back to Equipment
+          </button>
+          <button type="button" class="btn btn-primary btn-large" id="continueFromAgreement" disabled>
+            Continue to Review
+          </button>
+        </div>
+      </div>
+
+      <!-- ==================== STEP 4: Confirmation & Submit ==================== -->
+      <div class="step-content" id="step4" style="display: none;">
+        <div class="section-header">
+          <h2>Review Your Order</h2>
+          <p>Please confirm the details before submitting</p>
+        </div>
+
+        <!-- Order Summary -->
+        <div class="order-summary">
+          <div class="summary-section">
+            <h3>Contact Information</h3>
+            <div id="summaryCustomer"></div>
+          </div>
+
+          <div class="summary-section">
+            <h3>Equipment</h3>
+            <div id="summaryEquipment"></div>
+          </div>
+
+          <div class="summary-section">
+            <h3>Service</h3>
+            <div id="summaryService"></div>
+          </div>
+        </div>
+
+        <!-- Captcha Placeholder -->
+        <div class="captcha-container">
+          <div class="captcha-placeholder">
+            <!-- TODO: Enable Cloudflare Turnstile validation -->
+            <div class="captcha-notice">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+              </svg>
+              <span>Protected by security verification</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="error-message" id="submitError"></div>
+
+        <div class="navigation-buttons">
+          <button type="button" class="btn btn-secondary" id="backToStep3">
+            Back
+          </button>
+          <button type="button" class="btn btn-primary btn-large" id="submitWorkOrder">
+            Submit Work Order
+          </button>
+        </div>
+      </div>
+
+      <!-- ==================== SUCCESS SCREEN ==================== -->
+      <div class="step-content" id="successScreen" style="display: none;">
+        <div class="success-container">
+          <div class="success-icon">
+            <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+              <polyline points="22 4 12 14.01 9 11.01"/>
+            </svg>
+          </div>
+          <h2>Work Order Created!</h2>
+          <p class="success-message">Your work order has been successfully submitted.</p>
+          
+          <div class="work-order-details">
+            <div class="detail-row">
+              <span class="detail-label">Work Order Number:</span>
+              <span class="detail-value" id="workOrderNumber"></span>
+            </div>
+          </div>
+
+          <div class="instructions">
+            <h3>Next Steps:</h3>
+            <ol>
+              <li>Bring your equipment to our shop at your convenience</li>
+              <li>Reference your work order number: <strong id="workOrderNumberCopy"></strong></li>
+              <li>We'll notify you when your service is complete</li>
+            </ol>
+          </div>
+
+          <button type="button" class="btn btn-primary btn-large" onclick="location.reload()">
+            Create Another Work Order
+          </button>
+        </div>
+      </div>
+
+      <!-- ==================== LIMIT REACHED SCREEN ==================== -->
+      <div class="step-content" id="limitReachedScreen" style="display: none;">
+        <div class="error-container">
+          <div class="error-icon">
+            <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="12" y1="8" x2="12" y2="12"/>
+              <line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
+          </div>
+          <h2>Daily Limit Reached</h2>
+          <p class="limit-message">You have reached the maximum number of online work orders today.</p>
+          
+          <div class="instructions">
+            <h3>Please visit our shop to create additional work orders.</h3>
+            <p>Our staff will be happy to assist you in person.</p>
+          </div>
+
+          <button type="button" class="btn btn-secondary btn-large" onclick="location.href='index.html'">
+            Return to Home
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script src="customer-workorder.js"></script>
+</body>
+</html>

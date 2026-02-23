@@ -7,10 +7,10 @@ import com.finetune.app.model.dto.WorkOrderResponse;
 import com.finetune.app.model.dto.BootResponse;
 import com.finetune.app.model.dto.EquipmentRequest;
 import com.finetune.app.model.dto.EquipmentResponse;
-import com.finetune.app.model.entity.Customer;
-import com.finetune.app.model.entity.WorkOrder;
-import com.finetune.app.model.entity.Equipment;
-import com.finetune.app.repository.CustomerRepository;
+import com.finetune.app.model.Customer;
+import com.finetune.app.model.WorkOrder;
+import com.finetune.app.model.Equipment;
+import com.finetune.app.repository.sql.CustomerSqlRepository;
 import com.finetune.app.service.CustomerService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.HttpStatus;
@@ -33,10 +33,10 @@ import java.util.stream.Collectors;
 @CrossOrigin(origins = "*")
 public class CustomerController {
 
-    private final CustomerRepository customerRepository;
+    private final CustomerSqlRepository customerRepository;
     private final CustomerService customerService;
 
-    public CustomerController(CustomerRepository customerRepository, CustomerService customerService) {
+    public CustomerController(CustomerSqlRepository customerRepository, CustomerService customerService) {
         this.customerRepository = customerRepository;
         this.customerService = customerService;
     }

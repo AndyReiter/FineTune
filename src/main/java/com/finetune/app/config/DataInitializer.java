@@ -1,8 +1,8 @@
 package com.finetune.app.config;
 
-import com.finetune.app.model.entity.SkiBrand;
-import com.finetune.app.model.entity.SkiModel;
-import com.finetune.app.repository.SkiBrandRepository;
+import com.finetune.app.model.SkiBrand;
+import com.finetune.app.model.SkiModel;
+import com.finetune.app.repository.sql.SkiBrandSqlRepository;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.stereotype.Component;
@@ -20,10 +20,10 @@ import java.util.regex.Pattern;
 @Component
 public class DataInitializer implements CommandLineRunner {
 
-    private final SkiBrandRepository brandRepository;
+    private final SkiBrandSqlRepository brandRepository;
     private final ResourceLoader resourceLoader;
 
-    public DataInitializer(SkiBrandRepository brandRepository, ResourceLoader resourceLoader) {
+    public DataInitializer(SkiBrandSqlRepository brandRepository, ResourceLoader resourceLoader) {
         this.brandRepository = brandRepository;
         this.resourceLoader = resourceLoader;
     }

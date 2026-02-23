@@ -274,6 +274,136 @@ body {
   background: #f8fafc;
   border-color: #cbd5e1;
 }
+
+.settings-container {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.settings-card {
+  background: white;
+  border-radius: 12px;
+  padding: 32px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.card-header-section {
+  margin-bottom: 28px;
+  border-bottom: 2px solid #e2e8f0;
+  padding-bottom: 16px;
+}
+
+.card-title {
+  margin: 0 0 8px;
+  font-size: 20px;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.card-description {
+  margin: 0;
+  font-size: 14px;
+  color: #64748b;
+}
+
+.form-group {
+  margin-bottom: 24px;
+}
+
+.form-label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 600;
+  color: #1e293b;
+  font-size: 14px;
+}
+
+.field-description {
+  margin: 0 0 12px;
+  font-size: 13px;
+  color: #64748b;
+  line-height: 1.5;
+}
+
+.form-input {
+  width: 100%;
+  max-width: 300px;
+  padding: 10px 14px;
+  font-size: 14px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.form-actions {
+  display: flex;
+  gap: 12px;
+  padding-top: 8px;
+}
+
+.btn-primary {
+  padding: 12px 24px;
+  background: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-primary:hover {
+  background: #2563eb;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.btn-secondary {
+  padding: 12px 24px;
+  background: white;
+  color: #334155;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-secondary:hover {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+}
+
+.alert {
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  font-size: 14px;
+}
+
+.alert-success {
+  background: #d1fae5;
+  color: #065f46;
+  border: 1px solid #10b981;
+}
+
+.alert-error {
+  background: #fee2e2;
+  color: #991b1b;
+  border: 1px solid #ef4444;
+}
   </style>
 </head>
 <body>
@@ -345,46 +475,168 @@ body {
     </div>
 
     <!-- Coming Soon Content -->
-    <div class="coming-soon-container">
-      <div class="coming-soon-icon">
-        <i class="fas fa-cog"></i>
-      </div>
-      <h2 class="coming-soon-title">Settings Panel Coming Soon!</h2>
-      <p class="coming-soon-subtitle">
-        We're developing a comprehensive settings panel to help you customize your experience, 
-        manage preferences, and configure your system to work exactly the way you need.
-      </p>
+    <div class="settings-container">
+      <!-- Staff Settings Card -->
+      <div class="settings-card">
+        <div class="card-header-section">
+          <h2 class="card-title">
+            <i class="fas fa-cog"></i> Staff Settings
+          </h2>
+          <p class="card-description">Configure global system settings and limits</p>
+        </div>
+        
+        <div id="settingsMessage" class="alert" style="display: none;"></div>
+        
+        <form id="staffSettingsForm" onsubmit="handleSaveSettings(event)">
+          <div class="form-group">
+            <label for="maxCustomerWorkOrdersPerDay" class="form-label">
+              <i class="fas fa-clipboard-list"></i> 
+              Maximum Customer Work Orders Per Day
+            </label>
+            <p class="field-description">
+              Limit the number of work orders that customers can create per day through the public form.
+            </p>
+            <input 
+              type="number" 
+              id="maxCustomerWorkOrdersPerDay" 
+              name="maxCustomerWorkOrdersPerDay"
+              min="1"
+              max="1000"
+              required
+              class="form-input"
+              placeholder="25"
+            />
+          </div>
 
-      <div class="coming-soon-features">
-        <div class="feature-card">
-          <div class="feature-icon">
-            <i class="fas fa-user-cog"></i>
+          <div class="form-actions">
+            <button type="submit" class="btn-primary">
+              <i class="fas fa-save"></i> Save Settings
+            </button>
+            <button type="button" class="btn-secondary" onclick="loadSettings()">
+              <i class="fas fa-undo"></i> Reset
+            </button>
           </div>
-          <h3 class="feature-title">User Preferences</h3>
-        </div>
-        <div class="feature-card">
-          <div class="feature-icon">
-            <i class="fas fa-bell"></i>
-          </div>
-          <h3 class="feature-title">Notifications</h3>
-        </div>
-        <div class="feature-card">
-          <div class="feature-icon">
-            <i class="fas fa-shield-alt"></i>
-          </div>
-          <h3 class="feature-title">Security Settings</h3>
-        </div>
-        <div class="feature-card">
-          <div class="feature-icon">
-            <i class="fas fa-paint-brush"></i>
-          </div>
-          <h3 class="feature-title">Theme Options</h3>
-        </div>
+        </form>
       </div>
 
-      <a href="dashboard.html" class="back-button">
-        <i class="fas fa-arrow-left"></i> Back to Dashboard
-      </a>
+      <!-- Shop Branding Settings Card -->
+      <div class="settings-card" style="border-left: 4px solid #3b82f6;">
+        <div class="card-header-section">
+          <h2 class="card-title">
+            <i class="fas fa-store"></i> Shop Branding
+          </h2>
+          <p class="card-description">Upload your shop logo to display on agreements and throughout the dashboard</p>
+        </div>
+        
+        <div id="brandingMessage" class="alert" style="display: none;"></div>
+        
+        <form id="shopBrandingForm" onsubmit="handleSaveShopBranding(event)">
+          <!-- Logo Preview -->
+          <div class="form-group">
+            <label class="form-label">
+              <i class="fas fa-image"></i> Current Logo
+            </label>
+            <div id="logoPreviewContainer" style="margin-top: 12px; padding: 20px; background: #f8fafc; border: 2px dashed #cbd5e1; border-radius: 8px; text-align: center;">
+              <img id="logoPreview" src="" alt="Shop Logo" style="max-width: 200px; max-height: 100px; display: none; margin: 0 auto;">
+              <p id="noLogoText" style="color: #64748b; margin: 0;">
+                <i class="fas fa-image" style="font-size: 48px; color: #cbd5e1; display: block; margin-bottom: 12px;"></i>
+                No logo uploaded
+              </p>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="shopLogoFile" class="form-label">
+              <i class="fas fa-upload"></i> 
+              Upload Shop Logo
+            </label>
+            <p class="field-description">
+              Choose an image file from your computer (PNG, JPG, or SVG recommended). This logo will appear on customer agreements and in the dashboard header.
+            </p>
+            <input 
+              type="file" 
+              id="shopLogoFile" 
+              name="shopLogoFile"
+              accept="image/*"
+              class="form-input"
+              onchange="handleLogoFileSelect(event)"
+              style="padding: 8px;"
+            />
+            <button type="button" onclick="document.getElementById('shopLogoFile').click()" class="btn-secondary" style="margin-top: 8px;">
+              <i class="fas fa-folder-open"></i> Browse for Logo
+            </button>
+          </div>
+
+          <div class="form-group">
+            <label for="shopName" class="form-label">
+              <i class="fas fa-tag"></i> 
+              Shop Name
+            </label>
+            <p class="field-description">
+              Your shop name will be displayed on agreements alongside the logo.
+            </p>
+            <input 
+              type="text" 
+              id="shopName" 
+              name="shopName"
+              class="form-input"
+              placeholder="Your Shop Name"
+            />
+          </div>
+
+          <div class="form-actions">
+            <button type="submit" class="btn-primary">
+              <i class="fas fa-save"></i> Save Branding
+            </button>
+            <button type="button" class="btn-secondary" onclick="clearLogo()" style="margin-left: 8px;">
+              <i class="fas fa-trash"></i> Clear Logo
+            </button>
+            <button type="button" class="btn-secondary" onclick="loadShopBrandingFromLocalStorage()" style="margin-left: 8px;">
+              <i class="fas fa-undo"></i> Reset
+            </button>
+          </div>
+        </form>
+      </div>
+
+
+      <!-- Coming Soon Features -->
+      <div class="settings-card">
+        <div class="card-header-section">
+          <h2 class="card-title">
+            <i class="fas fa-clock"></i> Coming Soon
+          </h2>
+          <p class="card-description">
+            Additional settings and features are being developed to enhance your experience.
+          </p>
+        </div>
+
+        <div class="coming-soon-features">
+          <div class="feature-card">
+            <div class="feature-icon">
+              <i class="fas fa-user-cog"></i>
+            </div>
+            <h3 class="feature-title">User Preferences</h3>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">
+              <i class="fas fa-bell"></i>
+            </div>
+            <h3 class="feature-title">Notifications</h3>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">
+              <i class="fas fa-shield-alt"></i>
+            </div>
+            <h3 class="feature-title">Security Settings</h3>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">
+              <i class="fas fa-paint-brush"></i>
+            </div>
+            <h3 class="feature-title">Theme Options</h3>
+          </div>
+        </div>
+      </div>
     </div>
 
   </main>
@@ -421,6 +673,7 @@ body {
   window.addEventListener('DOMContentLoaded', () => {
     if (AuthUtils.isAuthenticated()) {
       showAuthenticatedView();
+      loadSettings();
     } else {
       showLoginView();
     }
@@ -433,6 +686,13 @@ body {
     const user = AuthUtils.getCurrentUser();
     if (user && user.username) {
       document.getElementById('userEmail').textContent = user.username;
+    }
+    
+    // Load shop logo in sidebar from localStorage
+    const savedLogo = localStorage.getItem('shopLogo');
+    const savedName = localStorage.getItem('shopName');
+    if (savedLogo) {
+      updateSidebarLogo(savedLogo, savedName);
     }
   }
 
@@ -465,6 +725,7 @@ body {
         AuthUtils.setToken(data.token);
         AuthUtils.setCurrentUser({ username });
         showAuthenticatedView();
+        loadSettings();
       } else {
         ValidationUtils.showMessage('loginMessage', 'Invalid username or password.', true);
       }
@@ -477,6 +738,257 @@ body {
   function handleLogout() {
     AuthUtils.logout();
     window.location.href = 'login.html';
+  }
+
+  // Staff Settings Functions
+  async function loadSettings() {
+    try {
+      const response = await fetch('/api/staff-settings', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${AuthUtils.getToken()}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        const settings = await response.json();
+        document.getElementById('maxCustomerWorkOrdersPerDay').value = settings.maxCustomerWorkOrdersPerDay;
+      } else {
+        console.error('Failed to load settings');
+      }
+    } catch (error) {
+      console.error('Error loading settings:', error);
+    }
+    
+    // Also load shop branding from localStorage
+    loadShopBrandingFromLocalStorage();
+  }
+
+  async function handleSaveSettings(event) {
+    event.preventDefault();
+    
+    const messageEl = document.getElementById('settingsMessage');
+    messageEl.style.display = 'none';
+    messageEl.className = 'alert';
+
+    const maxCustomerWorkOrdersPerDay = parseInt(document.getElementById('maxCustomerWorkOrdersPerDay').value);
+
+    if (maxCustomerWorkOrdersPerDay < 1 || maxCustomerWorkOrdersPerDay > 1000) {
+      showMessage('Please enter a value between 1 and 1000.', false);
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/staff-settings', {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${AuthUtils.getToken()}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ maxCustomerWorkOrdersPerDay })
+      });
+
+      if (response.ok) {
+        const settings = await response.json();
+        showMessage('Settings saved successfully!', true);
+        document.getElementById('maxCustomerWorkOrdersPerDay').value = settings.maxCustomerWorkOrdersPerDay;
+      } else {
+        const error = await response.text();
+        showMessage('Failed to save settings: ' + error, false);
+      }
+    } catch (error) {
+      console.error('Error saving settings:', error);
+      showMessage('Error saving settings. Please try again.', false);
+    }
+  }
+
+  function showMessage(message, isSuccess) {
+    const messageEl = document.getElementById('settingsMessage');
+    messageEl.textContent = message;
+    messageEl.className = 'alert ' + (isSuccess ? 'alert-success' : 'alert-error');
+    messageEl.style.display = 'block';
+    
+    // Auto-hide success messages after 3 seconds
+    if (isSuccess) {
+      setTimeout(() => {
+        messageEl.style.display = 'none';
+      }, 3000);
+    }
+  }
+
+  // Shop Branding Functions (Prototype - uses localStorage)
+  function loadShopBrandingFromLocalStorage() {
+    console.log('Loading shop branding from localStorage...');
+    try {
+      const logoData = localStorage.getItem('shopLogo');
+      const shopName = localStorage.getItem('shopName');
+      
+      if (logoData) {
+        console.log('Logo found in localStorage');
+        document.getElementById('logoPreview').src = logoData;
+        document.getElementById('logoPreview').style.display = 'block';
+        document.getElementById('noLogoText').style.display = 'none';
+      }
+      
+      if (shopName) {
+        document.getElementById('shopName').value = shopName;
+      }
+      
+      // Also update sidebar logo if exists
+      if (logoData) {
+        updateSidebarLogo(logoData, shopName);
+      }
+    } catch (error) {
+      console.error('Error loading shop branding:', error);
+    }
+  }
+  
+  function handleLogoFileSelect(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      showBrandingMessage('Please select a valid image file.', false);
+      return;
+    }
+    
+    // Validate file size (max 2MB)
+    if (file.size > 2 * 1024 * 1024) {
+      showBrandingMessage('Image file is too large. Please select an image under 2MB.', false);
+      return;
+    }
+    
+    // Read and preview the file
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const logoData = e.target.result;
+      
+      // Update preview
+      document.getElementById('logoPreview').src = logoData;
+      document.getElementById('logoPreview').style.display = 'block';
+      document.getElementById('noLogoText').style.display = 'none';
+      
+      console.log('Logo file loaded successfully');
+    };
+    reader.onerror = function() {
+      showBrandingMessage('Failed to read image file.', false);
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function handleSaveShopBranding(event) {
+    event.preventDefault();
+    
+    const messageEl = document.getElementById('brandingMessage');
+    messageEl.style.display = 'none';
+    messageEl.className = 'alert';
+
+    const logoPreview = document.getElementById('logoPreview');
+    const shopName = document.getElementById('shopName').value.trim();
+
+    if (!shopName) {
+      showBrandingMessage('Shop name is required.', false);
+      return;
+    }
+
+    // Prepare FormData for API
+    const formData = new FormData();
+    formData.append('shopName', shopName);
+    // If a file was selected, get it from the file input
+    const fileInput = document.getElementById('shopLogoFile');
+    if (fileInput && fileInput.files && fileInput.files[0]) {
+      formData.append('logo', fileInput.files[0]);
+    }
+    fetch('/shops/branding', {
+      method: 'POST',
+      body: formData
+    })
+      .then(async (response) => {
+        if (response.ok) {
+          const shop = await response.json();
+          showBrandingMessage('Shop branding saved successfully!', true);
+          // Update preview with returned logo if available
+          if (shop.logoUrl) {
+            document.getElementById('logoPreview').src = shop.logoUrl;
+            document.getElementById('logoPreview').style.display = 'block';
+            document.getElementById('noLogoText').style.display = 'none';
+            updateSidebarLogo(shop.logoUrl, shop.name);
+          }
+        } else {
+          const errorText = await response.text();
+          showBrandingMessage('Failed to save branding: ' + errorText, false);
+        }
+      })
+      .catch((error) => {
+        console.error('Error saving shop branding:', error);
+        showBrandingMessage('Error saving branding. Please try again.', false);
+      });
+  }
+
+  function clearLogo() {
+    const logoPreview = document.getElementById('logoPreview');
+    const noLogoText = document.getElementById('noLogoText');
+    const fileInput = document.getElementById('shopLogoFile');
+    
+    logoPreview.src = '';
+    logoPreview.style.display = 'none';
+    noLogoText.style.display = 'block';
+    noLogoText.innerHTML = '<i class="fas fa-image" style="font-size: 48px; color: #cbd5e1; display: block; margin-bottom: 12px;"></i>No logo uploaded';
+    
+    if (fileInput) {
+      fileInput.value = '';
+    }
+    
+    // Clear from localStorage
+    localStorage.removeItem('shopLogo');
+    console.log('Logo cleared');
+  }
+
+  function updateSidebarLogo(logoData, shopName) {
+    try {
+      if (!logoData) return;
+      
+      const logoElement = document.querySelector('.sidebar-header .logo');
+      if (logoElement) {
+        // Check if logo icon exists
+        const iconElement = logoElement.querySelector('i');
+        const displayName = shopName || 'FineTune';
+        
+        if (iconElement) {
+          // Replace icon with image
+          iconElement.outerHTML = `<img src="${logoData}" alt="Shop Logo" style="max-height: 32px; max-width: 32px; object-fit: contain;">`;
+        }
+        
+        // Update shop name
+        const textNode = logoElement.lastChild;
+        if (textNode && textNode.nodeType === Node.TEXT_NODE) {
+          textNode.textContent = displayName;
+        } else {
+          // Clear and rebuild
+          logoElement.innerHTML = `<img src="${logoData}" alt="Shop Logo" style="max-height: 32px; max-width: 32px; object-fit: contain;"> ${displayName}`;
+        }
+        
+        console.log('Sidebar logo updated');
+      }
+    } catch (error) {
+      console.error('Error updating sidebar logo:', error);
+    }
+  }
+
+  function showBrandingMessage(message, isSuccess) {
+    const messageEl = document.getElementById('brandingMessage');
+    messageEl.textContent = message;
+    messageEl.className = 'alert ' + (isSuccess ? 'alert-success' : 'alert-error');
+    messageEl.style.display = 'block';
+    
+    // Auto-hide success messages after 3 seconds
+    if (isSuccess) {
+      setTimeout(() => {
+        messageEl.style.display = 'none';
+      }, 3000);
+    }
   }
 </script>
 

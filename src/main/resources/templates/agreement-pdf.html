@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Agreement Document</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+            color: #333;
+            line-height: 1.6;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #333;
+            padding-bottom: 20px;
+        }
+        .logo {
+            max-width: 200px;
+            max-height: 100px;
+            margin-bottom: 10px;
+        }
+        .title {
+            font-size: 24px;
+            font-weight: bold;
+            margin: 15px 0;
+        }
+        .shop-info {
+            font-size: 14px;
+            color: #666;
+        }
+        .agreement-content {
+            margin: 30px 0;
+            text-align: justify;
+            white-space: pre-wrap;
+        }
+        .customer-info {
+            background-color: #f5f5f5;
+            padding: 20px;
+            margin: 30px 0;
+            border-radius: 5px;
+        }
+        .info-row {
+            margin: 10px 0;
+        }
+        .label {
+            font-weight: bold;
+            display: inline-block;
+            width: 150px;
+        }
+        .signature-section {
+            margin-top: 40px;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        .signature-acknowledgement {
+            font-style: italic;
+            margin: 15px 0;
+            color: #555;
+        }
+        .metadata {
+            margin-top: 40px;
+            font-size: 12px;
+            color: #999;
+            border-top: 1px solid #ddd;
+            padding-top: 20px;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            font-size: 11px;
+            color: #999;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div th:if="${logoUrl}">
+            <img th:src="${logoUrl}" alt="Shop Logo" class="logo"/>
+        </div>
+        <div class="title" th:text="${title}">Agreement Title</div>
+        <div class="shop-info" th:text="${shopName}">Shop Name</div>
+        <div class="shop-info" th:if="${shopAddress}">
+            <span th:text="${shopAddress}">Shop Address</span><br/>
+            <span th:if="${shopCity}" th:text="${shopCity} + ', '">City</span>
+            <span th:if="${shopState}" th:text="${shopState} + ' '">State</span>
+            <span th:if="${shopZipCode}" th:text="${shopZipCode}">Zip</span>
+        </div>
+        <div class="shop-info" th:if="${jurisdictionState}" th:text="'Jurisdiction: ' + ${jurisdictionState}">Jurisdiction</div>
+    </div>
+
+    <div class="agreement-content" th:utext="${agreementText}">
+        Agreement text will appear here...
+    </div>
+
+    <div class="customer-info">
+        <h3>Customer Information</h3>
+        <div class="info-row">
+            <span class="label">Name:</span>
+            <span th:text="${customerName}">Customer Name</span>
+        </div>
+        <div class="info-row">
+            <span class="label">Email:</span>
+            <span th:text="${customerEmail}">customer@example.com</span>
+        </div>
+        <div class="info-row" th:if="${customerPhone}">
+            <span class="label">Phone:</span>
+            <span th:text="${customerPhone}">Phone Number</span>
+        </div>
+        <div class="info-row">
+            <span class="label">Work Order ID:</span>
+            <span th:text="${workOrderId}">Work Order ID</span>
+        </div>
+    </div>
+
+    <div class="signature-section">
+        <h3>Electronic Signature Acknowledgement</h3>
+        <p class="signature-acknowledgement">
+            By signing below, I acknowledge that I have read, understood, and agree to the terms 
+            and conditions outlined in this agreement. I understand that my electronic signature 
+            is legally binding and has the same effect as a handwritten signature.
+        </p>
+        <div class="info-row">
+            <span class="label">Signed By:</span>
+            <span th:text="${signatureName}">Signature Name</span>
+        </div>
+        <div class="info-row" th:if="${signatureImageBase64}">
+            <span class="label">Signature Image:</span>
+            <img th:src="${signatureImageBase64}" alt="Signature" style="max-width:220px; max-height:80px; border:1px solid #bbb; background:#fff;" />
+        </div>
+        <div class="info-row">
+            <span class="label">Signed At:</span>
+            <span th:text="${#temporals.format(signedAt, 'MMM dd, yyyy HH:mm:ss')}">Timestamp</span>
+        </div>
+        <div class="info-row">
+            <span class="label">IP Address:</span>
+            <span th:text="${ipAddress}">IP Address</span>
+        </div>
+    </div>
+
+    <div class="metadata">
+        <p><strong>Document Details</strong></p>
+        <p>Document ID: <span th:text="${documentId}">Document ID</span></p>
+        <p>Generated: <span th:text="${#temporals.format(generatedAt, 'MMM dd, yyyy HH:mm:ss')}">Generated Time</span></p>
+        <p th:if="${userAgent}">User Agent: <span th:text="${userAgent}">User Agent</span></p>
+    </div>
+
+    <div class="footer">
+        <p>This document was electronically generated and is legally binding.</p>
+    </div>
+</body>
+</html>

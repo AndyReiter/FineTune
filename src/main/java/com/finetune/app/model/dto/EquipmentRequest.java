@@ -1,8 +1,8 @@
 package com.finetune.app.model.dto;
 
-import com.finetune.app.model.entity.Equipment.EquipmentType;
-import com.finetune.app.model.entity.Equipment.Condition;
-import com.finetune.app.model.entity.Equipment.AbilityLevel;
+import com.finetune.app.model.Equipment.EquipmentType;
+import com.finetune.app.model.Equipment.Condition;
+import com.finetune.app.model.Equipment.AbilityLevel;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;

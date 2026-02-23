@@ -1,6 +1,6 @@
 package com.finetune.app.model.dto;
 
-import com.finetune.app.model.entity.Customer;
+import com.finetune.app.model.Customer;
 
 /**
  * DTO for Customer API responses with aggregate counts.

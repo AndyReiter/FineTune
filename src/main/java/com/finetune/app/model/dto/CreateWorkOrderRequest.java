@@ -14,8 +14,8 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 import java.util.List;
 
-import com.finetune.app.model.entity.WorkOrder;
-import com.finetune.app.model.entity.Equipment;
+import com.finetune.app.model.WorkOrder;
+import com.finetune.app.model.Equipment;
 
 import jakarta.validation.constraints.NotEmpty;
 
@@ -39,7 +39,6 @@ public class CreateWorkOrderRequest {
     @NotEmpty(message = "At least one equipment item is required")
     private List<EquipmentItemRequest> equipment;
 
-    @NotNull(message = "Promised by date is required")
     private LocalDate promisedBy;
 
     // --- setters normalize data ---

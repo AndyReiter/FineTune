@@ -1,0 +1,1030 @@
+/* Customer Work Order Creation - Mobile-First Design */
+
+/* ==================== Reset & Base Styles ==================== */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  min-height: 100vh;
+  padding: 20px 10px;
+  color: #333;
+  line-height: 1.6;
+}
+
+/* ==================== Container ==================== */
+.container {
+  max-width: 700px;
+  margin: 0 auto;
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  overflow: hidden;
+  animation: slideIn 0.5s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ==================== Header ==================== */
+.header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 30px 20px;
+  text-align: center;
+}
+
+.header h1 {
+  font-size: 28px;
+  margin-bottom: 8px;
+  font-weight: 700;
+}
+
+.header .subtitle {
+  font-size: 16px;
+  opacity: 0.9;
+}
+
+/* ==================== Progress Bar ==================== */
+.progress-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 30px 20px;
+  background: #f8f9fa;
+  border-bottom: 2px solid #e9ecef;
+  overflow-x: auto;
+}
+
+.progress-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  transition: all 0.3s ease;
+}
+
+.step-number {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #e9ecef;
+  color: #6c757d;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 18px;
+  transition: all 0.3s ease;
+}
+
+.step-label {
+  font-size: 13px;
+  color: #6c757d;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.progress-step.active .step-number {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  transform: scale(1.1);
+}
+
+.progress-step.active .step-label {
+  color: #667eea;
+  font-weight: 700;
+}
+
+.progress-step.completed .step-number {
+  background: #28a745;
+  color: white;
+}
+
+.progress-step.completed .step-label {
+  color: #28a745;
+}
+
+.progress-connector {
+  flex: 1;
+  height: 2px;
+  background: #e9ecef;
+  min-width: 20px;
+  max-width: 80px;
+}
+
+/* ==================== Content Area ==================== */
+.content {
+  padding: 30px 20px;
+}
+
+.step-content {
+  animation: fadeIn 0.4s ease-in;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* ==================== Section Headers ==================== */
+.section-header {
+  margin-bottom: 30px;
+  text-align: center;
+}
+
+.section-header h2 {
+  font-size: 24px;
+  color: #333;
+  margin-bottom: 8px;
+  font-weight: 700;
+}
+
+.section-header p {
+  font-size: 16px;
+  color: #6c757d;
+}
+
+.subsection-title {
+  font-size: 18px;
+  color: #333;
+  margin: 20px 0 15px;
+  font-weight: 600;
+}
+
+h4 {
+  font-size: 16px;
+  color: #333;
+  margin: 15px 0 10px;
+  font-weight: 600;
+}
+
+.help-text {
+  font-size: 14px;
+  color: #6c757d;
+  margin-bottom: 15px;
+}
+
+/* ==================== Forms ==================== */
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 15px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-group label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+  padding: 12px 16px;
+  border: 2px solid #e9ecef;
+  border-radius: 8px;
+  font-size: 15px;
+  font-family: inherit;
+  transition: all 0.3s ease;
+  background: #fff;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.form-group textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+/* ==================== Buttons ==================== */
+.btn {
+  padding: 14px 28px;
+  border: none;
+  border-radius: 10px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-transform: none;
+  font-family: inherit;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+}
+
+.btn-primary:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
+}
+
+.btn-primary:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-secondary {
+  background: #f8f9fa;
+  color: #333;
+  border: 2px solid #e9ecef;
+}
+
+.btn-secondary:hover {
+  background: #e9ecef;
+  border-color: #dee2e6;
+}
+
+.btn-large {
+  padding: 16px 32px;
+  font-size: 18px;
+  width: 100%;
+}
+
+.button-group {
+  display: flex;
+  gap: 12px;
+  margin-top: 15px;
+}
+
+.navigation-buttons {
+  display: flex;
+  gap: 12px;
+  margin-top: 30px;
+}
+
+.navigation-buttons .btn {
+  flex: 1;
+}
+
+/* ==================== Equipment Grid ==================== */
+.equipment-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+.equipment-card {
+  border: 2px solid #e9ecef;
+  border-radius: 12px;
+  padding: 16px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background: #fff;
+}
+
+.equipment-card:hover {
+  border-color: #667eea;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+}
+
+.equipment-card.selected {
+  border-color: #667eea;
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+}
+
+.equipment-card-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.equipment-icon {
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 20px;
+}
+
+.equipment-card-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+}
+
+.equipment-card-details {
+  font-size: 14px;
+  color: #6c757d;
+  margin-top: 4px;
+}
+
+.equipment-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  background: #e9ecef;
+  color: #495057;
+  margin-top: 8px;
+}
+
+/* ==================== Loading States ==================== */
+.loading {
+  text-align: center;
+  padding: 40px 20px;
+}
+
+.spinner {
+  width: 50px;
+  height: 50px;
+  border: 4px solid #e9ecef;
+  border-top-color: #667eea;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 20px;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.loading p {
+  color: #6c757d;
+  font-size: 16px;
+}
+
+/* ==================== Messages ==================== */
+.error-message {
+  color: #dc3545;
+  font-size: 14px;
+  padding: 12px;
+  background: #f8d7da;
+  border: 1px solid #f5c6cb;
+  border-radius: 8px;
+  margin-top: 15px;
+  display: none;
+}
+
+.error-message.show {
+  display: block;
+}
+
+/* ==================== Order Summary ==================== */
+.order-summary {
+  background: #f8f9fa;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 25px;
+}
+
+.summary-section {
+  margin-bottom: 20px;
+  padding-bottom: 20px;
+  border-bottom: 2px solid #e9ecef;
+}
+
+.summary-section:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+.summary-section h3 {
+  font-size: 16px;
+  color: #667eea;
+  margin-bottom: 10px;
+  font-weight: 600;
+}
+
+.summary-item {
+  font-size: 15px;
+  color: #333;
+  margin-bottom: 5px;
+}
+
+.summary-label {
+  font-weight: 600;
+  color: #495057;
+}
+
+/* ==================== Captcha Placeholder ==================== */
+.captcha-container {
+  margin: 25px 0;
+}
+
+.captcha-placeholder {
+  border: 2px dashed #e9ecef;
+  border-radius: 12px;
+  padding: 20px;
+  text-align: center;
+}
+
+.captcha-notice {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  color: #6c757d;
+  font-size: 14px;
+}
+
+.captcha-notice svg {
+  color: #667eea;
+}
+
+/* ==================== Success Screen ==================== */
+.success-container,
+.error-container {
+  text-align: center;
+  padding: 40px 20px;
+}
+
+.success-icon {
+  color: #28a745;
+  margin-bottom: 20px;
+}
+
+.error-icon {
+  color: #dc3545;
+  margin-bottom: 20px;
+}
+
+.success-container h2,
+.error-container h2 {
+  font-size: 28px;
+  color: #333;
+  margin-bottom: 12px;
+  font-weight: 700;
+}
+
+.success-message,
+.limit-message {
+  font-size: 16px;
+  color: #6c757d;
+  margin-bottom: 25px;
+}
+
+.work-order-details {
+  background: #f8f9fa;
+  border-radius: 12px;
+  padding: 20px;
+  margin: 25px 0;
+}
+
+.detail-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 16px;
+}
+
+.detail-label {
+  font-weight: 600;
+  color: #495057;
+}
+
+.detail-value {
+  font-size: 20px;
+  font-weight: 700;
+  color: #667eea;
+}
+
+.instructions {
+  text-align: left;
+  background: #fff3cd;
+  border: 2px solid #ffc107;
+  border-radius: 12px;
+  padding: 20px;
+  margin: 25px 0;
+}
+
+.instructions h3 {
+  font-size: 18px;
+  color: #856404;
+  margin-bottom: 12px;
+  font-weight: 700;
+}
+
+.instructions p {
+  color: #856404;
+  font-size: 15px;
+  margin-bottom: 10px;
+}
+
+.instructions ol {
+  margin-left: 20px;
+  color: #856404;
+}
+
+.instructions li {
+  margin-bottom: 8px;
+  font-size: 15px;
+}
+
+.instructions strong {
+  color: #667eea;
+  font-weight: 700;
+}
+
+/* ==================== Tablet & Desktop Responsive ==================== */
+@media (min-width: 600px) {
+  body {
+    padding: 40px 20px;
+  }
+
+  .header h1 {
+    font-size: 32px;
+  }
+
+  .header .subtitle {
+    font-size: 18px;
+  }
+
+  .content {
+    padding: 40px 30px;
+  }
+
+  .form-row {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .equipment-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .navigation-buttons .btn:first-child {
+    flex: 0 0 auto;
+    min-width: 120px;
+  }
+
+  .navigation-buttons .btn:last-child {
+    flex: 1;
+  }
+
+  .btn-large {
+    width: auto;
+    min-width: 250px;
+    margin: 0 auto;
+    display: inline-flex;
+  }
+
+  .success-container,
+  .error-container {
+    padding: 60px 40px;
+  }
+}
+
+/* ==================== Agreement Step Styles - Modern SaaS Design ==================== */
+.agreement-container {
+  margin: 20px 0;
+}
+
+/* Trust Indicator Badge */
+.trust-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+}
+
+.trust-badge svg {
+  flex-shrink: 0;
+}
+
+/* Card-based Agreement Box */
+.agreement-scroll-box {
+  max-height: 450px;
+  overflow-y: auto;
+  border: none;
+  border-radius: 16px;
+  padding: 32px;
+  background: white;
+  margin-bottom: 24px;
+  scroll-behavior: smooth;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  transition: box-shadow 0.3s ease;
+}
+
+.agreement-scroll-box:hover {
+  box-shadow: 0 6px 25px rgba(0, 0, 0, 0.12);
+}
+
+.agreement-scroll-box::-webkit-scrollbar {
+  width: 8px;
+}
+
+.agreement-scroll-box::-webkit-scrollbar-track {
+  background: #f8f9fa;
+  border-radius: 10px;
+}
+
+.agreement-scroll-box::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
+  border-radius: 10px;
+}
+
+.agreement-scroll-box::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #764ba2 0%, #667eea 100%);
+}
+
+/* Accessible Typography - Modern SaaS */
+.agreement-text {
+  color: #1f2937;
+  line-height: 1.75;
+  font-size: 15px;
+}
+
+.agreement-text h3 {
+  color: #111827;
+  margin-bottom: 16px;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.agreement-text h4 {
+  color: #374151;
+  margin-top: 28px;
+  margin-bottom: 12px;
+  font-size: 16px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.agreement-text h4::before {
+  content: '';
+  display: inline-block;
+  width: 4px;
+  height: 16px;
+  background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
+  border-radius: 2px;
+}
+
+.agreement-text p {
+  margin-bottom: 14px;
+  color: #4b5563;
+}
+
+.agreement-text ul {
+  margin: 12px 0 16px 0;
+  padding-left: 24px;
+  list-style: none;
+}
+
+.agreement-text li {
+  margin-bottom: 10px;
+  position: relative;
+  padding-left: 8px;
+  color: #4b5563;
+}
+
+.agreement-text li::before {
+  content: '•';
+  position: absolute;
+  left: -16px;
+  color: #667eea;
+  font-weight: bold;
+}
+
+/* Scroll Progress Indicator */
+.scroll-warning {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 18px;
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  border: none;
+  border-radius: 12px;
+  color: #92400e;
+  font-weight: 500;
+  margin-bottom: 24px;
+  box-shadow: 0 2px 8px rgba(251, 191, 36, 0.2);
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.85; }
+}
+
+.scroll-warning svg {
+  flex-shrink: 0;
+  color: #f59e0b;
+  animation: bounce 1s ease-in-out infinite;
+}
+
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
+/* Signature Section - Card Style */
+.signature-section {
+  transition: all 0.4s ease;
+  background: white;
+  border-radius: 16px;
+  padding: 28px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  margin-top: 24px;
+}
+
+.signature-section.completed {
+  border: 2px solid #10b981;
+  box-shadow: 0 4px 20px rgba(16, 185, 129, 0.2);
+}
+
+.signature-section h3 {
+  font-size: 20px;
+  color: #111827;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 2px solid #e5e7eb;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.signature-section h3::before {
+  content: '✍️';
+  font-size: 24px;
+}
+
+.field-hint {
+  font-size: 13px;
+  color: #6b7280;
+  margin-top: 6px;
+  margin-bottom: 10px;
+  line-height: 1.5;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.field-hint::before {
+  content: 'ℹ️';
+  font-size: 14px;
+}
+
+.signature-pad-container {
+  position: relative;
+  width: 100%;
+  border: 2px dashed #d1d5db;
+  border-radius: 12px;
+  background: #fafafa;
+  margin-bottom: 12px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.signature-pad-container:hover {
+  border-color: #667eea;
+  background: white;
+}
+
+.signature-pad-container.has-signature {
+  border-style: solid;
+  border-color: #10b981;
+  background: white;
+}
+
+#signatureCanvas {
+  display: block;
+  width: 100%;
+  height: 200px;
+  cursor: crosshair;
+  touch-action: none;
+}
+
+.signature-placeholder {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: #9ca3af;
+  font-size: 16px;
+  pointer-events: none;
+  user-select: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.signature-placeholder::before {
+  content: '✏️';
+  font-size: 32px;
+  opacity: 0.5;
+}
+
+/* Modern Checkbox with Success State */
+.checkbox-label {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  cursor: pointer;
+  padding: 18px;
+  background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
+  border-radius: 12px;
+  border: 2px solid #e5e7eb;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.checkbox-label::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+  transform: scaleX(0);
+  transition: transform 0.3s ease;
+}
+
+.checkbox-label:hover {
+  background: white;
+  border-color: #667eea;
+  box-shadow: 0 2px 12px rgba(102, 126, 234, 0.15);
+}
+
+.checkbox-label.checked {
+  border-color: #10b981;
+  background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+}
+
+.checkbox-label.checked::before {
+  transform: scaleX(1);
+  background: linear-gradient(90deg, #10b981 0%, #059669 100%);
+}
+
+.checkbox-label input[type="checkbox"] {
+  width: 22px;
+  height: 22px;
+  margin-top: 2px;
+  cursor: pointer;
+  flex-shrink: 0;
+  accent-color: #10b981;
+}
+
+.checkbox-label span {
+  flex: 1;
+  font-size: 15px;
+  line-height: 1.65;
+  color: #1f2937;
+  font-weight: 500;
+}
+
+.btn-sm {
+  padding: 8px 16px;
+  font-size: 14px;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.btn-sm:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Success Check Animation */
+.success-check {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  background: #10b981;
+  border-radius: 50%;
+  animation: successPop 0.5s ease-out;
+}
+
+.success-check svg {
+  width: 18px;
+  height: 18px;
+  color: white;
+  stroke-width: 3;
+}
+
+@keyframes successPop {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Mobile-First Accessibility Improvements */
+@media (max-width: 599px) {
+  .agreement-scroll-box {
+    padding: 20px;
+    max-height: 350px;
+  }
+  
+  .agreement-text {
+    font-size: 14px;
+  }
+  
+  .agreement-text h3 {
+    font-size: 18px;
+  }
+  
+  .agreement-text h4 {
+    font-size: 15px;
+  }
+  
+  .signature-section {
+    padding: 20px;
+  }
+  
+  #signatureCanvas {
+    height: 180px;
+  }
+}
+
+@media (min-width: 900px) {
+  .container {
+    max-width: 800px;
+  }
+}
+
+/* ==================== Print Styles ==================== */
+@media print {
+  body {
+    background: white;
+  }
+
+  .container {
+    box-shadow: none;
+  }
+
+  .progress-bar,
+  .navigation-buttons,
+  .btn {
+    display: none;
+  }
+}

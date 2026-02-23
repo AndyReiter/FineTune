@@ -1,6 +1,6 @@
 package com.finetune.app.model.dto;
 
-import com.finetune.app.model.entity.Equipment;
+import com.finetune.app.model.Equipment;
 
 /**
  * DTO for Equipment responses (for ski items).

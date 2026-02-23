@@ -136,3 +136,26 @@ export async function fetchSkiModels() {
   if (!res.ok) throw new Error("Failed to fetch ski models");
   return res.json();
 }
+
+// ===============================
+// Agreement Signing API
+// ===============================
+
+/**
+ * Sign agreement for a work order (generates PDF, uploads to R2, returns PDF URL)
+ * @param {number|string} workOrderId
+ * @param {object} data { signatureName, email, phone }
+ * @returns {Promise<object>} { pdfUrl, signedAt, ... }
+ */
+export async function signAgreement(workOrderId, data) {
+  const res = await fetch(`${API_BASE}/workorders/${workOrderId}/sign-agreement`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) {
+    const error = await res.json().catch(() => ({}));
+    throw new Error(error.message || "Failed to sign agreement");
+  }
+  return res.json();
+}

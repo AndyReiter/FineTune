@@ -194,6 +194,49 @@ body {
   justify-content: center;
   gap: 6px;
   white-space: nowrap;
+  position: relative;
+}
+
+.tab-button .tab-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 600;
+  background: #e2e8f0;
+  color: #475569;
+  margin-left: 4px;
+}
+
+.tab-button.active .tab-badge {
+  background: rgba(255, 255, 255, 0.25);
+  color: white;
+}
+
+.tab-button .tab-badge.urgent {
+  background: #ef4444;
+  color: white;
+  animation: pulse-badge 2s ease-in-out infinite;
+}
+
+.tab-button.active .tab-badge.urgent {
+  background: #dc2626;
+  color: white;
+}
+
+@keyframes pulse-badge {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 0.9;
+  }
 }
 
 .tab-button:hover {
@@ -292,6 +335,7 @@ body {
   gap: 6px;
 }
 
+.badge-submitted { background: #fed7aa; color: #9a3412; }
 .badge-received { background: #fef3c7; color: #92400e; }
 .badge-in-progress { background: #dbeafe; color: #1d4ed8; }
 .badge-ready { background: #d1fae5; color: #065f46; }
@@ -1276,23 +1320,33 @@ body {
       <div class="card-content">
         <!-- Status Tabs -->
         <div class="status-tabs">
+          <button class="tab-button" data-status="CUSTOMER_SUBMITTED" onclick="switchTab('CUSTOMER_SUBMITTED', this)">
+            <i class="fas fa-clipboard-check"></i> Intake Review
+            <span class="tab-badge urgent" id="badge-CUSTOMER_SUBMITTED" style="display: none;">0</span>
+          </button>
           <button class="tab-button active" data-status="RECEIVED" onclick="switchTab('RECEIVED', this)">
             <i class="fas fa-inbox"></i> Awaiting
+            <span class="tab-badge" id="badge-RECEIVED" style="display: none;">0</span>
           </button>
           <button class="tab-button" data-service-type="TUNE" onclick="switchTab('TUNE', this)">
             <i class="fas fa-adjust"></i> Tune
+            <span class="tab-badge" id="badge-TUNE" style="display: none;">0</span>
           </button>
           <button class="tab-button" data-service-type="MOUNT" onclick="switchTab('MOUNT', this)">
             <i class="fas fa-wrench"></i> Mount
+            <span class="tab-badge" id="badge-MOUNT" style="display: none;">0</span>
           </button>
           <button class="tab-button" data-service-type="REPAIR" onclick="switchTab('REPAIR', this)">
             <i class="fas fa-tools"></i> Repair
+            <span class="tab-badge" id="badge-REPAIR" style="display: none;">0</span>
           </button>
           <button class="tab-button" data-status="READY_FOR_PICKUP" onclick="switchTab('READY_FOR_PICKUP', this)">
             <i class="fas fa-check-circle"></i> Ready
+            <span class="tab-badge" id="badge-READY_FOR_PICKUP" style="display: none;">0</span>
           </button>
           <button class="tab-button" data-status="AWAITING_PICKUP" onclick="switchTab('AWAITING_PICKUP', this)">
             <i class="fas fa-clock"></i> Awaiting Pickup
+            <span class="tab-badge" id="badge-AWAITING_PICKUP" style="display: none;">0</span>
           </button>
         </div>
         
@@ -1600,6 +1654,7 @@ body {
      =============================== */
   function getModernStatusBadge(status) {
     const badges = {
+      'CUSTOMER_SUBMITTED': '<span class="status-badge badge-submitted"><i class="fas fa-clipboard-check"></i> Needs Review</span>',
       'RECEIVED': '<span class="status-badge badge-received"><i class="fas fa-inbox"></i> New</span>',
       'IN_PROGRESS': '<span class="status-badge badge-in-progress"><i class="fas fa-cog"></i> In Progress</span>',
       'READY_FOR_PICKUP': '<span class="status-badge badge-ready"><i class="fas fa-check-circle"></i> Ready</span>',
@@ -1662,6 +1717,7 @@ body {
         document.getElementById("userEmail").textContent = email;
         showAuthenticatedView();
         fetchWorkOrdersByStatus(currentActiveTab);
+        updateTabCounts(); // Load counts for all tabs
       })
       .catch(error => {
         ValidationUtils.showMessage('loginMessage', 'Invalid credentials. Please try again.', true);
@@ -1712,6 +1768,32 @@ body {
     try {
       const response = await APIUtils.authenticatedFetch(`${API_CONFIG.WORKORDERS}/${orderId}`);
       const order = await response.json();
+
+      // Restore default modal title and footer (in case they were modified by intake review)
+      document.querySelector('#editModal .modal-header h3').textContent = 'Manage Equipment Item Status';
+      
+      const modalFooter = document.querySelector('#editModal .modal-footer');
+      modalFooter.innerHTML = `
+        <button type="button" class="secondary-button" onclick="closeEditModal()">
+          <i class="fas fa-times"></i> Cancel
+        </button>
+        <button type="button" id="notifyBtn" class="primary-button" onclick="notifyCustomer()" style="display: none;">
+          <i class="fas fa-bell"></i> Send Notification
+        </button>
+        <button type="button" id="pickupBtn" class="primary-button" onclick="markAsPickup()" style="display: none; background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
+          <i class="fas fa-check-circle"></i> Mark Order as Picked Up
+        </button>
+      `;
+
+      // Re-query button references after replacing footer HTML
+      const notifyBtn = document.getElementById("notifyBtn");
+      const pickupBtn = document.getElementById("pickupBtn");
+
+      // Special handling for CUSTOMER_SUBMITTED orders (Intake Review)
+      if (order.status === "CUSTOMER_SUBMITTED") {
+        loadIntakeReviewUI(orderId, order);
+        return;
+      }
 
       // Determine promised date rendering based on status
       const isInProgress = order.status === "IN_PROGRESS";
@@ -1786,21 +1868,16 @@ body {
         <!-- SECTION 3: Notes Section -->
         <div class="modal-section-card">
           <h4>Work Order Notes</h4>
-          <div id="workOrderNotesFeed" class="notes-feed"></div>
-          <div class="note-add-section">
-            <textarea 
-              id="newWorkOrderNoteText" 
-              placeholder="Add a note about this work order..."
-              class="note-textarea"
-            ></textarea>
-            <button 
-              type="button" 
-              class="primary-button" 
-              onclick="submitWorkOrderNote(${orderId})"
-            >
-              <i class="fas fa-plus"></i> Add Note
-            </button>
-          </div>
+          <textarea 
+            id="workOrderNotes" 
+            placeholder="Add notes or special instructions..."
+            class="note-textarea"
+            style="min-height: 120px; width: 100%;"
+            onblur="saveWorkOrderNotes(${orderId})"
+          >${order.notes || ''}</textarea>
+          <small style="color: #64748b; font-size: 12px; display: block; margin-top: 4px;">
+            <i class="fas fa-info-circle"></i> Notes are automatically saved when you click outside the text area
+          </small>
         </div>
       `;
 
@@ -1847,9 +1924,6 @@ body {
         // - order.status === 'AWAITING_PICKUP'
         pickupBtn.style.display = isAwaitingPickup ? "block" : "none";
       }
-
-      // Load work order notes
-      loadWorkOrderNotes(orderId);
     } catch (error) {
       console.error(error);
       if (error.message === "Authentication required") {
@@ -1859,6 +1933,235 @@ body {
         notifyBtn.style.display = "none";
         pickupBtn.style.display = "none";
       }
+    }
+  }
+
+  /* ===============================
+     Load Intake Review UI (for CUSTOMER_SUBMITTED orders)
+     =============================== */
+  async function loadIntakeReviewUI(orderId, order) {
+    const promisedDateValue = order.promisedBy ? new Date(order.promisedBy).toISOString().slice(0, 10) : '';
+    
+    modalBody.innerHTML = `
+      <!-- Intake Review Header -->
+      <div class="modal-section-card" style="background: linear-gradient(135deg, #fed7aa 0%, #fef3c7 100%); border-left: 4px solid #ea580c;">
+        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+          <i class="fas fa-clipboard-check" style="font-size: 24px; color: #9a3412;"></i>
+          <div>
+            <h3 style="margin: 0; color: #9a3412;">Intake Review Required</h3>
+            <p style="margin: 4px 0 0; color: #9a3412; font-size: 13px;">
+              Customer-submitted order #${order.id} needs verification before entering workflow
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Customer Information -->
+      <div class="modal-section-card">
+        <h4>Customer Information</h4>
+        <div class="wo-overview-grid">
+          <div class="wo-overview-item">
+            <span class="wo-overview-label">Customer Name</span>
+            <span class="wo-overview-value">${order.customerName}</span>
+          </div>
+          <div class="wo-overview-item">
+            <span class="wo-overview-label">Email</span>
+            <span class="wo-overview-value">${order.customerEmail || 'N/A'}</span>
+          </div>
+          <div class="wo-overview-item">
+            <span class="wo-overview-label">Phone</span>
+            <span class="wo-overview-value">${order.customerPhone || 'N/A'}</span>
+          </div>
+          <div class="wo-overview-item">
+            <span class="wo-overview-label">Created</span>
+            <span class="wo-overview-value">${new Date(order.createdAt).toLocaleString()}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Due Date (Required) -->
+      <div class="modal-section-card">
+        <h4>Set Due Date <span style="color: #dc2626; font-size: 14px;">*Required</span></h4>
+        <div class="wo-overview-grid">
+          <div class="wo-overview-item" style="grid-column: 1 / -1;">
+            <span class="wo-overview-label">Promised By</span>
+            <input 
+              type="date" 
+              id="intakePromisedBy" 
+              name="promisedBy"
+              value="${promisedDateValue}"
+              class="wo-promised-date-input"
+              onchange="updateWorkOrderPromisedBy(${orderId}, this.value)"
+              required
+              style="width: 100%; max-width: 300px;"
+            />
+            <small style="color: #64748b; font-size: 12px; margin-top: 4px; display: block;">
+              <i class="fas fa-info-circle"></i> Must be set before activating this order
+            </small>
+          </div>
+        </div>
+      </div>
+
+      <!-- Equipment Items -->
+      <div class="modal-section-card">
+        <h4>Equipment & Services</h4>
+        <p style="color: #64748b; font-size: 13px; margin-bottom: 16px;">
+          Review equipment details and services. Verify all information is correct.
+        </p>
+        <div id="equipmentStatusItems"></div>
+      </div>
+
+      <!-- Notes Section -->
+      <div class="modal-section-card">
+        <h4>Work Order Notes</h4>
+        <p style="color: #64748b; font-size: 13px; margin-bottom: 16px;">
+          Add any notes or special instructions for this work order.
+        </p>
+        <textarea 
+          id="intakeNotes" 
+          placeholder="Enter intake notes, special instructions, or observations..."
+          class="note-textarea"
+          style="min-height: 120px; width: 100%;"
+        >${order.notes || ''}</textarea>
+      </div>
+
+      <!-- Activation Instructions -->
+      <div class="modal-section-card" style="background: #f0f9ff; border-left: 4px solid #0284c7;">
+        <div style="display: flex; align-items: start; gap: 12px;">
+          <i class="fas fa-info-circle" style="color: #0284c7; margin-top: 2px;"></i>
+          <div style="font-size: 13px; color: #334155;">
+            <strong style="color: #0c4a6e;">Ready to activate?</strong>
+            <p style="margin: 8px 0 0;">
+              Once you confirm intake, this order will transition to <strong>RECEIVED</strong> status 
+              and enter the normal workflow. Make sure you've:
+            </p>
+            <ul style="margin: 8px 0 0; padding-left: 20px;">
+              <li>Verified all equipment details</li>
+              <li>Set a promised date</li>
+              <li>Added any necessary notes</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    `;
+
+    // Render equipment items (read-only review for intake)
+    const equipmentStatusItems = document.getElementById("equipmentStatusItems");
+    
+    // Get current button references
+    const notifyBtn = document.getElementById("notifyBtn");
+    const pickupBtn = document.getElementById("pickupBtn");
+    
+    if (!order.equipment || order.equipment.length === 0) {
+      equipmentStatusItems.innerHTML = '<div class="empty-notes-message">No equipment in this work order</div>';
+      if (notifyBtn) notifyBtn.style.display = "none";
+      if (pickupBtn) pickupBtn.style.display = "none";
+    } else {
+      equipmentStatusItems.innerHTML = order.equipment.map(item => `
+        <div class="equipment-item-card">
+          <div class="equipment-item-info">
+            <div class="equipment-item-name">
+              <strong>${item.brand} ${item.model}</strong>
+              ${item.notes ? `<div style="font-size: 12px; color: #64748b; margin-top: 4px;">${item.notes}</div>` : ''}
+            </div>
+            <div class="equipment-item-badges">
+              <span class="service-badge">${item.serviceType.replace(/_/g, ' ')}</span>
+              <span class="item-status-badge status-${item.status}">${item.status.replace(/_/g, ' ')}</span>
+            </div>
+          </div>
+        </div>
+      `).join("");
+      
+      // Hide default action buttons for intake review
+      if (notifyBtn) notifyBtn.style.display = "none";
+      if (pickupBtn) pickupBtn.style.display = "none";
+    }
+
+    // Change modal title
+    document.querySelector('#editModal .modal-header h3').innerHTML = 
+      '<i class="fas fa-clipboard-check"></i> Intake Review - Work Order #' + order.id;
+
+    // Replace default buttons with Confirm Intake button
+    const modalFooter = document.querySelector('#editModal .modal-footer');
+    modalFooter.innerHTML = `
+      <button type="button" class="secondary-button" onclick="closeEditModal()">
+        <i class="fas fa-times"></i> Cancel
+      </button>
+      <button type="button" class="primary-button" onclick="confirmIntakeAndActivate(${orderId})" 
+        style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
+        <i class="fas fa-check-circle"></i> Confirm & Activate Order
+      </button>
+    `;
+  }
+
+  /* ===============================
+     Confirm Intake and Activate Order
+     =============================== */
+  async function confirmIntakeAndActivate(orderId) {
+    try {
+      // Validate promised date is set
+      const promisedByInput = document.getElementById('intakePromisedBy');
+      if (!promisedByInput || !promisedByInput.value) {
+        alert('⚠️ Please set a promised date before activating this order.');
+        promisedByInput?.focus();
+        return;
+      }
+
+      // Get notes value
+      const notesTextarea = document.getElementById('intakeNotes');
+      const notes = notesTextarea ? notesTextarea.value.trim() : '';
+
+      // Show loading state
+      const confirmBtn = event.target.closest('button');
+      const originalText = confirmBtn.innerHTML;
+      confirmBtn.disabled = true;
+      confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving & Activating...';
+
+      // First, save notes and promisedBy via PATCH
+      const patchResponse = await APIUtils.authenticatedFetch(
+        `${API_CONFIG.WORKORDERS}/${orderId}`,
+        { 
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            notes: notes,
+            promisedBy: promisedByInput.value
+          })
+        }
+      );
+
+      if (!patchResponse.ok) {
+        throw new Error('Failed to save work order updates');
+      }
+
+      // Then, confirm intake (transitions status to RECEIVED)
+      const response = await APIUtils.authenticatedFetch(
+        `${API_CONFIG.WORKORDERS}/${orderId}/confirm-intake`,
+        { method: 'POST' }
+      );
+
+      if (response.ok) {
+        // Success - close modal and refresh
+        closeEditModal();
+        refreshCurrentTab();
+        
+        // Show success message
+        ValidationUtils.showMessage('listMessage', 
+          `✓ Work Order #${orderId} activated successfully and moved to workflow!`, 
+          'success'
+        );
+      } else {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to activate order');
+      }
+    } catch (error) {
+      console.error('Error confirming intake:', error);
+      alert('❌ ' + error.message);
+      
+      // Restore button
+      const confirmBtn = event.target.closest('button');
+      confirmBtn.disabled = false;
+      confirmBtn.innerHTML = originalText;
     }
   }
 
@@ -1929,6 +2232,44 @@ body {
     }
   }
 
+  /**
+   * Save work order notes via PATCH.
+   * Called when notes textarea loses focus.
+   */
+  async function saveWorkOrderNotes(orderId) {
+    try {
+      const notesTextarea = document.getElementById('workOrderNotes');
+      if (!notesTextarea) return;
+      
+      const notes = notesTextarea.value.trim();
+      
+      const response = await APIUtils.authenticatedFetch(`${API_CONFIG.WORKORDERS}/${orderId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ notes: notes })
+      });
+
+      if (!response.ok) throw new Error("Failed to save notes");
+
+      // Show brief success feedback
+      const originalBorder = notesTextarea.style.border;
+      notesTextarea.style.border = '2px solid #059669';
+      setTimeout(() => {
+        notesTextarea.style.border = originalBorder;
+      }, 1000);
+      
+      // Refresh current tab to update notes in list view
+      refreshCurrentTab();
+    } catch (error) {
+      console.error(error);
+      if (error.message === "Authentication required") {
+        showLoginView();
+      } else {
+        alert("Error saving notes: " + error.message);
+      }
+    }
+  }
+
   /* ===============================
      Customer Notification
      Notifies customer and transitions to AWAITING_PICKUP
@@ -1986,92 +2327,6 @@ body {
   }
 
   /* ===============================
-     Work Order Notes Functions
-     =============================== */
-  async function loadWorkOrderNotes(orderId) {
-    try {
-      const response = await APIUtils.authenticatedFetch(`/api/workorders/${orderId}/notes`);
-      if (!response.ok) throw new Error("Failed to load notes");
-
-      const notes = await response.json();
-      const notesFeed = document.getElementById('workOrderNotesFeed');
-      
-      if (!notesFeed) return; // Feed not rendered yet
-
-      if (notes.length === 0) {
-        notesFeed.innerHTML = '<div class="empty-notes-message">No notes yet</div>';
-      } else {
-        notesFeed.innerHTML = notes.map(note => {
-          const noteDate = new Date(note.createdAt);
-          const formattedDate = noteDate.toLocaleString('en-US', {
-            month: 'short',
-            day: 'numeric',
-            year: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-          });
-
-          return `
-            <div class="note-item">
-              <div class="note-item-header">
-                <span class="note-item-author">${note.createdBy}</span>
-                <span>${formattedDate}</span>
-              </div>
-              <div class="note-item-text">${note.noteText}</div>
-            </div>
-          `;
-        }).join('');
-      }
-    } catch (error) {
-      console.error('Error loading notes:', error);
-      const notesFeed = document.getElementById('workOrderNotesFeed');
-      if (notesFeed) {
-        notesFeed.innerHTML = '<div style="color: #ef4444; padding: 10px;">Failed to load notes</div>';
-      }
-    }
-  }
-
-  async function submitWorkOrderNote(orderId) {
-    const noteTextarea = document.getElementById('newWorkOrderNoteText');
-    const noteText = noteTextarea.value.trim();
-
-    if (!noteText) {
-      alert('Please enter a note');
-      return;
-    }
-
-    try {
-      // Get current user from localStorage
-      const user = JSON.parse(localStorage.getItem('user') || '{}');
-      const createdBy = user.username || 'Staff';
-
-      const response = await APIUtils.authenticatedFetch(`/api/workorders/${orderId}/notes`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          noteText: noteText,
-          createdBy: createdBy
-        })
-      });
-
-      if (!response.ok) throw new Error('Failed to save note');
-
-      // Clear textarea
-      noteTextarea.value = '';
-      
-      // Reload notes
-      await loadWorkOrderNotes(orderId);
-    } catch (error) {
-      console.error('Error saving note:', error);
-      if (error.message === "Authentication required") {
-        showLoginView();
-      } else {
-        alert('Error saving note: ' + error.message);
-      }
-    }
-  }
-
-  /* ===============================
      Tab Management Functions
      =============================== */
   function switchTab(statusOrServiceType, buttonElement) {
@@ -2103,6 +2358,9 @@ body {
     } else {
       fetchWorkOrdersByStatus(currentActiveTab);
     }
+
+    // Update tab counts
+    updateTabCounts();
   }
 
   /* ===============================
@@ -3757,15 +4015,11 @@ body {
       const initialNoteText = document.getElementById('createWorkOrderNoteText')?.value.trim();
       if (initialNoteText && result.id) {
         try {
-          const user = JSON.parse(localStorage.getItem('user') || '{}');
-          const createdBy = user.username || 'Staff';
-          
-          await APIUtils.authenticatedFetch(`/api/workorders/${result.id}/notes`, {
-            method: 'POST',
+          await APIUtils.authenticatedFetch(`${API_CONFIG.WORKORDERS}/${result.id}`, {
+            method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              noteText: initialNoteText,
-              createdBy: createdBy
+              notes: initialNoteText
             })
           });
         } catch (noteError) {
@@ -4008,6 +4262,74 @@ body {
   }
 
   /* ===============================
+     Update Tab Counts
+     =============================== */
+  async function updateTabCounts() {
+    if (!AuthUtils.isAuthenticated()) {
+      return;
+    }
+
+    try {
+      // Fetch all work orders
+      const response = await APIUtils.authenticatedFetch(API_CONFIG.WORKORDERS);
+      const allOrders = await response.json();
+
+      // Count by status
+      const counts = {
+        CUSTOMER_SUBMITTED: 0,
+        RECEIVED: 0,
+        READY_FOR_PICKUP: 0,
+        AWAITING_PICKUP: 0,
+        TUNE: 0,
+        MOUNT: 0,
+        REPAIR: 0
+      };
+
+      allOrders.forEach(order => {
+        // Count status-based tabs
+        if (order.status === 'CUSTOMER_SUBMITTED') {
+          counts.CUSTOMER_SUBMITTED++;
+        } else if (order.status === 'RECEIVED') {
+          counts.RECEIVED++;
+        } else if (order.status === 'READY_FOR_PICKUP') {
+          // Special handling: only count if ALL items are DONE
+          const equipment = order.equipment || [];
+          if (equipment.length > 0 && equipment.every(item => item.status === 'DONE')) {
+            counts.READY_FOR_PICKUP++;
+          }
+        } else if (order.status === 'AWAITING_PICKUP') {
+          counts.AWAITING_PICKUP++;
+        }
+
+        // Count service-based tabs (count equipment items, not orders)
+        const equipment = order.equipment || [];
+        equipment.forEach(item => {
+          if (item.serviceType === 'TUNE' && (item.status === 'PENDING' || item.status === 'IN_PROGRESS') && (order.status === 'RECEIVED' || order.status === 'IN_PROGRESS')) counts.TUNE++;
+          else if (item.serviceType === 'MOUNT' && (item.status === 'PENDING' || item.status === 'IN_PROGRESS') && (order.status === 'RECEIVED' || order.status === 'IN_PROGRESS')) counts.MOUNT++;
+          else if (item.serviceType === 'REPAIR' && (item.status === 'PENDING' || item.status === 'IN_PROGRESS') && (order.status === 'RECEIVED' || order.status === 'IN_PROGRESS')) counts.REPAIR++;
+        });
+      });
+
+      // Update badge displays
+      Object.keys(counts).forEach(key => {
+        const badge = document.getElementById(`badge-${key}`);
+        if (badge) {
+          const count = counts[key];
+          if (count > 0) {
+            badge.textContent = count;
+            badge.style.display = 'inline-flex';
+          } else {
+            badge.style.display = 'none';
+          }
+        }
+      });
+
+    } catch (error) {
+      console.error('Error updating tab counts:', error);
+    }
+  }
+
+  /* ===============================
      Initialize Page
      =============================== */
   // Check if user is already authenticated on page load
@@ -4016,6 +4338,7 @@ body {
       // Try to show authenticated view and fetch data for default tab
       showAuthenticatedView();
       fetchWorkOrdersByStatus(currentActiveTab); // Load default "RECEIVED" tab
+      updateTabCounts(); // Load counts for all tabs
     } else {
       showLoginView();
     }
@@ -4046,37 +4369,110 @@ body {
     notesContainer.innerHTML = '<div style="padding: 20px; text-align: center; color: #64748b;"><i class="fas fa-spinner fa-spin"></i> Loading notes...</div>';
     
     try {
-      const response = await APIUtils.authenticatedFetch(`/api/workorders/${orderId}/notes`);
-      if (!response.ok) throw new Error("Failed to load notes");
+      const response = await APIUtils.authenticatedFetch(`${API_CONFIG.WORKORDERS}/${orderId}`);
+      if (!response.ok) throw new Error("Failed to load work order");
 
-      const notes = await response.json();
+      const workOrder = await response.json();
       
-      if (notes.length === 0) {
-        notesContainer.innerHTML = '<div class="notes-popup-empty"><i class="fas fa-sticky-note" style="font-size: 48px; margin-bottom: 10px; opacity: 0.3;"></i><br>No notes on this work order</div>';
-      } else {
-        notesContainer.innerHTML = notes.map(note => {
-          const noteDate = new Date(note.createdAt);
-          const formattedDate = noteDate.toLocaleString('en-US', {
-            month: 'short',
-            day: 'numeric',
-            year: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-          });
-
-          return `
-            <div class="notes-popup-item">
-              <div class="notes-popup-item-header">
-                <strong>${note.createdBy}</strong> • ${formattedDate}
-              </div>
-              <div class="notes-popup-item-text">${note.noteText}</div>
-            </div>
-          `;
-        }).join('');
-      }
+      // Display editable notes textarea with save button
+      notesContainer.innerHTML = `
+        <div style="display: flex; flex-direction: column; gap: 16px;">
+          <textarea 
+            id="notesPopupTextarea" 
+            placeholder="Add notes or special instructions for this work order..."
+            style="
+              width: 100%;
+              min-height: 200px;
+              padding: 12px;
+              border: 1px solid #cbd5e1;
+              border-radius: 8px;
+              font-family: inherit;
+              font-size: 14px;
+              line-height: 1.6;
+              resize: vertical;
+              box-sizing: border-box;
+            "
+          >${workOrder.notes || ''}</textarea>
+          <div style="display: flex; gap: 8px; justify-content: flex-end;">
+            <button 
+              onclick="closeNotesPopup()"
+              style="
+                padding: 10px 20px;
+                background: #f1f5f9;
+                color: #475569;
+                border: none;
+                border-radius: 6px;
+                cursor: pointer;
+                font-weight: 500;
+                font-size: 14px;
+              "
+            >
+              Cancel
+            </button>
+            <button 
+              onclick="saveNotesFromPopup(${orderId})"
+              style="
+                padding: 10px 20px;
+                background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+                color: white;
+                border: none;
+                border-radius: 6px;
+                cursor: pointer;
+                font-weight: 500;
+                font-size: 14px;
+              "
+            >
+              <i class="fas fa-save"></i> Save Notes
+            </button>
+          </div>
+        </div>
+      `;
     } catch (error) {
       console.error('Error loading notes:', error);
       notesContainer.innerHTML = '<div style="color: #ef4444; padding: 20px; text-align: center;"><i class="fas fa-exclamation-triangle"></i><br>Failed to load notes</div>';
+    }
+  }
+
+  async function saveNotesFromPopup(orderId) {
+    const textarea = document.getElementById('notesPopupTextarea');
+    if (!textarea) return;
+    
+    const notes = textarea.value.trim();
+    const saveBtn = event.target.closest('button');
+    const originalHTML = saveBtn.innerHTML;
+    
+    try {
+      saveBtn.disabled = true;
+      saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+      
+      const response = await APIUtils.authenticatedFetch(`${API_CONFIG.WORKORDERS}/${orderId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ notes: notes })
+      });
+
+      if (!response.ok) throw new Error("Failed to save notes");
+
+      // Show success feedback
+      saveBtn.innerHTML = '<i class="fas fa-check"></i> Saved!';
+      saveBtn.style.background = 'linear-gradient(135deg, #10b981 0%, #059669 100%)';
+      
+      // Close popup after brief delay
+      setTimeout(() => {
+        closeNotesPopup();
+        refreshCurrentTab(); // Refresh to show updated notes
+      }, 800);
+      
+    } catch (error) {
+      console.error('Error saving notes:', error);
+      saveBtn.disabled = false;
+      saveBtn.innerHTML = originalHTML;
+      
+      if (error.message === "Authentication required") {
+        showLoginView();
+      } else {
+        alert("Error saving notes: " + error.message);
+      }
     }
   }
 

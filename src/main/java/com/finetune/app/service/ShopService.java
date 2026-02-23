@@ -1,15 +1,17 @@
+
 package com.finetune.app.service;
 
 import java.util.List;
 import org.springframework.stereotype.Service;
 import com.finetune.app.model.Shop;
-import com.finetune.app.repository.ShopJpaRepository;
+import com.finetune.app.model.Location;
+import com.finetune.app.repository.sql.ShopSqlRepository;
 
 @Service
 public class ShopService {
-    private final ShopJpaRepository shopRepository;
+    private final ShopSqlRepository shopRepository;
 
-    public ShopService(ShopJpaRepository shopRepository) {
+    public ShopService(ShopSqlRepository shopRepository) {
         this.shopRepository = shopRepository;
     }
 
@@ -24,46 +26,52 @@ public class ShopService {
 
     private void validateUniqueLocation(Shop shop) {
         if (shop.getLocation() != null) {
-            String address = shop.getLocation().getAddress();
-            String city = shop.getLocation().getCity();
-            String state = shop.getLocation().getState();
-            String zipCode = shop.getLocation().getZipCode();
-            
-            if (shopRepository.findByLocationAddress(address, city, state, zipCode).isPresent()) {
-                throw new IllegalArgumentException("A shop already exists at location: " + address + ", " + city + ", " + state + " " + zipCode);
+            List<Shop> shopsAtLocation = shopRepository.findByLocation(shop.getLocation());
+            if (!shopsAtLocation.isEmpty()) {
+                throw new IllegalArgumentException("A shop already exists at location: " +
+                    shop.getLocation().getAddress() + ", " +
+                    shop.getLocation().getCity() + ", " +
+                    shop.getLocation().getState() + " " +
+                    shop.getLocation().getZipCode());
             }
         }
     }
 
     public Shop createShop(Shop shop) {
         validateUniqueLocation(shop);
-        return shopRepository.save(shop);
+        shopRepository.save(shop);
+        // Return the saved shop (with generated ID)
+        return shopRepository.findLastInserted().orElse(shop);
+    }
+
+    public Shop getOrCreateMainShop() {
+        List<Shop> shops = getAllShops();
+        if (!shops.isEmpty()) {
+            return shops.get(0);
+        } else {
+            Shop newShop = new Shop();
+            shopRepository.save(newShop);
+            return shopRepository.findLastInserted().orElse(newShop);
+        }
+    }
+
+    public Shop saveShop(Shop shop) {
+        shopRepository.save(shop);
+        return shopRepository.findLastInserted().orElse(shop);
     }
 
     public Shop updateShop(Long id, Shop shop) {
-        Shop existingShop = shopRepository.findById(id)
-            .orElseThrow(() -> new IllegalArgumentException("Shop not found with id: " + id));
-        
-        // Only check for duplicates if the location changed
-        if (shop.getLocation() != null && 
-            (existingShop.getLocation() == null || 
-             !isSameLocation(existingShop.getLocation(), shop.getLocation()))) {
-            validateUniqueLocation(shop);
-        }
-        
+        Shop existingShop = getShop(id);
         shop.setId(id);
-        return shopRepository.save(shop);
-    }
-
-    private boolean isSameLocation(com.finetune.app.model.Location loc1, com.finetune.app.model.Location loc2) {
-        return loc1.getId() != null && loc1.getId().equals(loc2.getId());
+        shopRepository.update(shop);
+        return getShop(id);
     }
 
     public void deleteShop(Long id) {
-        if (!shopRepository.existsById(id)) {
+        if (!shopRepository.findById(id).isPresent()) {
             throw new IllegalArgumentException("Shop not found with id: " + id);
         }
-        shopRepository.deleteById(id);
+        shopRepository.delete(id);
     }
 
     public String checkIn() {

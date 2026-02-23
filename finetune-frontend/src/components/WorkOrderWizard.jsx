@@ -2,11 +2,15 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import CustomerSearch from './CustomerSearch';
 import EquipmentSelection from './EquipmentSelection';
-import { createWorkOrder } from '../services/api';
+import { createWorkOrder, signAgreement } from '../services/api';
+import CustomerAgreementStep from './CustomerAgreementStep';
 
 const WorkOrderWizard = () => {
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
+  const [pendingWorkOrder, setPendingWorkOrder] = useState(null);
+  const [agreementData, setAgreementData] = useState(null);
+  const [pdfUrl, setPdfUrl] = useState(null);
   const [error, setError] = useState(null);
   const [creating, setCreating] = useState(false);
 
@@ -22,7 +26,6 @@ const WorkOrderWizard = () => {
   const handleEquipmentComplete = async (equipmentData) => {
     setError(null);
     setCreating(true);
-
     try {
       // Build the complete work order payload
       const payload = {
@@ -32,22 +35,43 @@ const WorkOrderWizard = () => {
         phone: selectedCustomer.phone,
         equipment: equipmentData.skis
       };
-
-      console.log('Creating work order with payload:', payload);
-
       // Create work order
       const result = await createWorkOrder(payload);
-      
-      console.log('Work order created successfully:', result);
-      
-      // Navigate back to dashboard
-      navigate('/workorders', { 
-        state: { message: 'Work order created successfully!' }
-      });
-      
+      setPendingWorkOrder(result);
+      // Check if any equipment item is a MOUNT service
+      const needsAgreement = (equipmentData.skis || []).some(item => item.serviceType === 'MOUNT');
+      if (needsAgreement) {
+        setStep(3); // Show agreement step
+      } else {
+        // No agreement needed, finish
+        setCreating(false);
+        navigate('/workorders', { state: { message: 'Work order created successfully!' } });
+      }
     } catch (err) {
       console.error('Failed to create work order:', err);
       setError('Failed to create work order: ' + err.message);
+      setCreating(false);
+    }
+  };
+
+  // Handle agreement signing
+  const handleAgreementSign = async (data) => {
+    if (!pendingWorkOrder) return;
+    setCreating(true);
+    setAgreementData(data);
+    try {
+      // POST to sign-agreement endpoint
+      const response = await signAgreement(pendingWorkOrder.id, {
+        signatureName: data.signatureName,
+        email: selectedCustomer.email,
+        phone: selectedCustomer.phone,
+        signatureImageBase64: data.signatureImageBase64
+      });
+      setPdfUrl(response.pdfUrl);
+      setStep(4); // Show confirmation
+    } catch (err) {
+      setError('Failed to sign agreement: ' + err.message);
+    } finally {
       setCreating(false);
     }
   };
@@ -131,18 +155,42 @@ const WorkOrderWizard = () => {
         </div>
       )}
 
+
       {/* Step Content */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
         {step === 1 && (
           <CustomerSearch onCustomerSelected={handleCustomerSelected} />
         )}
-
         {step === 2 && selectedCustomer && (
           <EquipmentSelection
             customer={selectedCustomer}
             workOrderData={workOrderData}
             onComplete={handleEquipmentComplete}
           />
+        )}
+        {step === 3 && pendingWorkOrder && (
+          <CustomerAgreementStep
+            shop={pendingWorkOrder.shop || {}}
+            agreementTemplate={pendingWorkOrder.agreementTemplate || {}}
+            customer={selectedCustomer}
+            onSign={handleAgreementSign}
+            onBack={() => setStep(2)}
+          />
+        )}
+        {step === 4 && pdfUrl && (
+          <div className="text-center py-10">
+            <h2 className="text-2xl font-bold mb-4 text-green-700">Work Order & Agreement Complete!</h2>
+            <p className="mb-4">Your signed agreement has been securely stored.</p>
+            <a href={pdfUrl} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline font-semibold">View Signed PDF Agreement</a>
+            <div className="mt-8">
+              <button
+                className="btn btn-primary"
+                onClick={() => navigate('/workorders')}
+              >
+                Back to Dashboard
+              </button>
+            </div>
+          </div>
         )}
       </div>
 

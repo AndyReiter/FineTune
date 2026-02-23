@@ -1,9 +1,9 @@
 package com.finetune.app.model.dto;
 
-import com.finetune.app.model.entity.Equipment;
-import com.finetune.app.model.entity.Equipment.EquipmentType;
-import com.finetune.app.model.entity.Equipment.Condition;
-import com.finetune.app.model.entity.Equipment.AbilityLevel;
+import com.finetune.app.model.Equipment;
+import com.finetune.app.model.Equipment.EquipmentType;
+import com.finetune.app.model.Equipment.Condition;
+import com.finetune.app.model.Equipment.AbilityLevel;
 
 /**
  * DTO for Equipment responses.
@@ -28,6 +28,10 @@ public class EquipmentResponse {
     private Integer heightInches;
     private Integer weight;
     private Integer age;
+    
+    // Service history
+    private java.time.LocalDate lastServicedDate;
+    private String lastServiceType;
     
     // Boot information (when applicable)
     private BootResponse boot;
@@ -57,6 +61,10 @@ public class EquipmentResponse {
         response.heightInches = equipment.getHeightInches();
         response.weight = equipment.getWeight();
         response.age = equipment.getAge();
+        
+        // Include service history
+        response.lastServicedDate = equipment.getLastServicedDate();
+        response.lastServiceType = equipment.getLastServiceType();
         
         // Include boot information if present
         if (equipment.getBoot() != null) {
@@ -185,5 +193,21 @@ public class EquipmentResponse {
 
     public void setBoot(BootResponse boot) {
         this.boot = boot;
+    }
+
+    public java.time.LocalDate getLastServicedDate() {
+        return lastServicedDate;
+    }
+
+    public void setLastServicedDate(java.time.LocalDate lastServicedDate) {
+        this.lastServicedDate = lastServicedDate;
+    }
+
+    public String getLastServiceType() {
+        return lastServiceType;
+    }
+
+    public void setLastServiceType(String lastServiceType) {
+        this.lastServiceType = lastServiceType;
     }
 }

@@ -1,9 +1,9 @@
 package com.finetune.app.controller;
 
-import com.finetune.app.model.entity.SkiBrand;
-import com.finetune.app.model.entity.SkiModel;
-import com.finetune.app.repository.SkiBrandRepository;
-import com.finetune.app.repository.SkiModelRepository;
+import com.finetune.app.model.SkiBrand;
+import com.finetune.app.model.SkiModel;
+import com.finetune.app.repository.sql.SkiBrandSqlRepository;
+import com.finetune.app.repository.sql.SkiModelSqlRepository;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -13,10 +13,10 @@ import java.util.List;
 @CrossOrigin(origins = "*")
 public class BrandController {
 
-    private final SkiBrandRepository brandRepository;
-    private final SkiModelRepository modelRepository;
+    private final SkiBrandSqlRepository brandRepository;
+    private final SkiModelSqlRepository modelRepository;
 
-    public BrandController(SkiBrandRepository brandRepository, SkiModelRepository modelRepository) {
+    public BrandController(SkiBrandSqlRepository brandRepository, SkiModelSqlRepository modelRepository) {
         this.brandRepository = brandRepository;
         this.modelRepository = modelRepository;
     }
@@ -30,6 +30,6 @@ public class BrandController {
     // GET /brands/{id}/models → returns models for a brand (id + name)
     @GetMapping("/{id}/models")
     public List<SkiModel> getModelsByBrand(@PathVariable Long id) {
-        return modelRepository.findByBrand_Id(id);
+        return modelRepository.findByBrandId(id);
     }
 }

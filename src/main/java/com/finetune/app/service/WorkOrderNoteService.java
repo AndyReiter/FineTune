@@ -2,10 +2,10 @@ package com.finetune.app.service;
 
 import com.finetune.app.model.dto.CreateWorkOrderNoteRequest;
 import com.finetune.app.model.dto.WorkOrderNoteResponseDTO;
-import com.finetune.app.model.entity.WorkOrder;
-import com.finetune.app.model.entity.WorkOrderNote;
-import com.finetune.app.repository.WorkOrderNoteRepository;
-import com.finetune.app.repository.WorkOrderRepository;
+import com.finetune.app.model.WorkOrder;
+import com.finetune.app.model.WorkOrderNote;
+import com.finetune.app.repository.sql.WorkOrderNoteSqlRepository;
+import com.finetune.app.repository.sql.WorkOrderSqlRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,14 +19,14 @@ import java.util.stream.Collectors;
 @Service
 public class WorkOrderNoteService {
 
-    private final WorkOrderNoteRepository workOrderNoteRepository;
-    private final WorkOrderRepository workOrderRepository;
+    private final WorkOrderNoteSqlRepository workOrderNoteSqlRepository;
+    private final WorkOrderSqlRepository workOrderSqlRepository;
 
     public WorkOrderNoteService(
-            WorkOrderNoteRepository workOrderNoteRepository,
-            WorkOrderRepository workOrderRepository) {
-        this.workOrderNoteRepository = workOrderNoteRepository;
-        this.workOrderRepository = workOrderRepository;
+            WorkOrderNoteSqlRepository workOrderNoteSqlRepository,
+            WorkOrderSqlRepository workOrderSqlRepository) {
+        this.workOrderNoteSqlRepository = workOrderNoteSqlRepository;
+        this.workOrderSqlRepository = workOrderSqlRepository;
     }
 
     /**
@@ -36,7 +36,7 @@ public class WorkOrderNoteService {
      * @return list of note DTOs, newest first
      */
     public List<WorkOrderNoteResponseDTO> getNotes(Long workOrderId) {
-        List<WorkOrderNote> notes = workOrderNoteRepository.findByWorkOrderIdOrderByCreatedAtDesc(workOrderId);
+        List<WorkOrderNote> notes = workOrderNoteSqlRepository.findByWorkOrderIdOrderByCreatedAtDesc(workOrderId);
         return notes.stream()
                 .map(WorkOrderNoteResponseDTO::fromEntity)
                 .collect(Collectors.toList());
@@ -53,17 +53,15 @@ public class WorkOrderNoteService {
     @Transactional
     public WorkOrderNoteResponseDTO addNote(Long workOrderId, CreateWorkOrderNoteRequest request) {
         // Validate work order exists
-        WorkOrder workOrder = workOrderRepository.findById(workOrderId)
+        WorkOrder workOrder = workOrderSqlRepository.findById(workOrderId)
                 .orElseThrow(() -> new IllegalArgumentException("Work order not found: " + workOrderId));
 
-        // Create note
-        WorkOrderNote note = new WorkOrderNote();
-        note.setWorkOrder(workOrder);
-        note.setNoteText(request.getNoteText());
-        note.setCreatedBy(request.getCreatedBy());
-
-        // Save and return DTO
-        WorkOrderNote savedNote = workOrderNoteRepository.save(note);
-        return WorkOrderNoteResponseDTO.fromEntity(savedNote);
+        // Insert note using SqlRepository
+        WorkOrderNote note = workOrderNoteSqlRepository.insert(
+                workOrderId,
+                request.getNoteText(),
+                request.getCreatedBy()
+        );
+        return WorkOrderNoteResponseDTO.fromEntity(note);
     }
 }

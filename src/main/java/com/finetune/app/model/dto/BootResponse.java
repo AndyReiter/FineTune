@@ -1,7 +1,7 @@
 package com.finetune.app.model.dto;
 
-import com.finetune.app.model.entity.Boot;
-import com.finetune.app.model.entity.Equipment.AbilityLevel;
+import com.finetune.app.model.Boot;
+import com.finetune.app.model.Equipment.AbilityLevel;
 
 /**
  * BootResponse DTO for clean JSON serialization of Boot entities.

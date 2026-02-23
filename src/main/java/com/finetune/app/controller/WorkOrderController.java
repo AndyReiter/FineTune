@@ -4,12 +4,16 @@ import com.finetune.app.model.dto.CreateWorkOrderRequest;
 import com.finetune.app.model.dto.WorkOrderResponse;
 import com.finetune.app.model.dto.UpdateEquipmentStatusRequest;
 import com.finetune.app.model.dto.BootResponse;
-import com.finetune.app.model.entity.WorkOrder;
-import com.finetune.app.repository.WorkOrderRepository;
-import com.finetune.app.repository.CustomerRepository;
+import com.finetune.app.model.WorkOrder;
+import com.finetune.app.model.SignedAgreement;
+import com.finetune.app.repository.sql.WorkOrderSqlRepository;
+import com.finetune.app.repository.sql.CustomerSqlRepository;
 import com.finetune.app.service.WorkOrderService;
+import com.finetune.app.service.SignedAgreementService;
+import com.finetune.app.service.ObjectStorageService;
 
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import jakarta.validation.Valid;
@@ -50,13 +54,19 @@ import org.springframework.http.HttpStatus;
 public class WorkOrderController {
 
     @Autowired
-    private WorkOrderRepository workOrderRepository;
+    private WorkOrderSqlRepository workOrderRepository;
 
     @Autowired
     private WorkOrderService workOrderService;
 
     @Autowired
-    private CustomerRepository customerRepository;
+    private CustomerSqlRepository customerRepository;
+
+    @Autowired
+    private SignedAgreementService signedAgreementService;
+
+    @Autowired
+    private ObjectStorageService objectStorageService;
 
     /**
      * Get all work orders, optionally filtered by status.
@@ -249,6 +259,93 @@ public class WorkOrderController {
     }
 
     /**
+     * Update work order fields (general PATCH endpoint).
+     * Accepts partial updates for notes and promisedBy fields.
+     * 
+     * @param id WorkOrder ID
+     * @param request Map containing fields to update: "notes" (String), "promisedBy" (LocalDate string or null)
+     * @return Updated WorkOrderResponse
+     */
+    @PatchMapping("/{id}")
+    public ResponseEntity<WorkOrderResponse> updateWorkOrder(
+            @PathVariable Long id,
+            @RequestBody java.util.Map<String, Object> request) {
+        
+        WorkOrder workOrder = workOrderRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("Work order not found"));
+        
+        // Handle notes update
+        if (request.containsKey("notes")) {
+            Object notesValue = request.get("notes");
+            workOrder.setNotes(notesValue != null ? notesValue.toString() : null);
+        }
+        
+        // Handle promisedBy update (can be null to clear the date)
+        if (request.containsKey("promisedBy")) {
+            Object promisedByValue = request.get("promisedBy");
+            if (promisedByValue == null) {
+                workOrder.setPromisedBy(null);
+            } else {
+                workOrder.setPromisedBy(java.time.LocalDate.parse(promisedByValue.toString()));
+            }
+        }
+        
+        workOrderRepository.save(workOrder);
+        return ResponseEntity.ok(WorkOrderResponse.fromEntity(workOrder));
+    }
+
+    /**
+     * Confirm intake review and activate a customer-submitted work order.
+     * 
+     * This transitions a work order from CUSTOMER_SUBMITTED to RECEIVED status,
+     * allowing it to enter the normal workflow. This endpoint is used after staff
+     * completes the intake review process:
+     * - Verify equipment
+     * - Edit notes
+     * - Add/remove services
+     * - Set promisedBy date (REQUIRED)
+     * 
+     * @param id WorkOrder ID
+     * @return Updated WorkOrderResponse with RECEIVED status
+     * @throws IllegalArgumentException if work order is not in CUSTOMER_SUBMITTED status
+     * @throws IllegalStateException if promisedBy date is not set
+     */
+    @PostMapping("/{id}/confirm-intake")
+    public ResponseEntity<WorkOrderResponse> confirmIntake(@PathVariable Long id) {
+        WorkOrder workOrder = workOrderRepository.findById(id)
+            .orElseThrow(() -> new IllegalArgumentException("Work order not found: " + id));
+        
+        // Validate work order is in CUSTOMER_SUBMITTED status
+        if (!"CUSTOMER_SUBMITTED".equals(workOrder.getStatus())) {
+            throw new IllegalArgumentException(
+                "Work order must be in CUSTOMER_SUBMITTED status. Current status: " + workOrder.getStatus()
+            );
+        }
+        
+        // Validate promisedBy date is set
+        if (workOrder.getPromisedBy() == null) {
+            throw new IllegalStateException(
+                "Cannot activate work order without a promised date. Please set a due date first."
+            );
+        }
+        
+        // Update equipment service history
+        java.time.LocalDate today = java.time.LocalDate.now();
+        if (workOrder.getEquipment() != null) {
+            workOrder.getEquipment().forEach(equipment -> {
+                equipment.setLastServicedDate(today);
+                equipment.setLastServiceType(equipment.getServiceType());
+            });
+        }
+        
+        // Transition to RECEIVED status (entering normal workflow)
+        workOrder.setStatus("RECEIVED");
+        workOrderRepository.save(workOrder);
+        
+        return ResponseEntity.ok(WorkOrderResponse.fromEntity(workOrder));
+    }
+
+    /**
      * Delete a work order by ID.
      * Note: WorkOrder is cascaded to delete from Customer.
      * 
@@ -284,5 +381,30 @@ public class WorkOrderController {
         return completedWorkOrders.stream()
             .map(WorkOrderResponse::fromEntity)
             .collect(Collectors.toList());
+    }
+
+    /**
+     * Get signed URL for viewing work order agreement PDF.
+     * Returns a Cloudflare R2 signed URL valid for 15 minutes.
+     * Frontend should open this URL in a new tab.
+     * 
+     * Endpoint: GET /workorders/{id}/agreement-url
+     * 
+     * @param id Work Order ID
+     * @return JSON with signed URL, or 404 if work order or agreement not found
+     */
+    @GetMapping("/{id}/agreement-url")
+    public ResponseEntity<Map<String, String>> getAgreementUrl(@PathVariable Long id) {
+        // Find the signed agreement for this work order
+        SignedAgreement agreement = signedAgreementService.findByWorkOrderId(id);
+        
+        if (agreement == null) {
+            return ResponseEntity.notFound().build();
+        }
+        
+        // Generate signed URL from R2 (15-minute default expiration)
+        String signedUrl = objectStorageService.generateSignedUrl(agreement.getStorageKey());
+        
+        return ResponseEntity.ok(Map.of("url", signedUrl));
     }
 }

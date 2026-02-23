@@ -1,8 +1,8 @@
 package com.finetune.app.controller;
 
 import com.finetune.app.model.dto.EquipmentResponse;
-import com.finetune.app.model.entity.Equipment;
-import com.finetune.app.repository.EquipmentRepository;
+import com.finetune.app.model.Equipment;
+import com.finetune.app.repository.sql.EquipmentSqlRepository;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -26,7 +26,7 @@ import org.springframework.http.ResponseEntity;
 public class EquipmentController {
 
     @Autowired
-    private EquipmentRepository equipmentRepository;
+    private EquipmentSqlRepository equipmentRepository;
 
     /**
      * Get all equipment items.

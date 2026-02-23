@@ -2,8 +2,8 @@
 package com.finetune.app.model.dto;
 
 import jakarta.validation.constraints.NotBlank;
-import com.finetune.app.model.entity.Equipment.Condition;
-import com.finetune.app.model.entity.Equipment.AbilityLevel;
+import com.finetune.app.model.Equipment.Condition;
+import com.finetune.app.model.Equipment.AbilityLevel;
 
 /**
  * Request DTO for adding equipment items to a work order.

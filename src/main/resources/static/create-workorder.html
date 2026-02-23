@@ -915,8 +915,8 @@
 
     try {
       const response = await fetch(API_CONFIG.WORKORDERS, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       });
 
@@ -925,11 +925,11 @@
       }
 
       // Success - show success section and hide form
-      document.getElementById("createForm").style.display = "none";
-      successSection.style.display = "block";
+      document.getElementById('createForm').style.display = 'none';
+      successSection.style.display = 'block';
 
     } catch (error) {
-      console.error("Error creating work order:", error);
+      console.error('Error creating work order:', error);
       ValidationUtils.showMessage('formMessage', 'Error creating work order. Please try again.', true);
     }
   });
@@ -953,7 +953,7 @@
     
     // Store mount items for later processing
     for (let skiItem of skiItems) {
-      const serviceSelect = skiItem.querySelector(\".service-type\");
+      const serviceSelect = skiItem.querySelector(".service-type");
       if (serviceSelect.value === 'MOUNT') {
         mountItems.push(skiItem);
       }
@@ -1058,10 +1058,10 @@
     container.innerHTML = '';
     
     mountItems.forEach((skiItem, index) => {
-      const makeSelect = skiItem.querySelector(\".ski-make\");
-      const modelSelect = skiItem.querySelector(\".ski-model\");
-      const skiMake = makeSelect.options[makeSelect.selectedIndex]?.text || \"\";
-      const skiModel = (modelSelect.value || \"\").trim();
+      const makeSelect = skiItem.querySelector(".ski-make");
+      const modelSelect = skiItem.querySelector(".ski-model");
+      const skiMake = makeSelect.options[makeSelect.selectedIndex]?.text || "";
+      const skiModel = (modelSelect.value || "").trim();
       
       const configDiv = document.createElement('div');
       configDiv.className = 'mount-item-config';
@@ -1181,13 +1181,13 @@
     const allSkiItems = [...skiItemsContainer.children];
     
     for (let skiItem of allSkiItems) {
-      const makeSelect = skiItem.querySelector(\".ski-make\");
-      const modelSelect = skiItem.querySelector(\".ski-model\");
-      const serviceSelect = skiItem.querySelector(\".service-type\");
-      const conditionSelect = skiItem.querySelector(\".condition\");
+      const makeSelect = skiItem.querySelector(".ski-make");
+      const modelSelect = skiItem.querySelector(".ski-model");
+      const serviceSelect = skiItem.querySelector(".service-type");
+      const conditionSelect = skiItem.querySelector(".condition");
 
-      const skiMake = makeSelect.options[makeSelect.selectedIndex]?.text || \"\";
-      const skiModel = (modelSelect.value || \"\").trim();
+      const skiMake = makeSelect.options[makeSelect.selectedIndex]?.text || "";
+      const skiModel = (modelSelect.value || "").trim();
       const serviceType = serviceSelect.value;
       const condition = conditionSelect.value;
 
@@ -1309,8 +1309,8 @@
 
     try {
       const response = await fetch(API_CONFIG.WORKORDERS, {
-        method: \"POST\",
-        headers: { \"Content-Type\": \"application/json\" },
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
       });
 
@@ -1322,11 +1322,11 @@
 
       // Success - hide modal and show success section
       mountModal.style.display = 'none';
-      document.getElementById(\"createForm\").style.display = \"none\";
-      successSection.style.display = \"block\";
+      document.getElementById("createForm").style.display = "none";
+      successSection.style.display = "block";
 
     } catch (error) {
-      console.error(\"Error creating work order:\", error);
+      console.error("Error creating work order:", error);
       ValidationUtils.showMessage('formMessage', 'Error creating work order. Please check browser console for details.', true);
     }
   }
@@ -1337,13 +1337,13 @@
     let hasValidationError = false;
 
     for (let skiItem of skiItems) {
-      const makeSelect = skiItem.querySelector(\".ski-make\");
-      const modelSelect = skiItem.querySelector(\".ski-model\");
-      const serviceSelect = skiItem.querySelector(\".service-type\");
-      const conditionSelect = skiItem.querySelector(\".condition\");
+      const makeSelect = skiItem.querySelector(".ski-make");
+      const modelSelect = skiItem.querySelector(".ski-model");
+      const serviceSelect = skiItem.querySelector(".service-type");
+      const conditionSelect = skiItem.querySelector(".condition");
 
-      const skiMake = makeSelect.options[makeSelect.selectedIndex]?.text || \"\";
-      const skiModel = (modelSelect.value || \"\").trim();
+      const skiMake = makeSelect.options[makeSelect.selectedIndex]?.text || "";
+      const skiModel = (modelSelect.value || "").trim();
       const serviceType = serviceSelect.value;
       const condition = conditionSelect.value;
 
@@ -1387,7 +1387,7 @@
 
     try {
       const response = await fetch(API_CONFIG.WORKORDERS, {
-        method: \"POST\",
+        method: "POST",
         headers: { \"Content-Type\": \"application/json\" },
         body: JSON.stringify(payload)
       });

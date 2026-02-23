@@ -5,7 +5,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import com.finetune.app.model.entity.WorkOrder;
+import com.finetune.app.model.WorkOrder;
 
 /**
  * DTO for WorkOrder responses.
@@ -23,7 +23,8 @@ public class WorkOrderResponse {
     private String customerEmail;
     private String customerPhone;
     private List<EquipmentResponse> equipment;
-    private List<WorkOrderNoteResponseDTO> notes;
+    private String notes;  // Simple TEXT notes field for intake review
+    private List<WorkOrderNoteResponseDTO> notesList;  // Historical notes list
 
     public WorkOrderResponse() {}
 
@@ -50,9 +51,12 @@ public class WorkOrderResponse {
             .map(EquipmentResponse::fromEntity)
             .collect(Collectors.toList());
         
-        // Include notes if they are loaded
-        if (workOrder.getNotes() != null) {
-            response.notes = workOrder.getNotes().stream()
+        // Include notes TEXT field
+        response.notes = workOrder.getNotes();
+        
+        // Include notesList if they are loaded
+        if (workOrder.getNotesList() != null) {
+            response.notesList = workOrder.getNotesList().stream()
                 .map(WorkOrderNoteResponseDTO::fromEntity)
                 .collect(Collectors.toList());
         }
@@ -141,12 +145,20 @@ public class WorkOrderResponse {
         this.equipment = equipment;
     }
 
-    public List<WorkOrderNoteResponseDTO> getNotes() {
+    public String getNotes() {
         return notes;
     }
 
-    public void setNotes(List<WorkOrderNoteResponseDTO> notes) {
+    public void setNotes(String notes) {
         this.notes = notes;
+    }
+
+    public List<WorkOrderNoteResponseDTO> getNotesList() {
+        return notesList;
+    }
+
+    public void setNotesList(List<WorkOrderNoteResponseDTO> notesList) {
+        this.notesList = notesList;
     }
 }
 

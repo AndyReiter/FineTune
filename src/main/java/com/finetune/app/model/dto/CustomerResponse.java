@@ -3,7 +3,7 @@ package com.finetune.app.model.dto;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import com.finetune.app.model.entity.Customer;
+import com.finetune.app.model.Customer;
 
 /**
  * DTO for Customer responses.
@@ -120,7 +120,7 @@ public class CustomerResponse {
 
         public WorkOrderSummary() {}
 
-        public static WorkOrderSummary fromEntity(com.finetune.app.model.entity.WorkOrder workOrder) {
+        public static WorkOrderSummary fromEntity(com.finetune.app.model.WorkOrder workOrder) {
             WorkOrderSummary summary = new WorkOrderSummary();
             summary.id = workOrder.getId();
             summary.status = workOrder.getStatus();

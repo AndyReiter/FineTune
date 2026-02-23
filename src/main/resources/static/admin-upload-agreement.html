@@ -1,0 +1,57 @@
+// Simple admin HTML page to upload an agreement template for a shop
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Upload Agreement Template</title>
+  <style>
+    body { font-family: sans-serif; margin: 2em; }
+    label { display: block; margin-top: 1em; }
+    textarea { width: 100%; height: 120px; }
+    input, textarea, button { margin-top: 0.5em; }
+    .success { color: green; }
+    .error { color: red; }
+  </style>
+</head>
+<body>
+  <h2>Upload Agreement Template for Shop</h2>
+  <form id="templateForm">
+    <label>Shop ID:
+      <input type="number" id="shopId" required />
+    </label>
+    <label>Title:
+      <input type="text" id="title" required />
+    </label>
+    <label>Agreement Text:
+      <textarea id="agreementText" required></textarea>
+    </label>
+    <label>Jurisdiction State:
+      <input type="text" id="jurisdictionState" />
+    </label>
+    <button type="submit">Upload Template</button>
+  </form>
+  <div id="result"></div>
+  <script>
+    document.getElementById('templateForm').onsubmit = async function(e) {
+      e.preventDefault();
+      const shopId = document.getElementById('shopId').value;
+      const title = document.getElementById('title').value;
+      const agreementText = document.getElementById('agreementText').value;
+      const jurisdictionState = document.getElementById('jurisdictionState').value;
+      const payload = { title, agreementText, jurisdictionState, isActive: true };
+      const res = await fetch(`/api/agreement-templates/shop/${shopId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const resultDiv = document.getElementById('result');
+      if (res.ok) {
+        resultDiv.innerHTML = '<span class="success">Template uploaded and activated!</span>';
+      } else {
+        const err = await res.text();
+        resultDiv.innerHTML = '<span class="error">Failed: ' + err + '</span>';
+      }
+    };
+  </script>
+</body>
+</html>

@@ -1,6 +1,6 @@
 package com.finetune.app.model.dto;
 
-import com.finetune.app.model.entity.WorkOrderNote;
+import com.finetune.app.model.WorkOrderNote;
 import java.time.LocalDateTime;
 
 /**

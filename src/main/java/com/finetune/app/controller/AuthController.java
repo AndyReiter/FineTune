@@ -2,8 +2,8 @@ package com.finetune.app.controller;
 
 import com.finetune.app.model.dto.LoginRequest;
 import com.finetune.app.model.dto.LoginResponse;
-import com.finetune.app.model.entity.Staff;
-import com.finetune.app.repository.StaffRepository;
+import com.finetune.app.model.Staff;
+import com.finetune.app.repository.sql.StaffSqlRepository;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -21,7 +21,7 @@ import java.util.Optional;
 public class AuthController {
 
     @Autowired
-    private StaffRepository staffRepository;
+    private StaffSqlRepository staffRepository;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
