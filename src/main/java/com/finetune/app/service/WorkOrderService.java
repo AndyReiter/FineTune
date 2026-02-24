@@ -55,6 +55,7 @@ public class WorkOrderService {
     private final CustomerSqlRepository customerRepository;
     private final EquipmentSqlRepository equipmentRepository;
     private final BootSqlRepository bootRepository;
+    private final com.finetune.app.repository.sql.WorkOrderItemSqlRepository workOrderItemRepository;
     private final CustomerService customerService;
     private final StaffSettingsService staffSettingsService;
 
@@ -63,12 +64,14 @@ public class WorkOrderService {
             CustomerSqlRepository customerRepository,
             EquipmentSqlRepository equipmentRepository,
             BootSqlRepository bootRepository,
+            com.finetune.app.repository.sql.WorkOrderItemSqlRepository workOrderItemRepository,
             CustomerService customerService,
             StaffSettingsService staffSettingsService) {
         this.workOrderRepository = workOrderRepository;
         this.customerRepository = customerRepository;
         this.equipmentRepository = equipmentRepository;
         this.bootRepository = bootRepository;
+        this.workOrderItemRepository = workOrderItemRepository;
         this.customerService = customerService;
         this.staffSettingsService = staffSettingsService;
     }
@@ -170,9 +173,12 @@ public class WorkOrderService {
         if (request.getEquipment() != null && !request.getEquipment().isEmpty()) {
             EquipmentItemRequest firstItem = request.getEquipment().get(0);
             
-            // For mount services, resolve boot first to check for duplicates
+            // For mount services, validate and resolve boot first to check for duplicates
             Boot bootForDuplicateCheck = null;
             if ("MOUNT".equals(firstItem.getServiceType())) {
+                // Validate mount requirements on the first item before attempting to use/create boots
+                validateMountRequest(customer, firstItem);
+
                 if (firstItem.getBootId() != null) {
                     bootForDuplicateCheck = bootRepository.findById(firstItem.getBootId()).orElse(null);
                 } else {
@@ -214,6 +220,9 @@ public class WorkOrderService {
                 workOrder = new WorkOrder();
                 if (customerCreated) {
                     workOrder.setStatus(WorkOrderStatus.CUSTOMER_SUBMITTED.name());
+                } else {
+                    // Staff-created work orders should default to RECEIVED
+                    workOrder.setStatus(WorkOrderStatus.RECEIVED.name());
                 }
                 workOrder.setCreatedAt(LocalDateTime.now());
                 workOrder.setPromisedBy(request.getPromisedBy());
@@ -329,8 +338,14 @@ public class WorkOrderService {
                 if (newBoot.getAge() != null) age = newBoot.getAge();
                 if (newBoot.getSkiAbilityLevel() != null) skiAbilityLevel = newBoot.getSkiAbilityLevel();
             }
-            boot = findOrCreateBoot(customer.getId(), bootBrand, bootModel, bsl, heightInches, weight, age, skiAbilityLevel);
+            // Validate mount request before attempting to create/find boots
             validateMountRequest(customer, equipReq);
+            // If caller provided an existing bootId, load that boot instead of creating
+            if (equipReq.getBootId() != null) {
+                boot = bootRepository.findById(equipReq.getBootId()).orElseThrow(() -> new IllegalArgumentException("Boot not found: " + equipReq.getBootId()));
+            } else {
+                boot = findOrCreateBoot(customer.getId(), bootBrand, bootModel, bsl, heightInches, weight, age, skiAbilityLevel);
+            }
             // Boot will be attached when creating the new Equipment instance
             // Binding info is handled during equipment creation.
         }
@@ -373,8 +388,14 @@ public class WorkOrderService {
         
         // Handle boot for MOUNT services
         if ("MOUNT".equals(equipReq.getServiceType())) {
-            Boot boot = findOrCreateBoot(customer.getId(), equipReq.getBootBrand(), equipReq.getBootModel(), equipReq.getBsl(), equipReq.getHeightInches(), equipReq.getWeight(), equipReq.getAge(), equipReq.getSkiAbilityLevel());
+            // Validate mount request before attempting to find/create boots
             validateMountRequest(customer, equipReq);
+            Boot boot;
+            if (equipReq.getBootId() != null) {
+                boot = bootRepository.findById(equipReq.getBootId()).orElseThrow(() -> new IllegalArgumentException("Boot not found: " + equipReq.getBootId()));
+            } else {
+                boot = findOrCreateBoot(customer.getId(), equipReq.getBootBrand(), equipReq.getBootModel(), equipReq.getBsl(), equipReq.getHeightInches(), equipReq.getWeight(), equipReq.getAge(), equipReq.getSkiAbilityLevel());
+            }
             // Attach boot to equipment and update binding info
             equipment.setBoot(boot);
             equipment.setBindingBrand(equipReq.getBindingBrand());
@@ -386,8 +407,15 @@ public class WorkOrderService {
             workOrder.addEquipment(equipment);
         }
         
-        // Save equipment changes (including work_order_id relationship)
+        // Update last work order pointer and save equipment changes.
+        // New design: create work_order_items association instead of setting equipment.work_order_id
+        equipment.setLastWorkOrderId(workOrder.getId());
         equipmentRepository.save(equipment);
+        try {
+            workOrderItemRepository.addEquipmentToWorkOrder(workOrder.getId(), equipment.getId());
+        } catch (Exception ex) {
+            System.err.println("Failed to create work_order_items association for equipment id: " + equipment.getId() + " - " + ex.getMessage());
+        }
     }
 
     /**
@@ -540,8 +568,14 @@ public class WorkOrderService {
         // Remove bidirectional and cascade persistence logic
         // Set explicit foreign keys
         equipment.setCustomerId(customer.getId());
-        equipment.setWorkOrderId(workOrder.getId());
+        // Record the association for audit/history
+        equipment.setLastWorkOrderId(workOrder.getId());
         equipmentRepository.save(equipment);
+        try {
+            workOrderItemRepository.addEquipmentToWorkOrder(workOrder.getId(), equipment.getId());
+        } catch (Exception ex) {
+            System.err.println("Failed to create work_order_items association for new equipment id: " + equipment.getId() + " - " + ex.getMessage());
+        }
         
         // 2. Attach to work order (reference only, no cascade)
         // Guard: Prevent duplicate equipment entries in work order
@@ -935,14 +969,18 @@ public class WorkOrderService {
         }
 
         // VALIDATION: ALL items must be DONE (no partial pickups allowed)
-        List<Equipment> nonDoneItems = workOrder.getEquipment().stream()
+        List<Long> equipmentIds = workOrderItemRepository.findEquipmentIdsByWorkOrderId(workOrderId);
+        List<Equipment> equipmentList = equipmentIds.stream()
+            .map(id -> equipmentRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("Equipment not found: " + id)))
+            .collect(Collectors.toList());
+
+        List<Equipment> nonDoneItems = equipmentList.stream()
             .filter(item -> !"DONE".equals(item.getStatus()))
             .collect(Collectors.toList());
-        
+
         if (!nonDoneItems.isEmpty()) {
             String itemStatuses = nonDoneItems.stream()
-                .map(item -> String.format("%s %s (%s): %s", 
-                    item.getBrand(), item.getModel(), item.getServiceType(), item.getStatus()))
+                .map(item -> String.format("%s %s (%s): %s", item.getBrand(), item.getModel(), item.getServiceType(), item.getStatus()))
                 .collect(Collectors.joining(", "));
             throw new IllegalArgumentException(
                 String.format("Cannot pickup work order: %d items are not DONE: %s. All items must be DONE before pickup.",
@@ -950,18 +988,39 @@ public class WorkOrderService {
         }
 
         // ATOMIC OPERATION: Update ALL items to PICKED_UP
-        workOrder.getEquipment().forEach(item -> {
-            item.setStatus("PICKED_UP");
-        });
+        equipmentList.forEach(item -> item.setStatus("PICKED_UP"));
         
         // Set work order status to COMPLETED and record completion timestamp
         workOrder.setStatus(WorkOrderStatus.COMPLETED.name());
         workOrder.setCompletedDate(LocalDateTime.now());
         
         // Persist each equipment update explicitly (avoid customer cascade)
-        workOrder.getEquipment().forEach(item -> equipmentRepository.save(item));
+        for (Equipment item : equipmentList) {
+            try {
+                equipmentRepository.save(item);
+            } catch (Exception ex) {
+                System.err.println("Failed to persist equipment update for id=" + item.getId() + " - " + ex.getMessage());
+            }
+        }
+
+        // Set work order status to COMPLETED and record completion timestamp
+        workOrder.setStatus(WorkOrderStatus.COMPLETED.name());
+        LocalDateTime completedAt = LocalDateTime.now();
+        workOrder.setCompletedDate(completedAt);
+
+        // Mark work_order_items as completed (store completed_at)
+        try {
+            java.sql.Timestamp completedTs = java.sql.Timestamp.valueOf(completedAt);
+            workOrderItemRepository.markWorkOrderItemsCompleted(workOrderId, completedTs);
+        } catch (Exception ex) {
+            System.err.println("Failed to mark work_order_items completed for workOrderId=" + workOrderId + " - " + ex.getMessage());
+        }
+
         // Save work order status change (transactional - either all succeed or all fail)
         workOrderRepository.save(workOrder);
+
+        // Refresh equipment collection on returned workOrder to reflect updated statuses
+        workOrder.setEquipment(equipmentList);
         return workOrder;
     }
 

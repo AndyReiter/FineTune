@@ -1245,9 +1245,9 @@ body {
   <!-- Sidebar -->
   <aside class="sidebar">
     <div class="sidebar-header">
-      <a href="#" class="logo">
-        <i class="fas fa-tools"></i>
-        FineTune
+      <a href="#" class="logo" id="sidebarLogo">
+        <img id="shopLogo" src="" alt="Shop Logo" style="max-height:40px; width:auto; border-radius:6px; display:none; margin-right:8px;" />
+        <span id="shopName">FineTune</span>
       </a>
     </div>
     <nav>
@@ -1762,6 +1762,39 @@ body {
   };
 
   /* ===============================
+     Shop branding (logo + name)
+     =============================== */
+  async function loadShopBranding() {
+    const shopId = 1; // default shop id used by the UI
+    try {
+      const res = await fetch(`/shops/${shopId}`);
+      if (!res.ok) return;
+      const shop = await res.json();
+      applyShopBranding(shop);
+    } catch (e) {
+      console.warn('Failed to load shop branding', e);
+    }
+  }
+
+  function applyShopBranding(shop) {
+    if (!shop) return;
+    const nameEl = document.getElementById('shopName');
+    const logoEl = document.getElementById('shopLogo');
+    if (nameEl && shop.name) nameEl.textContent = shop.name;
+    if (logoEl && shop.logoUrl) {
+      logoEl.src = shop.logoUrl;
+      logoEl.style.display = 'inline-block';
+    }
+    // Update page title
+    if (shop.name) document.title = shop.name + ' - Staff Dashboard';
+  }
+
+  // Load branding on initial page load
+  document.addEventListener('DOMContentLoaded', () => {
+    loadShopBranding();
+  });
+
+  /* ===============================
      Load Order for Editing
      =============================== */
   async function loadOrderForEditing(orderId) {
@@ -2092,6 +2125,17 @@ body {
         <i class="fas fa-check-circle"></i> Confirm & Activate Order
       </button>
     `;
+
+    // Add a delete button for intake review to allow removing erroneous submissions
+    const deleteBtn = document.createElement('button');
+    deleteBtn.type = 'button';
+    deleteBtn.className = 'secondary-button';
+    deleteBtn.style.background = '#fff0f0';
+    deleteBtn.style.color = '#9b1c1c';
+    deleteBtn.style.border = '1px solid #fca5a5';
+    deleteBtn.innerHTML = '<i class="fas fa-trash"></i> Delete Order';
+    deleteBtn.onclick = () => deleteWorkOrder(orderId);
+    modalFooter.insertBefore(deleteBtn, modalFooter.firstChild);
   }
 
   /* ===============================
@@ -2162,6 +2206,27 @@ body {
       const confirmBtn = event.target.closest('button');
       confirmBtn.disabled = false;
       confirmBtn.innerHTML = originalText;
+    }
+  }
+
+  // Delete a work order (used from intake review)
+  async function deleteWorkOrder(orderId) {
+    if (!confirm('Are you sure you want to permanently delete work order #' + orderId + '? This action cannot be undone.')) return;
+    try {
+      const res = await APIUtils.authenticatedFetch(`${API_CONFIG.WORKORDERS}/${orderId}`, { method: 'DELETE' });
+      if (res.ok) {
+        closeEditModal();
+        refreshCurrentTab();
+        ValidationUtils.showMessage('listMessage', `✓ Work order #${orderId} deleted.`, 'success');
+      } else if (res.status === 404) {
+        alert('Work order not found. It may have already been deleted.');
+      } else {
+        const body = await res.text();
+        throw new Error(body || 'Failed to delete work order');
+      }
+    } catch (err) {
+      console.error('Delete work order failed', err);
+      alert('Failed to delete work order: ' + err.message);
     }
   }
 

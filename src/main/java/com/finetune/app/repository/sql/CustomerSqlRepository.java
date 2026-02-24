@@ -2,6 +2,8 @@
 package com.finetune.app.repository.sql;
 
 import com.finetune.app.model.Customer;
+import com.finetune.app.model.Boot;
+import com.finetune.app.repository.sql.BootSqlRepository;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
@@ -11,9 +13,11 @@ import java.util.Optional;
 @Repository
 public class CustomerSqlRepository {
     private final JdbcTemplate jdbcTemplate;
+    private final BootSqlRepository bootRepository;
 
-    public CustomerSqlRepository(JdbcTemplate jdbcTemplate) {
+    public CustomerSqlRepository(JdbcTemplate jdbcTemplate, BootSqlRepository bootRepository) {
         this.jdbcTemplate = jdbcTemplate;
+        this.bootRepository = bootRepository;
     }
 
     private final RowMapper<Customer> customerRowMapper = (rs, rowNum) -> {
@@ -93,6 +97,11 @@ public class CustomerSqlRepository {
     }
     public Optional<Customer> findByEmailAndPhone(String email, String phone) {
         List<Customer> customers = jdbcTemplate.query("SELECT * FROM customers WHERE email = ? AND phone = ?", customerRowMapper, email, phone);
-        return customers.stream().findFirst();
+        Optional<Customer> opt = customers.stream().findFirst();
+        opt.ifPresent(c -> {
+            List<Boot> boots = bootRepository.findByCustomerId(c.getId());
+            c.setBoots(boots);
+        });
+        return opt;
     }
 }

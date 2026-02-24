@@ -1,6 +1,6 @@
 package com.finetune.app.model;
 import com.fasterxml.jackson.annotation.JsonBackReference;
-
+import java.time.Instant;
 
 public class Shop {
         public void setLocationId(long locationId) {
@@ -14,6 +14,8 @@ public class Shop {
     private String name;
     private String status;
     private String logoUrl;
+    private String slug;
+    private Instant createdAt;
     private Location location;
 
     public Shop() {}
@@ -64,5 +66,21 @@ public class Shop {
 
     public void setLogoUrl(String logoUrl) {
         this.logoUrl = logoUrl;
+    }
+
+    public String getSlug() {
+        return slug;
+    }
+
+    public void setSlug(String slug) {
+        this.slug = slug;
+    }
+
+    public Instant getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(Instant createdAt) {
+        this.createdAt = createdAt;
     }
 }

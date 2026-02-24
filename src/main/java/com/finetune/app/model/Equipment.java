@@ -66,6 +66,9 @@ public class Equipment {
 
     private Customer customer;
 
+    // Tracks the last work order this equipment was attached to (helps auditing/history)
+    private Long lastWorkOrderId;
+
     // Constructor
     public Equipment() {
         this.status = "PENDING";
@@ -127,6 +130,22 @@ public class Equipment {
        if (workOrder == null) workOrder = new WorkOrder();
        workOrder.setId(workOrderId);
    }
+    /**
+     * Deprecated: Equipment no longer stores `work_order_id` directly. Use
+     * `WorkOrderItem` association instead (via repository layer).
+     * This setter is retained temporarily for migration compatibility.
+     */
+    @Deprecated
+    public void setWorkOrderIdDeprecated(Long workOrderId) {
+        if (workOrder == null) workOrder = new WorkOrder();
+        workOrder.setId(workOrderId);
+    }
+     public Long getLastWorkOrderId() {
+         return lastWorkOrderId;
+     }
+     public void setLastWorkOrderId(Long lastWorkOrderId) {
+         this.lastWorkOrderId = lastWorkOrderId;
+     }
    public Customer getCustomer() {
        return customer;
    }

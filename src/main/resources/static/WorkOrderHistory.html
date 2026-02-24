@@ -769,8 +769,9 @@ body {
         params.append('search', search.trim());
       }
       
-      const url = `${window.API_CONFIG.WORKORDERS}/completed${params.toString() ? '?' + params.toString() : ''}`;
-      console.log('Fetching completed orders:', url);
+      // Backend supports serviceType filter; perform dateRange and free-text search filtering client-side
+      const url = `${window.API_CONFIG.WORKORDERS}/completed${params.has('serviceType') ? '?serviceType=' + encodeURIComponent(params.get('serviceType')) : ''}`;
+      console.log('Fetching completed orders (server):', url);
 
       const response = await APIUtils.authenticatedFetch(url);
       
@@ -779,6 +780,30 @@ body {
       }
       
       let orders = await response.json();
+      // Client-side: apply dateRange and search filters if provided
+      if (dateRange) {
+        // Extract up to two ISO dates (YYYY-MM-DD) from dateRange string
+        const matches = dateRange.match(/\d{4}-\d{2}-\d{2}/g);
+        if (matches && matches.length >= 1) {
+          const start = new Date(matches[0]);
+          const end = matches.length > 1 ? new Date(matches[1]) : start;
+          orders = orders.filter(o => {
+            const dtStr = o.completedDate || o.createdAt || o.promisedBy;
+            if (!dtStr) return false;
+            const d = new Date(dtStr);
+            return d >= start && d <= end;
+          });
+        }
+      }
+      if (search && search.trim() !== '') {
+        const q = search.trim().toLowerCase();
+        orders = orders.filter(o => {
+          return (o.customerName && o.customerName.toLowerCase().includes(q)) ||
+                 (o.customerEmail && o.customerEmail.toLowerCase().includes(q)) ||
+                 (o.customerPhone && o.customerPhone.toLowerCase().includes(q)) ||
+                 (String(o.id).includes(q));
+        });
+      }
       console.log('Received orders:', orders.length);
 
       // Sort: Primary by completedDate DESC, Secondary by promisedBy DESC

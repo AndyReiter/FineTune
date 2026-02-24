@@ -58,9 +58,11 @@ CREATE TABLE equipment (
     last_serviced_date DATE,
     last_service_type VARCHAR(255),
     work_order_id BIGINT,
+    last_work_order_id BIGINT,
     customer_id BIGINT NOT NULL,
     FOREIGN KEY (boot_id) REFERENCES boots(id),
     FOREIGN KEY (work_order_id) REFERENCES work_orders(id),
+    FOREIGN KEY (last_work_order_id) REFERENCES work_orders(id),
     FOREIGN KEY (customer_id) REFERENCES customers(id)
 );
 

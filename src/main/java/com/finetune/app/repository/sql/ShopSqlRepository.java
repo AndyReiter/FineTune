@@ -23,53 +23,57 @@ public class ShopSqlRepository {
         Shop shop = new Shop();
         shop.setId(rs.getLong("id"));
         shop.setName(rs.getString("name"));
-        shop.setStatus(rs.getString("status"));
-        shop.setLogoUrl(rs.getString("logo_url"));
-        // Map location
-        com.finetune.app.model.Location location = new com.finetune.app.model.Location();
-        location.setId(rs.getLong("location_id"));
-        shop.setLocation(location);
+        // slug may exist
+        try {
+            shop.setSlug(rs.getString("slug"));
+        } catch (Exception ignore) {}
+        // logo_url may exist
+        try {
+            shop.setLogoUrl(rs.getString("logo_url"));
+        } catch (Exception ignore) {}
+        // created_at may exist
+        try {
+            shop.setCreatedAt(rs.getTimestamp("created_at").toInstant());
+        } catch (Exception ignore) {}
         return shop;
     };
 
     public Optional<Shop> findById(Long id) {
-        List<Shop> shops = jdbcTemplate.query("SELECT * FROM shops WHERE id = ?", shopRowMapper, id);
+        List<Shop> shops = jdbcTemplate.query("SELECT id, name, slug, logo_url, created_at FROM shop WHERE id = ?", shopRowMapper, id);
         return shops.stream().findFirst();
     }
 
     public List<Shop> findAll() {
-        return jdbcTemplate.query("SELECT * FROM shops", shopRowMapper);
+        return jdbcTemplate.query("SELECT id, name, slug, logo_url, created_at FROM shop ORDER BY id ASC", shopRowMapper);
     }
 
     public List<Shop> findAllByShopId(Long shopId) {
-        return jdbcTemplate.query("SELECT * FROM shops WHERE id = ?", shopRowMapper, shopId);
+        return jdbcTemplate.query("SELECT id, name, slug, logo_url, created_at FROM shop WHERE id = ?", shopRowMapper, shopId);
     }
 
     public int insert(Shop shop) {
         return jdbcTemplate.update(
-            "INSERT INTO shops (name, status, logo_url, location_id) VALUES (?, ?, ?, ?)",
-            shop.getName(), shop.getStatus(), shop.getLogoUrl(),
-            shop.getLocation() != null ? shop.getLocation().getId() : null
+            "INSERT INTO shop (name, slug, logo_url) VALUES (?, ?, ?)",
+            shop.getName(), shop.getSlug(), shop.getLogoUrl()
         );
     }
 
     public int update(Shop shop) {
         return jdbcTemplate.update(
-            "UPDATE shops SET name = ?, status = ?, logo_url = ?, location_id = ? WHERE id = ?",
-            shop.getName(), shop.getStatus(), shop.getLogoUrl(),
-            shop.getLocation() != null ? shop.getLocation().getId() : null,
+            "UPDATE shop SET name = ?, slug = ?, logo_url = ? WHERE id = ?",
+            shop.getName(), shop.getSlug(), shop.getLogoUrl(),
             shop.getId()
         );
     }
 
     public int delete(Long id) {
-        return jdbcTemplate.update("DELETE FROM shops WHERE id = ?", id);
+        return jdbcTemplate.update("DELETE FROM shop WHERE id = ?", id);
     }
     public List<Shop> findByLocation(com.finetune.app.model.Location location) {
         if (location == null || location.getId() == null) {
             return List.of();
         }
-        return jdbcTemplate.query("SELECT * FROM shops WHERE location_id = ?", shopRowMapper, location.getId());
+        return jdbcTemplate.query("SELECT id, name, slug, logo_url, created_at FROM shop WHERE location_id = ?", shopRowMapper, location.getId());
     }
 
     public int save(Shop shop) {
@@ -81,7 +85,7 @@ public class ShopSqlRepository {
     }
 
     public java.util.Optional<Shop> findLastInserted() {
-        List<Shop> shops = jdbcTemplate.query("SELECT * FROM shops ORDER BY id DESC LIMIT 1", shopRowMapper);
+        List<Shop> shops = jdbcTemplate.query("SELECT id, name, slug, logo_url, created_at FROM shop ORDER BY id DESC LIMIT 1", shopRowMapper);
         return shops.stream().findFirst();
     }
 }

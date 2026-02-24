@@ -182,6 +182,21 @@ public class WorkOrderSqlRepository {
     }
 
     public void deleteById(Long id) {
+        // Delete dependent records first to satisfy FK constraints
+        try {
+            // Delete work order notes
+            jdbcTemplate.update("DELETE FROM work_order_notes WHERE work_order_id = ?", id);
+        } catch (Exception ignore) {}
+        try {
+            // Delete signed agreements (and leave any stored files to external cleanup)
+            jdbcTemplate.update("DELETE FROM signed_agreements WHERE work_order_id = ?", id);
+        } catch (Exception ignore) {}
+        try {
+            // Delete work_order_items associations for this work order (equipment rows are preserved)
+            jdbcTemplate.update("DELETE FROM work_order_items WHERE work_order_id = ?", id);
+        } catch (Exception ignore) {}
+
+        // Finally delete the work order itself
         jdbcTemplate.update("DELETE FROM work_orders WHERE id = ?", id);
     }
 }
