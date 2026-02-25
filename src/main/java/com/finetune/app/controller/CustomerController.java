@@ -13,6 +13,7 @@ import com.finetune.app.model.Equipment;
 import com.finetune.app.repository.sql.CustomerSqlRepository;
 import com.finetune.app.repository.sql.EquipmentSqlRepository;
 import com.finetune.app.repository.sql.BootSqlRepository;
+import com.finetune.app.repository.sql.WorkOrderSqlRepository;
 import com.finetune.app.service.CustomerService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.HttpStatus;
@@ -39,12 +40,13 @@ public class CustomerController {
     private final CustomerService customerService;
     private final EquipmentSqlRepository equipmentRepository;
     private final BootSqlRepository bootRepository;
-
-    public CustomerController(CustomerSqlRepository customerRepository, CustomerService customerService, EquipmentSqlRepository equipmentRepository, BootSqlRepository bootRepository) {
+    private final WorkOrderSqlRepository workOrderRepository;
+    public CustomerController(CustomerSqlRepository customerRepository, CustomerService customerService, EquipmentSqlRepository equipmentRepository, BootSqlRepository bootRepository, WorkOrderSqlRepository workOrderRepository) {
         this.customerRepository = customerRepository;
         this.customerService = customerService;
         this.equipmentRepository = equipmentRepository;
         this.bootRepository = bootRepository;
+        this.workOrderRepository = workOrderRepository;
     }
 
     /**
@@ -158,15 +160,15 @@ public class CustomerController {
      */
     @GetMapping("/{id}/workorders")
     public ResponseEntity<List<WorkOrderResponse>> getCustomerWorkOrders(@PathVariable Long id) {
-        return customerRepository.findById(id)
-            .map(customer -> {
-                List<WorkOrderResponse> workOrders = customer.getWorkOrders()
-                    .stream()
-                    .map(WorkOrderResponse::fromEntity)
-                    .collect(Collectors.toList());
-                return ResponseEntity.ok(workOrders);
-            })
-            .orElse(ResponseEntity.notFound().build());
+        // Load work orders directly from repository to ensure equipment + boot details are included
+        if (!customerRepository.findById(id).isPresent()) {
+            return ResponseEntity.notFound().build();
+        }
+        List<WorkOrderResponse> workOrders = workOrderRepository.findByCustomerId(id)
+            .stream()
+            .map(WorkOrderResponse::fromEntity)
+            .collect(Collectors.toList());
+        return ResponseEntity.ok(workOrders);
     }
 
     /**

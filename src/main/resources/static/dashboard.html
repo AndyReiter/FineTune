@@ -1935,6 +1935,11 @@ body {
                 <span class="service-badge">${item.serviceType.replace(/_/g, ' ')}</span>
                 <span class="item-status-badge status-${item.status}">${item.status.replace(/_/g, ' ')}</span>
               </div>
+              ${ (item.serviceType === 'MOUNT' && item.boot) ? `
+                <div style="font-style: italic; color: #3730a3; margin-top: 8px; font-size: 13px;">
+                  <strong style="color: #4f46e5;">Boot:</strong> ${item.boot.brand || ''} ${item.boot.model || ''} ${item.boot.bsl ? '(BSL: ' + item.boot.bsl + ')' : ''}
+                </div>
+              ` : '' }
             </div>
             <select 
               class="equipment-status-dropdown" 
@@ -2101,6 +2106,11 @@ body {
               <span class="service-badge">${item.serviceType.replace(/_/g, ' ')}</span>
               <span class="item-status-badge status-${item.status}">${item.status.replace(/_/g, ' ')}</span>
             </div>
+            ${ (item.serviceType === 'MOUNT' && item.boot) ? `
+              <div style="font-style: italic; color: #3730a3; margin-top: 8px; font-size: 13px;">
+                <strong style="color: #4f46e5;">Boot:</strong> ${item.boot.brand || ''} ${item.boot.model || ''} ${item.boot.bsl ? '(BSL: ' + item.boot.bsl + ')' : ''}
+              </div>
+            ` : '' }
           </div>
         </div>
       `).join("");
@@ -4207,7 +4217,7 @@ body {
         const totalCount = equipment.length;
 
         const equipmentSummary = equipment.length > 0 
-          ? `${equipment.map(equip => `${equip.brand} ${equip.model} <span style="font-weight: 700; color: #3b82f6;">(${equip.serviceType})</span> ${getModernStatusBadge(equip.status)}`).join("<br>")}<span class="note-icon" onclick="showWorkOrderNotesPopup(${order.id})" title="View work order notes" style="margin-left: 8px;"><i class="fas fa-sticky-note"></i></span>`
+          ? `${equipment.map(equip => `${equip.brand} ${equip.model} <span style="font-weight: 700; color: #3b82f6;">(${equip.serviceType})</span> ${getModernStatusBadge(equip.status)} ${ (equip.serviceType === 'MOUNT' && equip.boot) ? `<div style="font-style: italic; color: #3730a3; font-size:13px; margin-top:4px;">Boot: ${equip.boot.brand || ''} ${equip.boot.model || ''} ${equip.boot.bsl ? '(BSL: ' + equip.boot.bsl + ')' : ''}</div>` : ''}`).join("<br>")}<span class="note-icon" onclick="showWorkOrderNotesPopup(${order.id})" title="View work order notes" style="margin-left: 8px;"><i class="fas fa-sticky-note"></i></span>`
           : "No equipment";
 
         row.innerHTML = `
@@ -4310,7 +4320,7 @@ body {
         const totalCount = equipment.length;
 
         const equipmentSummary = equipment.length > 0 
-          ? `${equipment.map(equip => `${equip.brand} ${equip.model} <span style="font-weight: 700; color: #3b82f6;">(${equip.serviceType})</span> ${getModernStatusBadge(equip.status)}`).join("<br>")}<span class="note-icon" onclick="showWorkOrderNotesPopup(${order.id})" title="View work order notes" style="margin-left: 8px;"><i class="fas fa-sticky-note"></i></span>`
+          ? `${equipment.map(equip => `${equip.brand} ${equip.model} <span style="font-weight: 700; color: #3b82f6;">(${equip.serviceType})</span> ${getModernStatusBadge(equip.status)} ${ (equip.serviceType === 'MOUNT' && equip.boot) ? `<div style="font-style: italic; color: #3730a3; font-size:13px; margin-top:4px;">Boot: ${equip.boot.brand || ''} ${equip.boot.model || ''} ${equip.boot.bsl ? '(BSL: ' + equip.boot.bsl + ')' : ''}</div>` : ''}`).join("<br>")}<span class="note-icon" onclick="showWorkOrderNotesPopup(${order.id})" title="View work order notes" style="margin-left: 8px;"><i class="fas fa-sticky-note"></i></span>`
           : "No equipment";
 
         row.innerHTML = `

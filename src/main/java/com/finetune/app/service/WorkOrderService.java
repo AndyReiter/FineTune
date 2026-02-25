@@ -320,30 +320,31 @@ public class WorkOrderService {
         
         // Step 2: Handle boot for mount service type (for new equipment)
         if ("MOUNT".equals(equipReq.getServiceType())) {
-            // Extract boot fields from request/newBoot
-            String bootBrand = equipReq.getBootBrand();
-            String bootModel = equipReq.getBootModel();
-            Integer bsl = equipReq.getBsl();
-            Integer heightInches = equipReq.getHeightInches();
-            Integer weight = equipReq.getWeight();
-            Integer age = equipReq.getAge();
-            com.finetune.app.model.Equipment.AbilityLevel skiAbilityLevel = equipReq.getSkiAbilityLevel();
-            if (equipReq.getNewBoot() != null) {
-                var newBoot = equipReq.getNewBoot();
-                if (newBoot.getBrand() != null) bootBrand = newBoot.getBrand();
-                if (newBoot.getModel() != null) bootModel = newBoot.getModel();
-                if (newBoot.getBsl() != null) bsl = newBoot.getBsl();
-                if (newBoot.getHeightInches() != null) heightInches = newBoot.getHeightInches();
-                if (newBoot.getWeight() != null) weight = newBoot.getWeight();
-                if (newBoot.getAge() != null) age = newBoot.getAge();
-                if (newBoot.getSkiAbilityLevel() != null) skiAbilityLevel = newBoot.getSkiAbilityLevel();
-            }
-            // Validate mount request before attempting to create/find boots
-            validateMountRequest(customer, equipReq);
-            // If caller provided an existing bootId, load that boot instead of creating
+            // If an existing boot was selected, load it and skip creating a new DB row
             if (equipReq.getBootId() != null) {
-                boot = bootRepository.findById(equipReq.getBootId()).orElseThrow(() -> new IllegalArgumentException("Boot not found: " + equipReq.getBootId()));
+                boot = bootRepository.findById(equipReq.getBootId())
+                    .orElseThrow(() -> new IllegalArgumentException("Boot not found with ID: " + equipReq.getBootId()));
             } else {
+                // Extract boot fields from request/newBoot
+                String bootBrand = equipReq.getBootBrand();
+                String bootModel = equipReq.getBootModel();
+                Integer bsl = equipReq.getBsl();
+                Integer heightInches = equipReq.getHeightInches();
+                Integer weight = equipReq.getWeight();
+                Integer age = equipReq.getAge();
+                com.finetune.app.model.Equipment.AbilityLevel skiAbilityLevel = equipReq.getSkiAbilityLevel();
+                if (equipReq.getNewBoot() != null) {
+                    var newBoot = equipReq.getNewBoot();
+                    if (newBoot.getBrand() != null) bootBrand = newBoot.getBrand();
+                    if (newBoot.getModel() != null) bootModel = newBoot.getModel();
+                    if (newBoot.getBsl() != null) bsl = newBoot.getBsl();
+                    if (newBoot.getHeightInches() != null) heightInches = newBoot.getHeightInches();
+                    if (newBoot.getWeight() != null) weight = newBoot.getWeight();
+                    if (newBoot.getAge() != null) age = newBoot.getAge();
+                    if (newBoot.getSkiAbilityLevel() != null) skiAbilityLevel = newBoot.getSkiAbilityLevel();
+                }
+                // Validate mount request before attempting to create/find boots
+                validateMountRequest(customer, equipReq);
                 boot = findOrCreateBoot(customer.getId(), bootBrand, bootModel, bsl, heightInches, weight, age, skiAbilityLevel);
             }
             // Boot will be attached when creating the new Equipment instance
@@ -388,18 +389,22 @@ public class WorkOrderService {
         
         // Handle boot for MOUNT services
         if ("MOUNT".equals(equipReq.getServiceType())) {
-            // Validate mount request before attempting to find/create boots
-            validateMountRequest(customer, equipReq);
-            Boot boot;
+            // If the request refers to an existing boot, load it and attach
             if (equipReq.getBootId() != null) {
-                boot = bootRepository.findById(equipReq.getBootId()).orElseThrow(() -> new IllegalArgumentException("Boot not found: " + equipReq.getBootId()));
+                Boot boot = bootRepository.findById(equipReq.getBootId())
+                    .orElseThrow(() -> new IllegalArgumentException("Boot not found with ID: " + equipReq.getBootId()));
+                equipment.setBoot(boot);
+                equipment.setBindingBrand(equipReq.getBindingBrand());
+                equipment.setBindingModel(equipReq.getBindingModel());
             } else {
-                boot = findOrCreateBoot(customer.getId(), equipReq.getBootBrand(), equipReq.getBootModel(), equipReq.getBsl(), equipReq.getHeightInches(), equipReq.getWeight(), equipReq.getAge(), equipReq.getSkiAbilityLevel());
+                // Validate mount request before attempting to find/create boots
+                validateMountRequest(customer, equipReq);
+                Boot boot = findOrCreateBoot(customer.getId(), equipReq.getBootBrand(), equipReq.getBootModel(), equipReq.getBsl(), equipReq.getHeightInches(), equipReq.getWeight(), equipReq.getAge(), equipReq.getSkiAbilityLevel());
+                // Attach boot to equipment and update binding info
+                equipment.setBoot(boot);
+                equipment.setBindingBrand(equipReq.getBindingBrand());
+                equipment.setBindingModel(equipReq.getBindingModel());
             }
-            // Attach boot to equipment and update binding info
-            equipment.setBoot(boot);
-            equipment.setBindingBrand(equipReq.getBindingBrand());
-            equipment.setBindingModel(equipReq.getBindingModel());
         }
         
         // Attach to work order (prevent duplicates)

@@ -103,7 +103,8 @@ public class WorkOrderSqlRepository {
     }
 
     public List<WorkOrder> findCompletedWorkOrdersOrderByCompletedDateDesc() {
-        List<WorkOrder> list = jdbcTemplate.query("SELECT * FROM work_orders WHERE status = 'PICKED_UP' ORDER BY completed_date DESC", workOrderRowMapper);
+        // Include both COMPLETED and PICKED_UP statuses as "completed" history
+        List<WorkOrder> list = jdbcTemplate.query("SELECT * FROM work_orders WHERE status IN ('COMPLETED', 'PICKED_UP') ORDER BY completed_date DESC", workOrderRowMapper);
         enrichWorkOrders(list);
         return list;
     }
@@ -130,6 +131,16 @@ public class WorkOrderSqlRepository {
             params[i] = statuses.get(i);
         }
         List<WorkOrder> list = jdbcTemplate.query(sql, params, workOrderRowMapper);
+        enrichWorkOrders(list);
+        return list;
+    }
+
+    /**
+     * Find all work orders for a specific customer, ordered by createdAt desc.
+     * Each work order is enriched with equipment and boots.
+     */
+    public List<WorkOrder> findByCustomerId(Long customerId) {
+        List<WorkOrder> list = jdbcTemplate.query("SELECT * FROM work_orders WHERE customer_id = ? ORDER BY createdAt DESC", workOrderRowMapper, customerId);
         enrichWorkOrders(list);
         return list;
     }

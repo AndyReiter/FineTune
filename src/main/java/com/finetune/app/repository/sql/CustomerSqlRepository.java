@@ -72,7 +72,15 @@ public class CustomerSqlRepository {
 
     public Optional<Customer> findById(Long id) {
         List<Customer> customers = jdbcTemplate.query("SELECT * FROM customers WHERE id = ?", customerRowMapper, id);
-        return customers.stream().findFirst();
+        Optional<Customer> opt = customers.stream().findFirst();
+        opt.ifPresent(c -> {
+            // Load boots for customer
+            try {
+                java.util.List<Boot> boots = bootRepository.findByCustomerId(c.getId());
+                c.setBoots(boots);
+            } catch (Exception ignore) {}
+        });
+        return opt;
     }
 
     public Optional<Customer> findByEmail(String email) {

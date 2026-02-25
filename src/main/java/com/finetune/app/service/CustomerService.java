@@ -6,6 +6,9 @@ import com.finetune.app.model.Equipment;
 import com.finetune.app.model.dto.EquipmentRequest;
 import com.finetune.app.model.dto.CustomerResponseDTO;
 import com.finetune.app.repository.sql.CustomerSqlRepository;
+import com.finetune.app.repository.sql.WorkOrderSqlRepository;
+import com.finetune.app.repository.sql.EquipmentSqlRepository;
+import com.finetune.app.repository.sql.BootSqlRepository;
 import com.finetune.app.util.PhoneNumberUtils;
 import org.springframework.stereotype.Service;
 
@@ -17,14 +20,35 @@ import java.util.stream.Collectors;
 public class CustomerService {
 
     private final CustomerSqlRepository customerRepository;
+    private final WorkOrderSqlRepository workOrderRepository;
+    private final EquipmentSqlRepository equipmentRepository;
+    private final BootSqlRepository bootRepository;
 
-    public CustomerService(CustomerSqlRepository customerRepository) {
+    public CustomerService(CustomerSqlRepository customerRepository, WorkOrderSqlRepository workOrderRepository, EquipmentSqlRepository equipmentRepository, BootSqlRepository bootRepository) {
         this.customerRepository = customerRepository;
+        this.workOrderRepository = workOrderRepository;
+        this.equipmentRepository = equipmentRepository;
+        this.bootRepository = bootRepository;
     }
 
     public List<CustomerResponseDTO> getAllCustomers() {
         return customerRepository.findAll().stream()
-            .map(CustomerResponseDTO::fromEntity)
+            .map(c -> {
+                CustomerResponseDTO dto = CustomerResponseDTO.fromEntity(c);
+                try {
+                    int woCount = workOrderRepository.findByCustomerId(c.getId()).size();
+                    dto.setWorkOrderCount(woCount);
+                } catch (Exception ignore) {}
+                try {
+                    int eqCount = equipmentRepository.findByCustomerId(c.getId()).size();
+                    dto.setEquipmentCount(eqCount);
+                } catch (Exception ignore) {}
+                try {
+                    int bCount = bootRepository.findByCustomerId(c.getId()).size();
+                    dto.setBootCount(bCount);
+                } catch (Exception ignore) {}
+                return dto;
+            })
             .collect(Collectors.toList());
     }
 
