@@ -1,15 +1,32 @@
 package com.finetune.app.config;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
+
+	@Autowired
+	private ResolveShopFromSubdomainInterceptor resolveShopFromSubdomainInterceptor;
+
+	@Autowired
+	private ShopAccessInterceptor shopAccessInterceptor;
+
 	@Override
 	public void addResourceHandlers(ResourceHandlerRegistry registry) {
 		registry.addResourceHandler("/uploads/shops/**")
 				.addResourceLocations("file:" + System.getProperty("user.dir") + "/uploads/shops/");
+	}
+
+	@Override
+	public void addInterceptors(InterceptorRegistry registry) {
+		// Apply to protected API routes. Adjust the pattern as needed.
+		registry.addInterceptor(resolveShopFromSubdomainInterceptor).addPathPatterns("/api/**");
+		// Enforce shop membership on shop-specific endpoints like workorders
+		registry.addInterceptor(shopAccessInterceptor).addPathPatterns("/api/workorders/**");
 	}
 }
 // package com.finetune.app.config;

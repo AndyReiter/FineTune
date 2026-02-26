@@ -387,7 +387,7 @@
     <div class="login-container">
         <div class="login-card">
             <div class="login-header">
-                <h1 class="app-title">Summit Ski Service</h1>
+                <h1 class="app-title">FineTune</h1>
                 <p class="app-subtitle">Staff Portal</p>
             </div>
 
@@ -423,9 +423,18 @@
         </div>
     </div>
 
+    <!-- Ensure shared.js (AuthUtils) is loaded before using it -->
+    <script src="/shared.js"></script>
+
     <script>
-        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+        // Ensure handler runs and log progress
+        console.log('login.html script executing');
+        const loginForm = document.getElementById('loginForm');
+        if (!loginForm) console.error('loginForm element not found');
+
+        loginForm.addEventListener('submit', async (e) => {
             e.preventDefault();
+            console.log('loginForm submit handler fired');
 
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
@@ -435,41 +444,64 @@
             errorMessage.textContent = '';
 
             try {
-                const response = await fetch('/auth/login', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        email: email,
-                        password: password
-                    })
-                });
-
-                if (response.ok) {
-                    const data = await response.json();
-                    
-                    // Store JWT token in localStorage
-                    localStorage.setItem('token', data.token);
-                    
-                    // Check for redirect query parameter
-                    const urlParams = new URLSearchParams(window.location.search);
-                    const redirectPath = urlParams.get('redirect');
-                    
-                    // Redirect to specified path or default to dashboard.html
-                    if (redirectPath) {
-                        window.location.href = redirectPath;
-                    } else {
-                        window.location.href = '/dashboard.html';
+                // Prefer AuthUtils.login if available
+                let data = null;
+                if (window.AuthUtils && typeof window.AuthUtils.login === 'function') {
+                    try {
+                        console.log('Using window.AuthUtils.login');
+                        data = await window.AuthUtils.login(email, password);
+                        console.log('AuthUtils.login returned', data);
+                    } catch (err) {
+                        console.error('AuthUtils.login error', err);
+                        errorMessage.textContent = 'Invalid username or password';
+                        errorMessage.classList.add('show');
+                        return;
                     }
-                } else if (response.status === 401) {
-                    errorMessage.textContent = 'Invalid username or password';
-                    errorMessage.classList.add('show');
                 } else {
-                    errorMessage.textContent = 'An error occurred. Please try again.';
-                    errorMessage.classList.add('show');
+                    console.log('AuthUtils not available, using fallback fetch');
+                    // Fallback to direct fetch. Use API_CONFIG if available, otherwise use absolute URL.
+                    const authUrl = (typeof API_CONFIG !== 'undefined' && API_CONFIG && API_CONFIG.AUTH_LOGIN)
+                        ? API_CONFIG.AUTH_LOGIN
+                        : 'http://localhost:8080/auth/login';
+                    const response = await fetch(authUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                        body: JSON.stringify({ email, password })
+                    });
+                    if (!response.ok) {
+                        if (response.status === 401) {
+                            errorMessage.textContent = 'Invalid username or password';
+                        } else {
+                            errorMessage.textContent = 'An error occurred. Please try again.';
+                        }
+                        errorMessage.classList.add('show');
+                        return;
+                    }
+                    data = await response.json();
+                    // Let shared AuthUtils handle token storage when available
+                    if (window.AuthUtils && typeof window.AuthUtils.setToken === 'function' && data && data.token) {
+                        window.AuthUtils.setToken(data.token);
+                    }
+                }
+
+                // After successful login, set current shop if returned by backend
+                console.log('login.html: login success, data=', data);
+                if (data && data.shopIds && data.shopIds.length > 0) {
+                    try { localStorage.setItem('current_shop_id', String(data.shopIds[0])); } catch (e) { /* ignore */ }
+                }
+
+                // Redirect handling
+                const urlParams = new URLSearchParams(window.location.search);
+                const redirectPath = urlParams.get('redirect');
+                const target = redirectPath || '/dashboard.html';
+                console.log('login.html: redirecting to', target);
+                try {
+                    window.location.assign(target);
+                } catch (err) {
+                    console.error('login.html: redirect failed', err);
                 }
             } catch (error) {
+                console.error('Login page error', error);
                 errorMessage.textContent = 'Unable to connect to server. Please try again.';
                 errorMessage.classList.add('show');
             }

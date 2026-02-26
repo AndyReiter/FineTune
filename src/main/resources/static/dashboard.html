@@ -1693,6 +1693,33 @@ body {
   }
 
   /* ===============================
+     Shop helper
+     =============================== */
+  function getCurrentShopId() {
+    try {
+      const v = localStorage.getItem('current_shop_id');
+      if (!v) return null;
+      const n = Number(v);
+      return Number.isFinite(n) ? n : null;
+    } catch (e) { return null; }
+  }
+
+  function buildWorkOrdersUrl(params) {
+    const base = API_CONFIG.WORKORDERS;
+    const shopId = getCurrentShopId();
+    const parts = [];
+    if (params) parts.push(params);
+    if (shopId != null) parts.push('shopId=' + encodeURIComponent(shopId));
+    return parts.length ? base + '?' + parts.join('&') : base + (shopId != null ? ('?shopId=' + encodeURIComponent(shopId)) : '');
+  }
+
+  function appendShopId(url) {
+    const shopId = getCurrentShopId();
+    if (!shopId) return url;
+    return url.includes('?') ? `${url}&shopId=${encodeURIComponent(shopId)}` : `${url}?shopId=${encodeURIComponent(shopId)}`;
+  }
+
+  /* ===============================
      Authentication Management
      =============================== */
   function handleLogin() {
@@ -1799,7 +1826,7 @@ body {
      =============================== */
   async function loadOrderForEditing(orderId) {
     try {
-      const response = await APIUtils.authenticatedFetch(`${API_CONFIG.WORKORDERS}/${orderId}`);
+      const response = await APIUtils.authenticatedFetch(`${API_CONFIG.WORKORDERS}/${orderId}?shopId=${encodeURIComponent(getCurrentShopId() || '')}`);
       const order = await response.json();
 
       // Restore default modal title and footer (in case they were modified by intake review)
@@ -2223,7 +2250,7 @@ body {
   async function deleteWorkOrder(orderId) {
     if (!confirm('Are you sure you want to permanently delete work order #' + orderId + '? This action cannot be undone.')) return;
     try {
-      const res = await APIUtils.authenticatedFetch(`${API_CONFIG.WORKORDERS}/${orderId}`, { method: 'DELETE' });
+      const res = await APIUtils.authenticatedFetch(appendShopId(`${API_CONFIG.WORKORDERS}/${orderId}`), { method: 'DELETE' });
       if (res.ok) {
         closeEditModal();
         refreshCurrentTab();
@@ -2245,7 +2272,7 @@ body {
      =============================== */
   async function updateEquipmentStatus(orderId, equipmentId, newStatus) {
     try {
-      const response = await APIUtils.authenticatedFetch(`${API_CONFIG.WORKORDERS}/${orderId}/equipment/${equipmentId}/status`, {
+      const response = await APIUtils.authenticatedFetch(appendShopId(`${API_CONFIG.WORKORDERS}/${orderId}/equipment/${equipmentId}/status`), {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status: newStatus })
@@ -2275,7 +2302,7 @@ body {
       // Convert datetime-local to date only (YYYY-MM-DD)
       const promisedBy = promisedByValue ? promisedByValue.split('T')[0] : null;
       
-      const response = await APIUtils.authenticatedFetch(`${API_CONFIG.WORKORDERS}/${orderId}/promised-by`, {
+      const response = await APIUtils.authenticatedFetch(appendShopId(`${API_CONFIG.WORKORDERS}/${orderId}/promised-by`), {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ promisedBy: promisedBy })
@@ -2318,7 +2345,7 @@ body {
       
       const notes = notesTextarea.value.trim();
       
-      const response = await APIUtils.authenticatedFetch(`${API_CONFIG.WORKORDERS}/${orderId}`, {
+      const response = await APIUtils.authenticatedFetch(appendShopId(`${API_CONFIG.WORKORDERS}/${orderId}`), {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ notes: notes })
@@ -2353,7 +2380,7 @@ body {
     if (!currentEditingOrderId) return;
 
     try {
-      const response = await APIUtils.authenticatedFetch(`${API_CONFIG.WORKORDERS}/${currentEditingOrderId}/notify`, {
+      const response = await APIUtils.authenticatedFetch(appendShopId(`${API_CONFIG.WORKORDERS}/${currentEditingOrderId}/notify`), {
         method: "POST",
         headers: { "Content-Type": "application/json" }
       });
@@ -2381,7 +2408,7 @@ body {
     if (!currentEditingOrderId) return;
 
     try {
-      const response = await APIUtils.authenticatedFetch(`${API_CONFIG.WORKORDERS}/${currentEditingOrderId}/pickup`, {
+      const response = await APIUtils.authenticatedFetch(appendShopId(`${API_CONFIG.WORKORDERS}/${currentEditingOrderId}/pickup`), {
         method: "POST",
         headers: { "Content-Type": "application/json" }
       });
@@ -2450,7 +2477,7 @@ body {
     try {
       // Fetch work orders for each status and combine results
       const promises = statuses.map(status => 
-        APIUtils.authenticatedFetch(`${API_CONFIG.WORKORDERS}?status=${encodeURIComponent(status)}`)
+        APIUtils.authenticatedFetch(buildWorkOrdersUrl(`status=${encodeURIComponent(status)}`))
           .then(response => response.json())
       );
       
@@ -3067,7 +3094,7 @@ body {
       `;
       
       // Use a customer lookup endpoint with email and phone
-      const response = await APIUtils.authenticatedFetch(`${API_CONFIG.WORKORDERS}/customer/boots?email=${encodeURIComponent(email)}&phone=${encodeURIComponent(phone)}`);
+      const response = await APIUtils.authenticatedFetch(appendShopId(`${API_CONFIG.WORKORDERS}/customer/boots?email=${encodeURIComponent(email)}&phone=${encodeURIComponent(phone)}`));
       
       if (response.ok) {
         customerBoots = await response.json();
@@ -3136,7 +3163,7 @@ body {
   async function lookupCustomerEquipment(email, phone) {
     try {
       // Look up customer by email and phone to get customer ID
-      const response = await APIUtils.authenticatedFetch(`${API_CONFIG.WORKORDERS}/customer/boots?email=${encodeURIComponent(email)}&phone=${encodeURIComponent(phone)}`);
+      const response = await APIUtils.authenticatedFetch(appendShopId(`${API_CONFIG.WORKORDERS}/customer/boots?email=${encodeURIComponent(email)}&phone=${encodeURIComponent(phone)}`));
       
       if (response.ok) {
         const boots = await response.json();
@@ -4103,7 +4130,7 @@ body {
       const initialNoteText = document.getElementById('createWorkOrderNoteText')?.value.trim();
       if (initialNoteText && result.id) {
         try {
-          await APIUtils.authenticatedFetch(`${API_CONFIG.WORKORDERS}/${result.id}`, {
+          await APIUtils.authenticatedFetch(appendShopId(`${API_CONFIG.WORKORDERS}/${result.id}`), {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -4154,13 +4181,10 @@ body {
     }
 
     try {
-      let url = API_CONFIG.WORKORDERS;
-      
-      // Add status filter parameter for the specific tab
-      if (status) {
-        url += `?status=${encodeURIComponent(status)}`;
-      }
-      
+      // Build URL including shopId
+      const params = status ? `status=${encodeURIComponent(status)}` : null;
+      const url = buildWorkOrdersUrl(params);
+
       // Debug: Log the URL being called
       console.log('Fetching work orders with URL:', url);
       console.log('Status parameter:', status);
@@ -4264,7 +4288,7 @@ body {
 
     try {
       // Fetch all work orders (no status filter)
-      const response = await APIUtils.authenticatedFetch(API_CONFIG.WORKORDERS);
+      const response = await APIUtils.authenticatedFetch(buildWorkOrdersUrl());
       const allOrders = await response.json();
 
       // Filter work orders that:
@@ -4359,7 +4383,7 @@ body {
 
     try {
       // Fetch all work orders
-      const response = await APIUtils.authenticatedFetch(API_CONFIG.WORKORDERS);
+      const response = await APIUtils.authenticatedFetch(buildWorkOrdersUrl());
       const allOrders = await response.json();
 
       // Count by status
@@ -4457,7 +4481,7 @@ body {
     notesContainer.innerHTML = '<div style="padding: 20px; text-align: center; color: #64748b;"><i class="fas fa-spinner fa-spin"></i> Loading notes...</div>';
     
     try {
-      const response = await APIUtils.authenticatedFetch(`${API_CONFIG.WORKORDERS}/${orderId}`);
+      const response = await APIUtils.authenticatedFetch(appendShopId(`${API_CONFIG.WORKORDERS}/${orderId}`));
       if (!response.ok) throw new Error("Failed to load work order");
 
       const workOrder = await response.json();

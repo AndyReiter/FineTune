@@ -7,10 +7,17 @@ import com.finetune.app.repository.sql.StaffSqlRepository;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
+import com.finetune.app.config.JwtUtils;
 
 import java.util.Optional;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * AuthController handles authentication endpoints (simple version without JWT).
@@ -26,6 +33,12 @@ public class AuthController {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    @Autowired
+    private AuthenticationManager authenticationManager;
+
+    @Autowired
+    private JwtUtils jwtUtils;
+
     /**
      * Simple authentication without JWT (for testing).
      * 
@@ -35,26 +48,29 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<?> login(@Valid @RequestBody LoginRequest loginRequest) {
         try {
-            // Find staff by email
-            Optional<Staff> staffOpt = staffRepository.findByEmail(loginRequest.getEmail());
-            
-            if (staffOpt.isEmpty()) {
-                return ResponseEntity.badRequest().body("User not found");
-            }
-            
-            Staff staff = staffOpt.get();
-            
-            // Check password
-            if (!passwordEncoder.matches(loginRequest.getPassword(), staff.getPassword())) {
-                return ResponseEntity.badRequest().body("Invalid password");
+            // Authenticate using AuthenticationManager
+            UsernamePasswordAuthenticationToken authToken =
+                    new UsernamePasswordAuthenticationToken(loginRequest.getEmail(), loginRequest.getPassword());
+
+            Authentication authentication = authenticationManager.authenticate(authToken);
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+
+            // Load staff with shops for token claims
+            Optional<Staff> staffWithShops = staffRepository.findByEmailWithShops(loginRequest.getEmail());
+            Staff sForToken = staffWithShops.orElseGet(() -> staffRepository.findByEmail(loginRequest.getEmail()).orElse(null));
+
+            if (sForToken == null) {
+                return ResponseEntity.badRequest().body("User not found after authentication");
             }
 
-            // Create simple response (no JWT yet)
-            LoginResponse response = new LoginResponse("temporary-token", staff.getEmail(), staff.getRole());
-            return ResponseEntity.ok(response);
+            String token = jwtUtils.generateToken(sForToken.getId(), sForToken.getEmail(), sForToken.getShopIds());
 
+            Map<String, Object> resp = new HashMap<>();
+            resp.put("token", token);
+            resp.put("shopIds", sForToken.getShopIds() != null ? sForToken.getShopIds() : java.util.List.of());
+            return ResponseEntity.ok(resp);
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body("Login failed: " + e.getMessage());
+            return ResponseEntity.status(401).body("Login failed: " + e.getMessage());
         }
     }
 }

@@ -19,6 +19,8 @@ public class Staff {
 
     private LocalDateTime updatedAt;
 
+    private java.util.List<com.finetune.app.model.Shop> shops;
+
     // Remove JPA lifecycle methods; set timestamps manually in service/repository if needed
 
     // Constructors
@@ -77,5 +79,22 @@ public class Staff {
 
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    public java.util.List<com.finetune.app.model.Shop> getShops() {
+        return shops;
+    }
+
+    public void setShops(java.util.List<com.finetune.app.model.Shop> shops) {
+        this.shops = shops;
+    }
+
+    public java.util.List<Long> getShopIds() {
+        if (shops == null) return java.util.List.of();
+        java.util.List<Long> ids = new java.util.ArrayList<>();
+        for (com.finetune.app.model.Shop s : shops) {
+            if (s != null && s.getId() != null) ids.add(s.getId());
+        }
+        return ids;
     }
 }

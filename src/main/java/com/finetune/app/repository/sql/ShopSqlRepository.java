@@ -88,4 +88,10 @@ public class ShopSqlRepository {
         List<Shop> shops = jdbcTemplate.query("SELECT id, name, slug, logo_url, created_at FROM shop ORDER BY id DESC LIMIT 1", shopRowMapper);
         return shops.stream().findFirst();
     }
+
+    public java.util.Optional<Shop> findBySlug(String slug) {
+        if (slug == null) return java.util.Optional.empty();
+        List<Shop> shops = jdbcTemplate.query("SELECT id, name, slug, logo_url, created_at FROM shop WHERE slug = ? LIMIT 1", shopRowMapper, slug);
+        return shops.stream().findFirst();
+    }
 }

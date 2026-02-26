@@ -11,6 +11,8 @@ import java.util.List;
 @Repository
 public class StaffSqlRepository {
     private final JdbcTemplate jdbcTemplate;
+    @org.springframework.beans.factory.annotation.Autowired
+    private com.finetune.app.repository.sql.ShopSqlRepository shopRepository;
 
     public StaffSqlRepository(JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
@@ -30,6 +32,34 @@ public class StaffSqlRepository {
     public Optional<Staff> findByEmail(String email) {
         List<Staff> staff = jdbcTemplate.query("SELECT * FROM staff WHERE email = ?", staffRowMapper, email);
         return staff.stream().findFirst();
+    }
+
+    /**
+     * Find staff by email and load associated shops via staff_shops join
+     */
+    public Optional<Staff> findByEmailWithShops(String email) {
+        Optional<Staff> sOpt = findByEmail(email);
+        if (sOpt.isEmpty()) return sOpt;
+        Staff s = sOpt.get();
+
+        // Load shops for this staff
+        try {
+            List<com.finetune.app.model.Shop> shops = jdbcTemplate.query(
+                "SELECT sh.id, sh.name, sh.slug, sh.logo_url, sh.created_at FROM shop sh JOIN staff_shops ss ON sh.id = ss.shop_id WHERE ss.staff_id = ?",
+                (rs, rowNum) -> {
+                    com.finetune.app.model.Shop shop = new com.finetune.app.model.Shop();
+                    shop.setId(rs.getLong("id"));
+                    shop.setName(rs.getString("name"));
+                    try { shop.setSlug(rs.getString("slug")); } catch (Exception ignore) {}
+                    try { shop.setLogoUrl(rs.getString("logo_url")); } catch (Exception ignore) {}
+                    try { shop.setCreatedAt(rs.getTimestamp("created_at").toInstant()); } catch (Exception ignore) {}
+                    return shop;
+                }, s.getId());
+
+            s.setShops(shops);
+        } catch (Exception ignore) {}
+
+        return Optional.of(s);
     }
 
     public boolean existsByEmail(String email) {
