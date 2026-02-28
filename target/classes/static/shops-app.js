@@ -52,7 +52,7 @@ document.addEventListener('DOMContentLoaded', () => {
       let location;
       if (currentEditId) {
         // When editing shop, we need to get the existing location ID
-        const existingShop = await fetch(`${API_URL}/${currentEditId}`).then(r => r.json());
+        const existingShop = await (await APIUtils.authenticatedFetch(`${API_URL}/${currentEditId}`)).json();
         if (existingShop.location && existingShop.location.id) {
           // Update existing location
           location = await updateExistingLocation(existingShop.location.id, locationData);
@@ -115,7 +115,7 @@ async function createOrUpdateLocation(locationData) {
   try {
     console.log('Creating location with data:', locationData);
     
-    const response = await fetch(LOCATIONS_API_URL, {
+    const response = await APIUtils.authenticatedFetch(LOCATIONS_API_URL, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -162,7 +162,7 @@ async function updateExistingLocation(locationId, locationData) {
   try {
     console.log('Updating location', locationId, 'with data:', locationData);
     
-    const response = await fetch(`${LOCATIONS_API_URL}/${locationId}`, {
+    const response = await APIUtils.authenticatedFetch(`${LOCATIONS_API_URL}/${locationId}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json'
@@ -207,11 +207,10 @@ async function updateExistingLocation(locationId, locationData) {
 // Fetch all shops
 async function loadShops() {
   try {
-    const response = await fetch(API_URL);
+    const response = await APIUtils.authenticatedFetch(API_URL);
     if (!response.ok) {
       throw new Error('Failed to fetch shops');
     }
-    
     const shops = await response.json();
     displayShops(shops);
     showMessage('Shops loaded successfully', 'success');
@@ -250,7 +249,7 @@ function displayShops(shops) {
 
 // Create a new shop
 async function createShop(shopData) {
-  const response = await fetch(API_URL, {
+  const response = await APIUtils.authenticatedFetch(API_URL, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'
@@ -267,7 +266,7 @@ async function createShop(shopData) {
 
 // Update an existing shop
 async function updateShop(id, shopData) {
-  const response = await fetch(`${API_URL}/${id}`, {
+  const response = await APIUtils.authenticatedFetch(`${API_URL}/${id}`, {
     method: 'PUT',
     headers: {
       'Content-Type': 'application/json'
@@ -285,7 +284,7 @@ async function updateShop(id, shopData) {
 // Edit shop - fetch and populate form
 async function editShop(id) {
   try {
-    const response = await fetch(`${API_URL}/${id}`);
+    const response = await APIUtils.authenticatedFetch(`${API_URL}/${id}`);
     if (!response.ok) {
       throw new Error('Failed to fetch shop');
     }
@@ -316,7 +315,7 @@ async function deleteShop(id) {
   }
 
   try {
-    const response = await fetch(`${API_URL}/${id}`, {
+    const response = await APIUtils.authenticatedFetch(`${API_URL}/${id}`, {
       method: 'DELETE'
     });
 

@@ -1,12 +1,16 @@
 // Shared JavaScript utilities for Work Order system
 
 // API endpoints - Make globally available
+// Use relative URLs so API calls hit the same host/subdomain as the frontend.
+// This avoids CORS issues when running frontend on shopslug.localhost.com.
+const ORIGIN = window.location.origin;
 window.API_CONFIG = {
-  BASE_URL: "http://localhost:8080",
-  WORKORDERS: "http://localhost:8080/workorders",
-  BRANDS: "http://localhost:8080/brands",
-  AUTH_LOGIN: "http://localhost:8080/auth/login",
-  CUSTOMERS: "http://localhost:8080/api/customers"
+  BASE_URL: ORIGIN,
+  WORKORDERS: "/workorders",
+  BRANDS: "/brands",
+  AUTH_LOGIN: "/auth/login",
+  CUSTOMERS: "/api/customers",
+  AUTH_REFRESH: "/auth/refresh",
 };
 
 // Also keep const reference for backward compatibility
@@ -16,26 +20,91 @@ const API_CONFIG = window.API_CONFIG;
 
 console.log('shared.js loaded');
 
+// Helper to mask Authorization header when logging
+function _maskHeadersForLog(headers) {
+  try {
+    const copy = { ...(headers || {}) };
+    if (copy.Authorization) {
+      const parts = copy.Authorization.split(' ');
+      const scheme = parts[0];
+      const token = parts.slice(1).join(' ');
+      const shown = token ? token.slice(-6) : '';
+      copy.Authorization = `${scheme} ****${shown}`;
+    }
+    return copy;
+  } catch (e) {
+    return headers;
+  }
+}
+
 // Authentication utilities
 const AuthUtils = {
   // Get JWT token from localStorage
   getToken() {
-    return localStorage.getItem('jwt_token');
+    return localStorage.getItem('authToken');
   },
 
   // Store JWT token in localStorage
   setToken(token) {
-    localStorage.setItem('jwt_token', token);
+    localStorage.setItem('authToken', token);
   },
 
   // Remove JWT token
   clearToken() {
-    localStorage.removeItem('jwt_token');
+    localStorage.removeItem('authToken');
   },
 
   // Check if user is authenticated
   isAuthenticated() {
     return !!this.getToken();
+  },
+
+  // Require authentication on protected pages; redirect to login if missing
+  requireAuth() {
+    const token = localStorage.getItem('authToken');
+    if (!token) {
+      console.warn('AuthUtils.requireAuth: missing authToken, redirecting to /login.html');
+      try { window.location.href = '/login.html'; } catch (e) {}
+      return false;
+    }
+    return true;
+  },
+
+  // Attempt to refresh auth token by calling /auth/refresh
+  async refreshToken() {
+    console.debug('AuthUtils.refreshToken: attempting token refresh');
+    try {
+      const current = localStorage.getItem('authToken');
+      const res = await fetch(API_CONFIG.AUTH_REFRESH, {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(current ? { Authorization: `Bearer ${current}` } : {})
+        }
+      });
+
+      if (!res.ok) {
+        console.warn('AuthUtils.refreshToken: refresh request failed', res.status);
+        return false;
+      }
+
+      // Try parsing JSON response; if not JSON, fail gracefully
+      let data = null;
+      try { data = await res.json(); } catch (e) { console.warn('AuthUtils.refreshToken: non-JSON refresh response'); }
+
+      if (data && data.token) {
+        try { localStorage.setItem('authToken', data.token); } catch (e) {}
+        console.debug('AuthUtils.refreshToken: token refreshed');
+        return true;
+      }
+
+      console.warn('AuthUtils.refreshToken: no token in refresh response');
+      return false;
+    } catch (err) {
+      console.error('AuthUtils.refreshToken error', err);
+      return false;
+    }
   },
 
   // Get headers with Authorization if authenticated
@@ -54,6 +123,7 @@ const AuthUtils = {
     try {
       const response = await fetch(API_CONFIG.AUTH_LOGIN, {
         method: "POST",
+        credentials: 'include',
         headers: { "Content-Type": "application/json", "Accept": "application/json" },
         body: JSON.stringify({ email, password })
       });
@@ -95,7 +165,10 @@ const AuthUtils = {
       }
     };
 
-    return fetch(url, config);
+    console.debug('publicFetch:', url, { headers: _maskHeadersForLog(config.headers) });
+    const res = await fetch(url, config);
+    console.debug('publicFetch response', res.status, 'for', url);
+    return res;
   },
 
   // Logout function
@@ -103,10 +176,97 @@ const AuthUtils = {
     this.clearToken();
     window.location.reload();
   }
+,
+  // Auth fetch wrapper that uses localStorage 'authToken'
+  async authFetch(url, options = {}) {
+    options = { ...(options || {}) };
+    const method = (options.method || 'GET').toUpperCase();
+
+    // Build headers without overwriting user-provided headers
+    const headers = {
+      'Content-Type': 'application/json',
+      ...(options.headers || {})
+    };
+
+    const token = localStorage.getItem('authToken');
+    const tokenPresent = !!token;
+    if (tokenPresent) {
+      headers.Authorization = `Bearer ${token}`;
+      console.debug('authFetch: attached Authorization header (token present)');
+    } else {
+      console.debug('authFetch: no authToken found in localStorage');
+    }
+
+    console.debug('authFetch: request headers', _maskHeadersForLog(headers));
+
+    // Automatically stringify JSON bodies for non-GET/HEAD requests when body is a plain object
+    if (options.body && typeof options.body === 'object' && !(options.body instanceof FormData)) {
+      if (method !== 'GET' && method !== 'HEAD') {
+        try {
+          options.body = JSON.stringify(options.body);
+        } catch (e) {
+          console.warn('authFetch: failed to stringify request body', e);
+        }
+      } else {
+        // GET/HEAD should not have a body; remove it
+        delete options.body;
+      }
+    }
+
+    // Prepare final fetch options
+    const fetchOptions = { ...options, headers };
+
+    console.debug(`authFetch: ${method} ${url}`, fetchOptions);
+
+    const response = await fetch(url, { ...fetchOptions, credentials: fetchOptions.credentials || 'include' });
+
+    // Log response status
+    console.debug('authFetch: response', response.status, 'for', url);
+
+    // If unauthorized, try refresh once and retry the original request
+    if (response.status === 401) {
+      console.warn('authFetch: 401 Unauthorized - attempting token refresh');
+      try {
+        const refreshed = await AuthUtils.refreshToken();
+        if (refreshed) {
+          console.debug('authFetch: token refresh reported success');
+          // update Authorization header with new token and retry once
+          const newToken = localStorage.getItem('authToken');
+          if (newToken) {
+            headers.Authorization = `Bearer ${newToken}`;
+            console.debug('authFetch: retrying original request with refreshed token');
+            const retryOptions = { ...options, headers, _retry: true };
+            const retryRes = await fetch(url, { ...retryOptions, credentials: retryOptions.credentials || 'include' });
+            console.debug('authFetch: retry response', retryRes.status, 'for', url);
+            if (retryRes.status !== 401) return retryRes;
+            // if retry also 401 fallthrough to clear
+          }
+        }
+      } catch (e) {
+        console.error('authFetch: error during token refresh attempt', e);
+      }
+      // Refresh failed or retry failed: clear token and redirect to login only for staff pages
+      console.warn('authFetch: refresh failed or retry yielded 401 - clearing token');
+      try { localStorage.removeItem('authToken'); } catch (e) {}
+      try {
+        const path = (window.location && window.location.pathname) ? window.location.pathname.toLowerCase() : '';
+        const isPublicPage = path.includes('customer-workorder');
+        if (!isPublicPage) {
+          window.location.href = '/login.html';
+        } else {
+          console.warn('authFetch: public page detected, not redirecting to login');
+        }
+      } catch (e) {}
+    }
+
+    return response;
+  }
 };
 
 // Expose AuthUtils to global window for pages that reference window.AuthUtils
 window.AuthUtils = AuthUtils;
+// Expose authFetch globally (bound to AuthUtils so 'this' works when called directly)
+window.authFetch = AuthUtils.authFetch.bind(AuthUtils);
 
 // API utilities
 const APIUtils = {
@@ -128,20 +288,47 @@ window.APIUtils = APIUtils;
  */
 async function apiFetch(url, options = {}) {
   const token = AuthUtils.getToken();
+  // Build headers but avoid forcing Content-Type when sending FormData
   const headers = {
-    "Content-Type": "application/json",
     ...(options.headers || {})
   };
+
+  const isFormData = options && options.body && (options.body instanceof FormData);
+  if (!isFormData) {
+    // Only set JSON content-type when body is not FormData and header not already provided
+    if (!headers['Content-Type'] && !headers['content-type']) {
+      headers['Content-Type'] = 'application/json';
+    }
+  }
 
   if (token) {
     headers.Authorization = `Bearer ${token}`;
   }
 
-  const response = await fetch(url, { ...options, headers });
+  const response = await fetch(url, { ...options, headers, credentials: options.credentials || 'include' });
 
-  if (response.status === 401 || response.status === 403) {
+  if (response.status === 401) {
+    // Clear token and redirect to login for staff-only pages. Public pages (customer-workorder)
+    // must NOT be redirected to login when they receive a 401 from a public API.
     AuthUtils.clearToken();
+    try {
+      const path = (window.location && window.location.pathname) ? window.location.pathname.toLowerCase() : '';
+      const isPublicPage = path.includes('customer-workorder');
+      if (!isPublicPage) {
+        window.location.href = '/login.html';
+      } else {
+        console.warn('apiFetch: received 401 on public page; not redirecting to login');
+      }
+    } catch (e) {
+      // ignore in non-browser contexts
+    }
     throw new Error('Authentication required');
+  }
+
+  if (response.status === 403) {
+    // Forbidden - clear token as well (token may be invalid) and surface error
+    AuthUtils.clearToken();
+    throw new Error('Forbidden');
   }
 
   return response;
@@ -200,7 +387,8 @@ let brandsCache = null; // cache brands to minimize network calls
 async function populateBrandSelect(selectEl) {
   try {
     if (!brandsCache) {
-      const res = await fetch(API_CONFIG.BRANDS);
+      const res = await APIUtils.authenticatedFetch(API_CONFIG.BRANDS);
+      if (!res || !res.ok) throw new Error('Failed to load brands');
       brandsCache = await res.json();
     }
     // Reset options (preserve placeholder)
@@ -221,8 +409,8 @@ async function populateModelSelect(selectEl, brandId) {
       selectEl.innerHTML = '<option value="">Select Model</option>';
       return;
     }
-    const res = await fetch(`${API_CONFIG.BRANDS}/${brandId}/models`);
-    const models = await res.json();
+    const res = await APIUtils.authenticatedFetch(`${API_CONFIG.BRANDS}/${brandId}/models`);
+    const models = res && res.ok ? await res.json() : [];
     selectEl.innerHTML = '<option value="">Select Model</option>' +
       models.map(m => `<option value="${m.name}">${m.name}</option>`).join("");
   } catch (err) {

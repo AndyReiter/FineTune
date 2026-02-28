@@ -1,4 +1,5 @@
-const API_BASE = 'http://localhost:8080';
+// Use relative base so API calls go to same origin (supports subdomain dev hosts)
+const API_BASE = '';
 
 export const workOrderApi = {
   getAll: async () => {

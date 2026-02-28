@@ -1,4 +1,5 @@
-const API_BASE = "http://localhost:8080";
+// Use relative API base so frontend on subdomains talks to same origin
+const API_BASE = "";
 
 // ===============================
 // Work Order API

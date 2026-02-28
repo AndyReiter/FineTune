@@ -627,10 +627,10 @@ body {
   if (typeof window.API_CONFIG === 'undefined') {
     console.warn('shared.js did not load properly, using fallback API_CONFIG');
     window.API_CONFIG = {
-      WORKORDERS: "http://localhost:8080/workorders",
-      BRANDS: "http://localhost:8080/brands",
-      AUTH_LOGIN: "http://localhost:8080/auth/login",
-      CUSTOMERS: "http://localhost:8080/api/customers"
+      WORKORDERS: "/workorders",
+      BRANDS: "/brands",
+      AUTH_LOGIN: "/auth/login",
+      CUSTOMERS: "/api/customers"
     };
   }
   
@@ -638,7 +638,7 @@ body {
   if (typeof window.authenticatedFetch === 'undefined') {
     console.warn('authenticatedFetch not found, using basic fetch');
     window.authenticatedFetch = async function(url, options = {}) {
-      const token = localStorage.getItem('jwt_token');
+      const token = localStorage.getItem('authToken');
       const headers = {
         'Content-Type': 'application/json',
         ...options.headers

@@ -25,8 +25,14 @@ public class StaffSettingsSqlRepository {
     };
 
     public Optional<StaffSettings> findFirstByOrderByIdAsc() {
-        List<StaffSettings> settings = jdbcTemplate.query("SELECT * FROM staff_settings ORDER BY id ASC LIMIT 1", staffSettingsRowMapper);
-        return settings.stream().findFirst();
+        try {
+            List<StaffSettings> settings = jdbcTemplate.query("SELECT * FROM staff_settings ORDER BY id ASC LIMIT 1", staffSettingsRowMapper);
+            return settings.stream().findFirst();
+        } catch (org.springframework.dao.DataAccessException ex) {
+            // Table might not exist in local/dev environments; log and return empty so callers can use defaults
+            System.err.println("StaffSettingsSqlRepository: failed to read staff_settings table: " + ex.getMessage());
+            return Optional.empty();
+        }
     }
 
     public Optional<StaffSettings> findById(Long id) {

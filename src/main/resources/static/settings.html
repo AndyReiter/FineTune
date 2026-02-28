@@ -743,12 +743,8 @@ body {
   // Staff Settings Functions
   async function loadSettings() {
     try {
-      const response = await fetch('/api/staff-settings', {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${AuthUtils.getToken()}`,
-          'Content-Type': 'application/json'
-        }
+      const response = await APIUtils.authenticatedFetch('/api/staff-settings', {
+        method: 'GET'
       });
 
       if (response.ok) {
@@ -780,10 +776,9 @@ body {
     }
 
     try {
-      const response = await fetch('/api/staff-settings', {
+      const response = await APIUtils.authenticatedFetch('/api/staff-settings', {
         method: 'PUT',
         headers: {
-          'Authorization': `Bearer ${AuthUtils.getToken()}`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({ maxCustomerWorkOrdersPerDay })
@@ -901,30 +896,25 @@ body {
     if (fileInput && fileInput.files && fileInput.files[0]) {
       formData.append('logo', fileInput.files[0]);
     }
-    fetch('/shops/branding', {
-      method: 'POST',
-      body: formData
-    })
-      .then(async (response) => {
-        if (response.ok) {
-          const shop = await response.json();
-          showBrandingMessage('Shop branding saved successfully!', true);
-          // Update preview with returned logo if available
-          if (shop.logoUrl) {
-            document.getElementById('logoPreview').src = shop.logoUrl;
-            document.getElementById('logoPreview').style.display = 'block';
-            document.getElementById('noLogoText').style.display = 'none';
-            updateSidebarLogo(shop.logoUrl, shop.name);
-          }
-        } else {
-          const errorText = await response.text();
-          showBrandingMessage('Failed to save branding: ' + errorText, false);
+    try {
+      const response = await APIUtils.authenticatedFetch('/shops/branding', { method: 'POST', body: formData });
+      if (response.ok) {
+        const shop = await response.json();
+        showBrandingMessage('Shop branding saved successfully!', true);
+        if (shop.logoUrl) {
+          document.getElementById('logoPreview').src = shop.logoUrl;
+          document.getElementById('logoPreview').style.display = 'block';
+          document.getElementById('noLogoText').style.display = 'none';
+          updateSidebarLogo(shop.logoUrl, shop.name);
         }
-      })
-      .catch((error) => {
-        console.error('Error saving shop branding:', error);
-        showBrandingMessage('Error saving branding. Please try again.', false);
-      });
+      } else {
+        const errorText = await response.text();
+        showBrandingMessage('Failed to save branding: ' + errorText, false);
+      }
+    } catch (error) {
+      console.error('Error saving shop branding:', error);
+      showBrandingMessage('Error saving branding. Please try again.', false);
+    }
   }
 
   function clearLogo() {

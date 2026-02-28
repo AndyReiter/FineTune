@@ -39,7 +39,7 @@
       const agreementText = document.getElementById('agreementText').value;
       const jurisdictionState = document.getElementById('jurisdictionState').value;
       const payload = { title, agreementText, jurisdictionState, isActive: true };
-      const res = await fetch(`/api/agreement-templates/shop/${shopId}`, {
+      const res = await APIUtils.authenticatedFetch(`/api/agreement-templates/shop/${shopId}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)

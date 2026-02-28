@@ -914,7 +914,7 @@
     };
 
     try {
-      const response = await fetch(API_CONFIG.WORKORDERS, {
+      const response = await APIUtils.authenticatedFetch(API_CONFIG.WORKORDERS, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
@@ -1308,7 +1308,7 @@
     console.log('Submitting mount payload:', JSON.stringify(payload, null, 2));
 
     try {
-      const response = await fetch(API_CONFIG.WORKORDERS, {
+      const response = await APIUtils.authenticatedFetch(API_CONFIG.WORKORDERS, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
@@ -1386,7 +1386,7 @@
     console.log('Submitting non-mount payload:', JSON.stringify(payload, null, 2));
 
     try {
-      const response = await fetch(API_CONFIG.WORKORDERS, {
+      const response = await APIUtils.authenticatedFetch(API_CONFIG.WORKORDERS, {
         method: "POST",
         headers: { \"Content-Type\": \"application/json\" },
         body: JSON.stringify(payload)
@@ -1482,7 +1482,7 @@
       const phone = formData.phone;
       
       // Call customer service to find customer by email + phone
-      const response = await fetch(`${API_CONFIG.BASE_URL}/customers/lookup?email=${encodeURIComponent(email)}&phone=${encodeURIComponent(phone)}`);
+      const response = await APIUtils.authenticatedFetch(`/customers/lookup?email=${encodeURIComponent(email)}&phone=${encodeURIComponent(phone)}`);
       
       if (response.ok) {
         const customer = await response.json();
@@ -1504,7 +1504,7 @@
   async function loadCustomerBoots(customerId) {
     try {
       // Fetch customer's boots
-      const response = await fetch(`${API_CONFIG.BASE_URL}/customers/${customerId}/boots`);
+      const response = await APIUtils.authenticatedFetch(`${API_CONFIG.CUSTOMERS}/${customerId}/boots`);
       
       if (response.ok) {
         const boots = await response.json();
@@ -1713,7 +1713,7 @@
       skis: skiItemsData
     };
 
-    const response = await fetch(`${API_CONFIG.BASE_URL}/workorders`, {
+    const response = await APIUtils.authenticatedFetch(API_CONFIG.WORKORDERS, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

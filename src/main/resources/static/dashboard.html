@@ -1218,30 +1218,7 @@ body {
 </head>
 <body>
 
-<div id="loginSection" class="login-container">
-  <div class="login-card">
-    <div class="login-header">
-      <h1 class="login-title">Staff Dashboard</h1>
-      <p class="login-subtitle">Sign in to access the equipment management system</p>
-    </div>
-    <form id="loginForm">
-      <div class="form-group">
-        <label class="form-label" for="loginEmail">Email Address</label>
-        <input type="email" id="loginEmail" class="form-input" placeholder="Enter your email" required>
-      </div>
-      <div class="form-group">
-        <label class="form-label" for="loginPassword">Password</label>
-        <input type="password" id="loginPassword" class="form-input" placeholder="Enter your password" required>
-      </div>
-      <button type="button" class="login-button" onclick="handleLogin()">
-        <i class="fas fa-sign-in-alt"></i> Sign In
-      </button>
-    </form>
-    <div id="loginMessage" class="message"></div>
-  </div>
-</div>
-
-<div id="authenticatedSection" class="dashboard-container" style="display: none;">
+<div id="authenticatedSection" class="dashboard-container">
   <!-- Sidebar -->
   <aside class="sidebar">
     <div class="sidebar-header">
@@ -1610,6 +1587,7 @@ body {
 </div>
 
 <!-- Include shared JavaScript utilities -->
+<script src="auth-guard.js"></script>
 <script src="shared.js"></script>
 
 <script>
@@ -1722,48 +1700,21 @@ body {
   /* ===============================
      Authentication Management
      =============================== */
-  function handleLogin() {
-    const email = document.getElementById("loginEmail").value.trim();
-    const password = document.getElementById("loginPassword").value.trim();
-
-    ValidationUtils.clearMessage('loginMessage');
-
-    if (!email || !password) {
-      ValidationUtils.showMessage('loginMessage', 'Please enter both email and password.', true);
-      return;
-    }
-
-    if (!ValidationUtils.isValidEmail(email)) {
-      ValidationUtils.showMessage('loginMessage', 'Please enter a valid email address.', true);
-      return;
-    }
-
-    // Attempt login
-    AuthUtils.login(email, password)
-      .then(response => {
-        document.getElementById("userEmail").textContent = email;
-        showAuthenticatedView();
-        fetchWorkOrdersByStatus(currentActiveTab);
-        updateTabCounts(); // Load counts for all tabs
-      })
-      .catch(error => {
-        ValidationUtils.showMessage('loginMessage', 'Invalid credentials. Please try again.', true);
-      });
-  }
-
   function handleLogout() {
     AuthUtils.logout();
   }
 
-  function showAuthenticatedView() {
-    document.getElementById("loginSection").style.display = "none";
-    document.getElementById("authenticatedSection").style.display = "block";
+  function showLoginView() {
+    // Redirect to centralized login page; dashboard no longer hosts login UI
+    window.location.href = '/login.html';
   }
 
-  function showLoginView() {
-    document.getElementById("loginSection").style.display = "block";
-    document.getElementById("authenticatedSection").style.display = "none";
-    ValidationUtils.clearMessage('loginMessage');
+  function showAuthenticatedView() {
+    // Reveal authenticated UI if present
+    const authSection = document.getElementById('authenticatedSection');
+    if (authSection) authSection.style.display = 'block';
+    const loginSection = document.getElementById('loginSection');
+    if (loginSection) loginSection.style.display = 'none';
   }
 
   /* ===============================
@@ -1794,8 +1745,8 @@ body {
   async function loadShopBranding() {
     const shopId = 1; // default shop id used by the UI
     try {
-      const res = await fetch(`/shops/${shopId}`);
-      if (!res.ok) return;
+      const res = await APIUtils.authenticatedFetch(`/shops/${shopId}`);
+      if (!res || !res.ok) return;
       const shop = await res.json();
       applyShopBranding(shop);
     } catch (e) {
@@ -1816,10 +1767,24 @@ body {
     if (shop.name) document.title = shop.name + ' - Staff Dashboard';
   }
 
-  // Load branding on initial page load
-  document.addEventListener('DOMContentLoaded', () => {
-    loadShopBranding();
-  });
+  // branding and other dashboard initialization will run after auth is confirmed
+
+  /* ===============================
+     Initialize Page (deferred until auth:ready)
+     =============================== */
+  function initDashboard() {
+    try {
+      showAuthenticatedView();
+      fetchWorkOrdersByStatus(currentActiveTab); // Load default "RECEIVED" tab
+      updateTabCounts(); // Load counts for all tabs
+      loadShopBranding();
+    } catch (e) {
+      console.warn('initDashboard skipped or errored:', e);
+    }
+  }
+
+  // Wait for auth-guard to confirm authentication before initializing dashboard
+  window.addEventListener('auth:ready', initDashboard);
 
   /* ===============================
      Load Order for Editing
@@ -1992,7 +1957,7 @@ body {
     } catch (error) {
       console.error(error);
       if (error.message === "Authentication required") {
-        showLoginView();
+        // auth-guard will handle redirects
       } else {
         modalBody.innerHTML = '<div class="error">Failed to load work order.</div>';
         notifyBtn.style.display = "none";
@@ -2287,7 +2252,7 @@ body {
     } catch (error) {
       console.error(error);
       if (error.message === "Authentication required") {
-        showLoginView();
+        // auth-guard will handle redirects
       } else {
         alert("Error updating equipment status: " + error.message);
       }
@@ -2325,7 +2290,7 @@ body {
     } catch (error) {
       console.error(error);
       if (error.message === "Authentication required") {
-        showLoginView();
+        // auth-guard will handle redirects
       } else {
         alert("Error updating promise date: " + error.message);
         // Reload the modal to restore original value
@@ -2365,7 +2330,7 @@ body {
     } catch (error) {
       console.error(error);
       if (error.message === "Authentication required") {
-        showLoginView();
+        // auth-guard will handle redirects
       } else {
         alert("Error saving notes: " + error.message);
       }
@@ -2393,7 +2358,7 @@ body {
     } catch (error) {
       console.error(error);
       if (error.message === "Authentication required") {
-        showLoginView();
+        // auth-guard will handle redirects
       } else {
         alert("Error sending notification: " + error.message);
       }
@@ -2421,7 +2386,7 @@ body {
     } catch (error) {
       console.error(error);
       if (error.message === "Authentication required") {
-        showLoginView();
+        // auth-guard will handle redirects
       } else {
         alert("Error marking as pickup: " + error.message);
       }
@@ -2469,10 +2434,7 @@ body {
      Fetch Multiple Status Work Orders (for Completed Tab)
      =============================== */
   async function fetchMultipleStatuses(statuses) {
-    if (!AuthUtils.isAuthenticated()) {
-      showLoginView();
-      return;
-    }
+    // auth-guard will ensure authentication; proceed to fetch
 
     try {
       // Fetch work orders for each status and combine results
@@ -2550,7 +2512,7 @@ body {
     } catch (error) {
       console.error("Error fetching work orders:", error);
       if (error.message === "Authentication required") {
-        showLoginView();
+        // auth-guard will handle redirects
       } else {
         ValidationUtils.showMessage('listMessage', 'Failed to load work orders.', true);
       }
@@ -4160,7 +4122,7 @@ body {
     } catch (error) {
       console.error("Error creating work order:", error);
       if (error.message === "Authentication required") {
-        showLoginView();
+        // auth-guard will handle redirects
       } else {
         const currentModal = bootModal.style.display === 'block' ? 'bootFormMessage' : 'createFormMessage';
         const errorMessage = error.message.includes('Failed to create work order') 
@@ -4175,10 +4137,7 @@ body {
      Fetch Work Orders (Updated for Tabs)
      =============================== */
   async function fetchWorkOrdersByStatus(status) {
-    if (!AuthUtils.isAuthenticated()) {
-      showLoginView();
-      return;
-    }
+    // auth-guard will ensure authentication; proceed to fetch
 
     try {
       // Build URL including shopId
@@ -4263,7 +4222,7 @@ body {
     } catch (error) {
       console.error("Error fetching work orders:", error);
       if (error.message === "Authentication required") {
-        showLoginView();
+        // auth-guard will handle redirects
       } else {
         ValidationUtils.showMessage('listMessage', 'Failed to load work orders.', true);
       }
@@ -4281,10 +4240,7 @@ body {
      Only shows orders with RECEIVED, IN_PROGRESS, or READY_FOR_PICKUP status
      =============================== */
   async function fetchWorkOrdersByServiceType(serviceType) {
-    if (!AuthUtils.isAuthenticated()) {
-      showLoginView();
-      return;
-    }
+    // auth-guard will ensure authentication; proceed to fetch
 
     try {
       // Fetch all work orders (no status filter)
@@ -4366,7 +4322,7 @@ body {
     } catch (error) {
       console.error("Error fetching work orders by service type:", error);
       if (error.message === "Authentication required") {
-        showLoginView();
+        // auth-guard will handle redirects
       } else {
         ValidationUtils.showMessage('listMessage', 'Failed to load work orders.', true);
       }
@@ -4377,9 +4333,7 @@ body {
      Update Tab Counts
      =============================== */
   async function updateTabCounts() {
-    if (!AuthUtils.isAuthenticated()) {
-      return;
-    }
+    // auth-guard will ensure authentication; proceed to fetch
 
     try {
       // Fetch all work orders
@@ -4446,27 +4400,14 @@ body {
      =============================== */
   // Check if user is already authenticated on page load
   window.addEventListener('DOMContentLoaded', function() {
-    if (AuthUtils.isAuthenticated()) {
-      // Try to show authenticated view and fetch data for default tab
+    // Auth is enforced by auth-guard; initialize dashboard for authenticated users.
+    try {
       showAuthenticatedView();
       fetchWorkOrdersByStatus(currentActiveTab); // Load default "RECEIVED" tab
       updateTabCounts(); // Load counts for all tabs
-    } else {
-      showLoginView();
+    } catch (e) {
+      console.warn('Initialization skipped (likely unauthenticated):', e);
     }
-
-    // Handle Enter key in login fields
-    document.getElementById("loginEmail").addEventListener('keypress', function(e) {
-      if (e.key === 'Enter') {
-        handleLogin();
-      }
-    });
-
-    document.getElementById("loginPassword").addEventListener('keypress', function(e) {
-      if (e.key === 'Enter') {
-        handleLogin();
-      }
-    });
   });
 
   /* ===============================
@@ -4581,7 +4522,7 @@ body {
       saveBtn.innerHTML = originalHTML;
       
       if (error.message === "Authentication required") {
-        showLoginView();
+        // auth-guard will handle redirects
       } else {
         alert("Error saving notes: " + error.message);
       }

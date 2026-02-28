@@ -53,7 +53,7 @@ refreshLocationsBtn.addEventListener('click', loadLocations);
 // Fetch all locations
 async function loadLocations() {
   try {
-    const response = await fetch(LOCATIONS_API_URL);
+  const response = await APIUtils.authenticatedFetch(LOCATIONS_API_URL);
     if (!response.ok) {
       throw new Error('Failed to fetch locations');
     }
@@ -92,7 +92,7 @@ function displayLocations(locations) {
 
 // Create a new location
 async function createLocation(locationData) {
-  const response = await fetch(LOCATIONS_API_URL, {
+  const response = await APIUtils.authenticatedFetch(LOCATIONS_API_URL, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'
@@ -109,7 +109,7 @@ async function createLocation(locationData) {
 
 // Update an existing location
 async function updateLocation(id, locationData) {
-  const response = await fetch(`${LOCATIONS_API_URL}/${id}`, {
+  const response = await APIUtils.authenticatedFetch(`${LOCATIONS_API_URL}/${id}`, {
     method: 'PUT',
     headers: {
       'Content-Type': 'application/json'
@@ -143,7 +143,7 @@ async function deleteLocation(id) {
   }
 
   try {
-    const response = await fetch(`${LOCATIONS_API_URL}/${id}`, {
+    const response = await APIUtils.authenticatedFetch(`${LOCATIONS_API_URL}/${id}`, {
       method: 'DELETE'
     });
 

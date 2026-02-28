@@ -427,7 +427,7 @@ body {
       <h1 class="login-title">Staff Dashboard</h1>
       <p class="login-subtitle">Sign in to access the equipment management system</p>
     </div>
-    <form id="loginForm">
+    <form id="loginForm" onsubmit="handleLogin(event)">
       <div class="form-group">
         <label class="form-label" for="loginEmail">Email Address</label>
         <input type="email" id="loginEmail" class="form-input" placeholder="Enter your email" required>
@@ -436,7 +436,7 @@ body {
         <label class="form-label" for="loginPassword">Password</label>
         <input type="password" id="loginPassword" class="form-input" placeholder="Enter your password" required>
       </div>
-      <button type="button" class="login-button" onclick="handleLogin()">
+      <button type="submit" class="login-button">
         <i class="fas fa-sign-in-alt"></i> Sign In
       </button>
     </form>
@@ -651,7 +651,8 @@ body {
   /* ===============================
      Authentication Management
      =============================== */
-  function handleLogin() {
+  function handleLogin(event) {
+    if (event && typeof event.preventDefault === 'function') event.preventDefault();
     const email = document.getElementById("loginEmail").value.trim();
     const password = document.getElementById("loginPassword").value.trim();
 
@@ -667,16 +668,29 @@ body {
       return;
     }
 
-    // Attempt login
-    AuthUtils.login(email, password)
-      .then(response => {
-        document.getElementById("userEmail").textContent = email;
-        showAuthenticatedView();
-        fetchAllCustomers();
-      })
-      .catch(error => {
-        ValidationUtils.showMessage('loginMessage', 'Invalid credentials. Please try again.', true);
-      });
+    // Submit credentials to /auth/login
+    fetch(API_CONFIG.AUTH_LOGIN, {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      body: JSON.stringify({ email, password })
+    })
+    .then(async res => {
+      if (!res.ok) {
+        const txt = await res.text().catch(() => '');
+        throw new Error(txt || `Login failed (${res.status})`);
+      }
+      const data = await res.json();
+      if (!data || !data.token) throw new Error('Invalid login response');
+      // Save to localStorage as authToken
+      try { localStorage.setItem('authToken', data.token); } catch (e) {}
+      // Redirect to dashboard
+      window.location.href = '/dashboard.html';
+    })
+    .catch(err => {
+      console.error('Login error', err);
+      ValidationUtils.showMessage('loginMessage', 'Invalid credentials. Please try again.', true);
+    });
   }
 
   function handleLogout() {
@@ -699,7 +713,7 @@ body {
      =============================== */
   async function openCustomerModal(customerId) {
     try {
-      const response = await APIUtils.authenticatedFetch(`${API_CONFIG.CUSTOMERS}/${customerId}`);
+      const response = await AuthUtils.authFetch(`${API_CONFIG.CUSTOMERS}/${customerId}`);
       const customer = await response.json();
 
       const customerInfoSection = document.getElementById('customerInfoSection');
@@ -786,7 +800,7 @@ body {
 
   async function loadCustomerWorkOrders(customerId) {
     try {
-      const response = await APIUtils.authenticatedFetch(`${API_CONFIG.CUSTOMERS}/${customerId}/workorders`);
+      const response = await AuthUtils.authFetch(`${API_CONFIG.CUSTOMERS}/${customerId}/workorders`);
       const workOrders = await response.json();
 
       const workOrdersTab = document.getElementById('customerWorkOrdersTab');
@@ -847,7 +861,7 @@ body {
 
   async function loadCustomerEquipment(customerId) {
     try {
-      const response = await APIUtils.authenticatedFetch(`${API_CONFIG.CUSTOMERS}/${customerId}/equipment`);
+      const response = await AuthUtils.authFetch(`${API_CONFIG.CUSTOMERS}/${customerId}/equipment`);
       const equipment = await response.json();
 
       const equipmentTab = document.getElementById('customerEquipmentTab');
@@ -899,7 +913,7 @@ body {
 
   async function loadCustomerBoots(customerId) {
     try {
-      const response = await APIUtils.authenticatedFetch(`${API_CONFIG.CUSTOMERS}/${customerId}/boots`);
+      const response = await AuthUtils.authFetch(`${API_CONFIG.CUSTOMERS}/${customerId}/boots`);
       const boots = await response.json();
 
       const bootsTab = document.getElementById('customerBootsTab');
@@ -1056,7 +1070,7 @@ body {
     }
 
     try {
-      const response = await APIUtils.authenticatedFetch(API_CONFIG.CUSTOMERS);
+      const response = await AuthUtils.authFetch(API_CONFIG.CUSTOMERS);
       const customers = await response.json();
 
       if (!Array.isArray(customers)) {

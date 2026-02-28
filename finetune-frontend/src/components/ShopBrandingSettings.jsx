@@ -9,11 +9,11 @@ export default function ShopBrandingSettings() {
 
   const fetchBranding = async () => {
     try {
-      const res = await fetch("http://localhost:8080/shops");
+      const res = await fetch(`/shops`, { credentials: 'include' });
       const shops = await res.json();
       if (shops.length > 0) {
         setShopName(shops[0].name || "");
-        setLogoPreview(shops[0].logoUrl ? `http://localhost:8080${shops[0].logoUrl}` : "");
+        setLogoPreview(shops[0].logoUrl ? `${shops[0].logoUrl}` : "");
       }
     } catch (e) {
       setMessage("Failed to load branding");
@@ -37,8 +37,9 @@ export default function ShopBrandingSettings() {
     formData.append("shopName", shopName);
     if (logoFile) formData.append("logo", logoFile);
     try {
-      const res = await fetch("http://localhost:8080/shops/branding", {
+      const res = await fetch(`/shops/branding`, {
         method: "POST",
+        credentials: 'include',
         body: formData,
       });
       if (res.ok) {

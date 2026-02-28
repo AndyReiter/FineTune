@@ -8,6 +8,9 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
@@ -33,34 +36,92 @@ public class SecurityConfig {
     @Autowired
     private JwtAuthFilter jwtAuthFilter;
 
+    @Autowired
+    private ShopSubdomainResolver shopSubdomainResolver;
+
+    @Autowired
+    private RestAuthenticationEntryPoint restAuthenticationEntryPoint;
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
+            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .csrf(csrf -> csrf.disable())
             .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-                // Permit authentication endpoint and static assets
-                .requestMatchers("/login.html").permitAll()
-                .requestMatchers("/auth/**").permitAll()
-                // Allow UI pages to be served so client-side JS can attach JWT and call APIs
-                .requestMatchers("/dashboard.html").permitAll()
-                .requestMatchers("/customers.html").permitAll()
-                .requestMatchers("/settings.html").permitAll()
-                .requestMatchers("/analytics.html").permitAll()
-                .requestMatchers("/shops.html").permitAll()
-                .requestMatchers("/api/public/workorders/**").permitAll()
-                .requestMatchers("/shared.js").permitAll()
-                .requestMatchers("/favicon.ico").permitAll()
-                .requestMatchers("/css/**").permitAll()
-                .requestMatchers("/js/**").permitAll()
-                // All other endpoints require authentication
+                // Public: static assets, public APIs, and public UI pages - must be checked first
+                .requestMatchers(
+                    "/**/*.js",
+                    "/**/*.css",
+                    "/**/*.png",
+                    "/**/*.jpg",
+                    "/**/*.jpeg",
+                    "/**/*.gif",
+                    "/**/*.svg",
+                    "/**/*.ico",
+                    "/favicon.ico",
+                    "/images/**",
+                    "/webjars/**",
+                    "/static/**",
+                    "/public/**",
+                    "/resources/**",
+                    "/login.html",
+                    "/index.html",
+                    "/create-workorder.html",
+                    "/customer-workorder.html",
+                    "/customer-workorder.js",
+                    "/shared.css",
+                    "/assets/**",
+                    "/auth/login",
+                    "/auth/logout",
+                    "/auth/refresh",
+                    "/api/public/**"
+                ).permitAll()
+
+                // All other API endpoints require authentication
+                .requestMatchers("/api/**").authenticated()
+
+                // Protected UI pages (frontend will handle redirects)
+                .requestMatchers(
+                    "/dashboard.html",
+                    "/customers.html",
+                    "/workorders.html",
+                    "/settings.html",
+                    "/analytics.html"
+                ).authenticated()
+
+                // Default: authenticated
                 .anyRequest().authenticated()
             )
-            .exceptionHandling(ex -> ex.authenticationEntryPoint(loginRedirectEntryPoint()))
+            .exceptionHandling(ex -> ex.authenticationEntryPoint(restAuthenticationEntryPoint))
             .httpBasic(httpBasic -> httpBasic.disable())
+            .formLogin(form -> form.disable())
+            .addFilterBefore(shopSubdomainResolver, UsernamePasswordAuthenticationFilter.class)
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
+    }
+
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+        configuration.setAllowCredentials(true);
+        // Allow credentials and explicit local dev subdomains (host-only / port-aware)
+        // Keep production patterns for finetune.com but restrict to those domains.
+        // Allow local dev origins (explicit port-aware patterns) and production patterns
+        configuration.setAllowedOriginPatterns(java.util.List.of(
+            "http://localhost:8080",
+            "http://*.localhost:8080",
+            "http://*.finetune.com",
+            "https://*.finetune.com"
+        ));
+        configuration.addAllowedHeader("*");
+        // Restrict to the methods required for the API surface in local dev
+        configuration.setAllowedMethods(java.util.List.of("GET", "POST", "OPTIONS"));
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+        return source;
     }
 
     @Bean
@@ -83,21 +144,5 @@ public class SecurityConfig {
         return authenticationConfiguration.getAuthenticationManager();
     }
 
-    @Bean
-    public AuthenticationEntryPoint loginRedirectEntryPoint() {
-        return new AuthenticationEntryPoint() {
-            @Override
-            public void commence(HttpServletRequest request, HttpServletResponse response,
-                                 org.springframework.security.core.AuthenticationException authException) throws IOException {
-                String accept = request.getHeader("Accept");
-                String uri = request.getRequestURI();
-                // For API calls return 401, for page requests redirect to login page
-                if (uri.startsWith("/api/") || (accept != null && accept.contains("application/json"))) {
-                    response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized");
-                } else {
-                    response.sendRedirect("/login.html");
-                }
-            }
-        };
-    }
+    
 }
